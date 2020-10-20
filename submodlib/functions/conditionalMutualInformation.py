@@ -1,0 +1,59 @@
+# conditionalMutualInformation.py
+# Author: Vishal Kaushal <vishal.kaushal@gmail.com>
+
+from .setFunction import SetFunction
+
+class ConditionalMutualInformationFunction(SetFunction):
+	"""Implementation of the Conditional Mutual Information of a submodular function
+	
+	Denote :math:`V` as the ground-set of items to be summarized. We denote by :math:`V^{\\prime}` an auxiliary set that contains user-provided information such as a query (for query-focused summarization) or a private set (for privacy-preserving summarization). The auxiliary information provided by the user may not be in the same space as the items in :math:`V` -- for example, if the items in :math:`V` are images, the query could be text queries. In such a case, we assume we have a *joint* embedding that can represent both the query and the image items, and correspondingly, we can define similarity between the items in :math:`V` and :math:`V^{\\prime}`. Next, let :math:`\\Omega  = V \\cup V^{\\prime}` and define a set function :math:`f: 2^{\\Omega} \\rightarrow \\mathbf{R}`. Although :math:`f` is defined on :math:`\\Omega`, summarization is on the items in :math:`V`, i.e., the discrete optimization problem will be only on subsets of :math:`V`
+
+	We define the submodular conditional mutual information of sets :math:`A,B` given set :math:`C` as 
+
+	.. math::
+	        I_f(A; B | C) = f(A | C) + f(B | C) - f(A \\cup B | C) \\\\ &= f(A \\cup C) + f(B \\cup C) - f(A \\cup B \\cup C) - f(C)
+
+	Properties of conditional mutual information are studied at length in :cite:`iyer2020submodular`
+
+	One possible application is joint query-focused and privacy preserving summarization. Given a query set :math:`Q` and a private set :math:`P`, we would like to select a subset :math:`A \\subseteq V` which has a high similarity with respect to a query set :math:`Q`, while simultaneously being different from the private set :math:`P`. A natural way to do this is by maximizing the above conditional submodular mutual information such that :math:`B=Q` and :math:`C=P`.
+
+	.. note::
+	        Given a submodular function :math:`f`, the CSMI can either be viewed as the mutual information of the conditional gain function, or the conditional gain of the submodular mutual information :cite:`kaushal2020unified`.
+	
+    Parameters
+	----------
+	
+	f : SetFunction
+	    The particular instantiated set function to be used for instantiating this Conditional Gain function
+
+	b : set
+	    The :math:`B` set as defined above. For example, it could be the query set in case of query-focused summarization
+	
+	c : set
+	    The :math:`C` set as defined above. For example, it could be the private set in case of privacy preserving summarization or existing subset in case of update summarization
+	
+	"""
+
+	def __init__():
+		pass
+
+	def evaluate():
+		"""Computes the score of a set
+
+		"""
+
+		pass
+
+	def maximize():
+		"""Find the optimal subset with maximum score
+
+		"""
+
+		pass
+	
+	def marginalGain():
+		"""Find the marginal gain of adding an item to a set
+
+		"""
+
+		pass

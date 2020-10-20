@@ -1,0 +1,39 @@
+.. title:: Introduction
+
+submodlib is an efficient and scalable library for submodular optimization which finds its application in summarization, data subset selection, hyper parameter tuning etc.
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: submodlib
+
+   Introduction <self> 
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Functions
+
+   functions/facilityLocation.rst
+   functions/graphCut.rst
+   functions/setCover.rst
+   functions/probabilisticSetCover.rst
+   functions/featureBased.rst
+   functions/logDeterminant.rst
+   functions/saturatedCoverage.rst
+   functions/disparityMin.rst
+   functions/disparitySum.rst
+   functions/mixture.rst
+   functions/clustered.rst
+   functions/mutualInformation.rst
+   functions/conditionalGain.rst
+   functions/conditionalMutualInformation.rst
+   
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Optimizers
+
+   optimizers/naiveGreedy.rst
+   optimizers/randomizedGreedy.rst
+   optimizers/lazyGreedy.rst
