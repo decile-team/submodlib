@@ -10,12 +10,12 @@ class SubmodularMutualInformationFunction(SetFunction):
 	We define the submodular mutual information :cite:`guillory2011-active-semisupervised-submodular,levin2020online` between two sets :math:`A,B` as 
 
 	.. math::
-	        I_f(A; B) = f(A) + f(B) - f(A \\cup B)
+			I_f(A; B) = f(A) + f(B) - f(A \\cup B)
 
 	It is easy to see that :math:`I_f(A; B)` is equal to the mutual information between two random variables when :math:`f` is the entropy function.
 
 	.. note::
-	        I_f(A; B) = f(A) - f(A|B)
+			I_f(A; B) = f(A) - f(A|B)
 
 	Properties of submodular mutual information are studied at length in :cite:`iyer2020submodular`
 
@@ -24,29 +24,72 @@ class SubmodularMutualInformationFunction(SetFunction):
 	Some simple properties of SMI which follow almost immediately from definition is that :math:`I_f(A; B) \\geq 0` and :math:`I_f(A; B)` is also monotone in :math:`A` for a fixed :math:`B`. :math:`I_f(A; Q)` models the mutual coverage, or shared information, between :math:`A` and :math:`Q`, and is thus useful for modeling query relevance in query-focused summarization. 
 		
 	.. note::
-	        :math:`I_f(A; Q)` is unfortunately not submodular in :math:`A` for a fixed :math:`Q` in general :cite:`krause2008near`.However instantiation of SMI using a particular submodular function may turn out to be submodular.
+			:math:`I_f(A; Q)` is unfortunately not submodular in :math:`A` for a fixed :math:`Q` in general :cite:`krause2008near`.However instantiation of SMI using a particular submodular function may turn out to be submodular.
+
+	Parameters
+	----------
+	
+	f : SetFunction
+		The particular instantiated set function to be used for instantiating this Submodular Mutual Information function
+
+	b : set
+		The :math:`B` set as defined above. For example, it could be the query set in case of query-focused summarization
 	
 	"""
 
-	def __init__():
+	def __init__(self, f, b):
 		pass
 
-	def evaluate():
+	def evaluate(self, X):
 		"""Computes the score of a set
+
+		Parameters
+		----------
+		X : set
+			The set whose score needs to be computed
+		
+		Returns
+		-------
+		float
+			The function evaluation on the given set
 
 		"""
 
 		pass
 
-	def maximize():
+	def maximize(self, budget, optimizer):
 		"""Find the optimal subset with maximum score
+
+		Parameters
+		----------
+		budget : int
+			Desired size of the optimal set
+		optimizer : optimizers.Optimizer
+			The optimizer that should be used to compute the optimal set
+
+		Returns
+		-------
+		set
+			The optimal set of size budget
 
 		"""
 
 		pass
 	
-	def marginalGain():
+	def marginalGain(self, X, element):
 		"""Find the marginal gain of adding an item to a set
+
+		Parameters
+		----------
+		X : set
+			Set on which the marginal gain of adding an element has to be calculated
+		element : int
+			Element for which the marginal gain is to be calculated
+
+		Returns
+		-------
+		float
+			Marginal gain of adding element to X
 
 		"""
 
