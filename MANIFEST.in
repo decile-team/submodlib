@@ -1,1 +1,3 @@
-include cpp/HelloWorld/*.h
+include CMakeLists.txt
+include src/submodlib_alt/cpp/HelloWorld/*.h
+include src/submodlib_alt/cpp/HelloWorld/*.cpp

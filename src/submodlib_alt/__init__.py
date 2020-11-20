@@ -1,6 +1,7 @@
 # __init__.py
 # Author: Vishal Kaushal <vishal.kaushal@gmail.com>
 
+from .submodlib_alt import *
 from .version import __version__
 from .functions import FacilityLocationFunction
 from .functions import GraphCutFunction

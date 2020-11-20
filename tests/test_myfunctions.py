@@ -1,4 +1,4 @@
-from submodlib import myfunctions
+from submodlib_alt import myfunctions
 def test_squareInt():
     assert myfunctions.square(5) == 25
 

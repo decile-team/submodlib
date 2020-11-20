@@ -2,7 +2,7 @@
 #include "HelloWorld.h"
 namespace py = pybind11;
 
-PYBIND11_MODULE(submodlib_cpp, m) {
+PYBIND11_MODULE(submodlib_alt, m) {
 	py::class_<mess>(m, "mess")
 		.def(py::init<std::string>())
 		.def("out", &mess::out);

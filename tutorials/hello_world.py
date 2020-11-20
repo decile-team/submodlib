@@ -1,7 +1,7 @@
-import submodlib #Pure Python modules
-import submodlib_cpp #CPP Engine backed modules
-from submodlib import myfunctions 
-from submodlib_cpp import mess 
+#In this implementation of packaging (using CMake) we can import
+#both cpp backed modules and actual python modules from
+#same library name (here submodlib_alt)
+from submodlib_alt import myfunctions, mess 
 
 x = input("Please enter a number whose square you want:")
 x_square = myfunctions.square(float(x))
