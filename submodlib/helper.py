@@ -8,8 +8,8 @@ from scipy import sparse
 
 def create_kernel(X, mode, metric, num_neigh=0, n_jobs=1):
     if mode=='sparse' and num_neigh==0:
-        print("ERROR: num of neighbors not provided")
-        return None
+        num_neigh=np.shape(X)[0] #default is total no of datapoints
+
     if mode=='sparse' and num_neigh>np.shape(X)[0]:
         print("ERROR: num of neighbors can't be more than no of datapoints")
         return None
