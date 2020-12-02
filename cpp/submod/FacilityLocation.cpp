@@ -1,3 +1,17 @@
+
+/*
+Implementation decisions.
+1) Considering the possibility of very large datasets, its safer to use long long int (alias ll) in place of int (for storing size/index of data)
+2) Containers like X, groundset, effectiveGroundSet etc (which contain index of datapoints) have been implemented as set (instead of vector).
+This is because in C++, set container is implemented as red-black tree and thus search operations happen in log(n) time which is beneficial
+for functions like marginalGain(), sequentialUpdate() etc that require such search operations frequently.
+If we use vectors then for efficiency we would have an additional responsibility of ensuring that they are sorted. Thus,
+set is a more natural choice here
+3) For sparse mode, constructor will accept sparse matrix as a map of 3 component vectors (for csr) and use them to instantiate
+a sparse matrix object either using a custom utility class or using some high performance library like boost.
+*/
+
+
 #include<iostream>
 #include<vector>
 #include<string>
