@@ -1,213 +1,384 @@
-/*
-constructor() {
-    Input: (int) number of elements in the ground set (n)
-    Input: (string) mode - dense | sparse | clustered (mode)
-    Input: (vector<vector<float>>) dense similarity matrix kernel (k_dense)
-    Input: sparse similarity matrix kernel (k_sparse)
-    Input: number of neighbors (num_neighbors)
-    Input: clustering (clusters)
-    Input: (bool) partial
-    Input: (set) items in the partial ground set (ground_subset)
+#include<iostream>
+#include<vector>
+#include<string>
+#include<algorithm>
+#include<cmath>
+#include<set>
+#include<iterator>
+#include<map>
+#include"FacilityLocation.h"
 
-    if partial == true {
-        effectiveGroundSet = ground_subset
-        numEffectiveGroundset = num elements in effectiveGroundSet
-    } else {
-        effectiveGroundSet = groundSet
-        numEffectiveGroundset = num elements in effectiveGroundSet
-    }
-    if mode == dense {
-        if k_dense == empty {
-            error
-            return
-        } 
-        similarityWithNearestInEffectiveX = vector(numEffectiveGroundset)
-        similarityWithNearestInEffectiveX = 0
-        
-    } else if mode == sparse {
-        if k_sparse == empty or num_neighbors == 0 {
-            error
-            return
-        }
-    } else if mode == clustered {
-        if clusters == empty {
-            error
-            return
-        }
-    } else {
-        invalid mode
-    }
+typedef long long int ll;
 
-}
-    
+//Note to self: Migrate all parameter related sanity/error checks from C++ FL to Python FL
 
-evaluate() {
-    Input: X
+//For dense mode
+FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_)
+{
+	if (mode_ != "dense") 
+	{
+		std::cerr << "Error: Incorrect mode specified for the provided dense similarity matrix\n";
+		return;
+	}
 
-    if partial == true {
-        effectiveX = intersect(X, effectiveGroundSet)
-    } else {
-        effectiveX = X
-    }
+	if (k_dense_.size() == 0)
+	{
+		std::cerr << "Error: Empty similarity matrix\n";
+		return;
+	}
 
-    if mode == dense {
-        result = 0
-        for each element i in effectiveGroundSet {
-            find max similarity of i with all items in effectiveSubset
-            result += max
-        }
-    } else if mode == sparse {
-
-    } else if mode == clustered {
-        result = 0
-        for each cluster ci {
-            relevantSubset = intersect(X, ci)
-            if relevantSubset = empty {
-                continue
-            }
-            for each element i in ci {
-                find max similarity of i with all items in relevantSubset
-                result += max
-            }
-        }
-    } else {
-        not possible
-    }
+	n = n_;
+	mode = mode_;
+	k_dense = k_dense_;
+	num_neighbors = num_neighbors_;
+	partial = partial_;
+	if (partial == true)
+	{
+		effectiveGroundSet = ground_;
+	}
+	else
+	{
+		for (ll i = 0; i < n; ++i)
+		{
+			effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
+		}
+	}
+	numEffectiveGroundset = effectiveGroundSet.size();
+	similarityWithNearestInEffectiveX.resize(numEffectiveGroundset, 0);
 }
 
-evaluateSequential() {
-    //assumes that pre computed statistics exist for effectiveX
-    Input: X
+//For sparse mode (TODO)
 
-    if partial == true {
-        effectiveX = intersect(X, effectiveGroundSet)
-    } else {
-        effectiveX = X
-    }
-    
-    if mode == dense {
-        result = 0
-        for each element i in effectiveGroundSet {
-            result += similarityWithNearestEffectiveX[i]
-        }
-    } else if mode == sparse {
 
-    } else if mode == clustered {
+//For cluster mode
+FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_, ll num_neighbors_, bool partial_, std::set<ll> ground_ )
+{
+	if (mode_ != "cluster")
+	{
+		std::cerr << "Error: Incorrect mode specified for the provided cluster\n";
+		return;
+	}
 
-    } else {
-        not possible
-    }
-    
-    
+	if (clusters_.size() == 0)
+	{
+		std::cerr << "Error: Cluster vector is empty\n";
+		return;
+	}
+
+	n = n_;
+	mode = mode_;
+	clusters = clusters_;
+	num_neighbors = num_neighbors_;
+	partial = partial_;
+	if (partial == true)
+	{
+		effectiveGroundSet = ground_;
+	}
+	else
+	{
+		for (ll i = 0; i < n; ++i)
+		{
+			effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
+		}
+	}
+	numEffectiveGroundset = effectiveGroundSet.size();
 }
 
-marginalGain() {
-    Input: X
-    Input: item
+//helper friend function
+float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj)
+{
+	ll i = datapoint_ind, j;
+	float m = 0;
+	
+	for (auto it = dataset_ind.begin(); it != dataset_ind.end(); ++it)//search max similarity wrt datapoints of given dataset
+	{
+		ll j = *it;
+		if (obj.k_dense[i][j] > m)
+		{
+			m = obj.k_dense[i][j];
+		}
+	}
 
-    if partial == true {
-        effectiveX = intersect(X, effectiveGroundSet)
-    } else {
-        effectiveX = X
-    }
-
-    if item not in effectiveGroundSet {
-        return 0
-    }
-
-    if effectiveX contains item {
-        return 0
-    }
-
-    gain = 0
-
-    if mode == dense {
-        for each element i in effectiveGroundSet {
-            max = 0
-            find max similarity of i with all items in effectiveSubset
-            if sim(i, item) > max {
-                gain += sim(i, item) - max
-            }
-        }
-        return gain
-
-    } else if mode == sparse {
-
-    } else if mode == clustered {
-
-    } else {
-        not possible
-    }
-
+	return m;
 }
 
-marginalGainSequential() {
-    //assumes that pre computed statistics exist for effectiveX
-    Input: X
-    Input: item
 
-    if partial == true {
-        effectiveX = intersect(X, effectiveGroundSet)
-    } else {
-        effectiveX = X
-    }
+float FacilityLocation::evaluate(std::set<ll> X)
+{
+	std::set<ll> effectiveX;
+	float result=0;
 
-    if item not in effectiveGroundSet {
-        return 0
-    }
+	if (partial == true)
+	{
+		//effectiveX = intersect(X, effectiveGroundSet)
+		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+	}
+	else
+	{
+		effectiveX = X;
+	}
 
-    if effectiveX contains item {
-        return 0
-    }
+	if (mode == "dense")
+	{
+		//Implementing f(X)=Sum_i_V ( max_j_X ( s_ij ) )
+		for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it) //O(n^2) where n=num of elements in effective GS 
+		{
+			ll ind = *it;
+			result += get_max_sim_dense(ind, effectiveX, *this);
+		}
+	}
+	else
+	{
+		if (mode == "sparse")
+		{
+			//TODO
 
-    gain = 0
+		}
+		else
+		{
+			if (mode == "clustered")
+			{
+				//TODO
+			}
+			else
+			{
+				std::cerr << "ERROR: INVALID mode\n";
+			}
+		}
 
-    if mode == dense {
-        for each element i in effectiveGroundSet {
-            if sim(i, item) > similarityWithNearestEffectiveX[i] {
-                gain += sim(i, item) - similarityWithNearestEffectiveX[i]
-            }
-        }
-        return gain
+	}
 
-    } else if mode == sparse {
-
-    } else if mode == clustered {
-
-    } else {
-        not possible
-    }
+	return result;
 }
 
-sequentialUpdate() {
-    Input: X
-    Input: item
 
-    if partial == true {
-        effectiveX = intersect(X, effectiveGroundSet)
-    } else {
-        effectiveX = X
-    }
+float FacilityLocation::evaluateSequential(std::set<ll> X) //assumes that pre computed statistics exist for effectiveX
+{
+	std::set<ll> effectiveX;
+	float result = 0;
 
-    if mode == dense {
-        if item not in effectiveGroundSet {
-            return
-        }
-        for each element i in effectiveGroundSet {
-            if similarityWithNearestEffectiveX[i] < sim(i, item) {
-                similarityWithNearestEffectiveX[i] = sim(i, item)
-            } 
-        }
-    } else if mode == sparse {
+	if (partial == true)
+	{
+		//effectiveX = intersect(X, effectiveGroundSet)
+		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+	}
+	else
+	{
+		effectiveX = X;
+	}
 
-    } else if mode == clustered {
+	if (mode == "dense")
+	{
+		for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it)
+		{
+			ll ind = *it;
+			result += similarityWithNearestInEffectiveX[ind];
+		}
+	}
+	else
+	{
+		if (mode == "sparse")
+		{
+			//TODO
 
-    } else {
+		}
+		else
+		{
+			if (mode == "clustered")
+			{
+				//TODO
+			}
+			else
+			{
+				std::cerr << "ERROR: INVALID mode\n";
+			}
+		}
 
-    }
+	}
+
+	return result;
 }
 
-getEffectiveGroundSet() {
-    return effectiveGroundSet
+
+float FacilityLocation::marginalGain(std::set<ll> X, ll item)
+{
+	std::set<ll> effectiveX;
+	float gain = 0;
+
+	if (partial == true)
+	{
+		//effectiveX = intersect(X, effectiveGroundSet)
+		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+	}
+	else
+	{
+		effectiveX = X;
+	}
+
+	if (effectiveGroundSet.find(item) == effectiveGroundSet.end()) //O(log(n))
+	{
+		return 0;
+	}
+
+	if (effectiveX.find(item) != effectiveX.end())
+	{
+		return 0;
+	}
+
+	if (mode == "dense")
+	{
+		for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it)
+		{
+			ll ind = *it;
+			float m = get_max_sim_dense(ind, effectiveX, *this);
+			if (k_dense[ind][item] > m)
+			{
+				gain += (k_dense[ind][item] - m);
+			}
+		}
+	}
+	else
+	{
+		if (mode == "sparse")
+		{
+			//TODO
+
+		}
+		else
+		{
+			if (mode == "clustered")
+			{
+				//TODO
+			}
+			else
+			{
+				std::cerr << "ERROR: INVALID mode\n";
+			}
+		}
+
+	}
+
+	return gain;
 }
-*/
+
+
+float FacilityLocation::marginalGainSequential(std::set<ll> X, ll item)
+{
+	std::set<ll> effectiveX;
+	float gain = 0;
+
+	if (partial == true)
+	{
+		//effectiveX = intersect(X, effectiveGroundSet)
+		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+	}
+	else
+	{
+		effectiveX = X;
+	}
+
+	if (effectiveGroundSet.find(item) == effectiveGroundSet.end())
+	{
+		return 0;
+	}
+
+	if (effectiveX.find(item) != effectiveX.end())
+	{
+		return 0;
+	}
+
+	if (mode == "dense")
+	{
+		for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it)
+		{
+			ll ind = *it;
+			if (k_dense[ind][item] > similarityWithNearestInEffectiveX[ind])
+			{
+				gain += (k_dense[ind][item] - similarityWithNearestInEffectiveX[ind]);
+			}
+
+		}
+	}
+	else
+	{
+		if (mode == "sparse")
+		{
+			//TODO
+
+		}
+		else
+		{
+			if (mode == "clustered")
+			{
+				//TODO
+			}
+			else
+			{
+				std::cerr << "ERROR: INVALID mode\n";
+			}
+		}
+
+	}
+
+	return gain;
+}
+
+void FacilityLocation::sequentialUpdate(std::set<ll> X, ll item)
+{
+	std::set<ll> effectiveX;
+
+	if (partial == true)
+	{
+		//effectiveX = intersect(X, effectiveGroundSet)
+		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+	}
+	else
+	{
+		effectiveX = X;
+	}
+
+	if (mode == "dense")
+	{
+		if (effectiveGroundSet.find(item) == effectiveGroundSet.end())
+		{
+			return;
+		}
+
+		for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it)
+		{
+			ll ind = *it;
+			if (k_dense[ind][item] > similarityWithNearestInEffectiveX[ind])
+			{
+				similarityWithNearestInEffectiveX[ind] = k_dense[ind][item];
+			}
+
+		}
+	}
+	else
+	{
+		if (mode == "sparse")
+		{
+			//TODO
+
+		}
+		else
+		{
+			if (mode == "clustered")
+			{
+				//TODO
+			}
+			else
+			{
+				std::cerr << "ERROR: INVALID mode\n";
+			}
+		}
+
+	}
+}
+
+std::set<ll> FacilityLocation::getEffectiveGroundSet()
+{
+	return effectiveGroundSet;
+}
+
+
