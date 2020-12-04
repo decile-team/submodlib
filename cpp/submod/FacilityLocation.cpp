@@ -25,7 +25,6 @@ a sparse matrix object either using a custom utility class or using some high pe
 
 typedef long long int ll;
 
-//Note to self: Migrate all parameter related sanity/error checks from C++ FL to Python FL
 
 //For dense mode
 FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_)
