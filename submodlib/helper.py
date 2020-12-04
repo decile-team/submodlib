@@ -6,8 +6,8 @@ from sklearn.neighbors import NearestNeighbors
 from scipy import sparse
 
 
-def create_kernel(X, mode, metric, num_neigh=0, n_jobs=1):
-    if mode=='sparse' and num_neigh==0:
+def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1):
+    if mode=='sparse' and num_neigh==-1:
         num_neigh=np.shape(X)[0] #default is total no of datapoints
 
     if mode=='sparse' and num_neigh>np.shape(X)[0]:
@@ -30,7 +30,7 @@ def create_kernel(X, mode, metric, num_neigh=0, n_jobs=1):
                 return None
         
         if mode=='dense':
-            return dense.tolist() #Return kernel as list of list
+            return dense
         else:
             #nbrs = NearestNeighbors(n_neighbors=2, metric='precomputed', n_jobs=n_jobs).fit(D)
             nbrs = NearestNeighbors(n_neighbors=num_neigh, metric=metric, n_jobs=n_jobs).fit(X)
@@ -41,12 +41,7 @@ def create_kernel(X, mode, metric, num_neigh=0, n_jobs=1):
             mat[row, col]=1
             dense_ = dense*mat #Only retain similarity of nearest neighbours
             sparse_csr = sparse.csr_matrix(dense_)
-            ds_csr = {}
-            ds_csr['arr_val'] = m.data.tolist() #contains non-zero values in matrix (row major traversal)
-            ds_csr['arr_count'] = m.indptr.tolist() #cumulitive count of non-zero elements upto but not including current row
-            ds_csr['arr_col'] = m.indices.tolist() #contains col index corrosponding to non-zero values in arr_val
-            
-            return ds_csr 
+            return num_neigh, sparse_csr
       
     else:
         print("ERROR: unsupported mode")

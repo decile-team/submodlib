@@ -8,7 +8,7 @@ for functions like marginalGain(), sequentialUpdate() etc that require such sear
 If we use vectors then for efficiency we would have an additional responsibility of ensuring that they are sorted. Thus,
 set is a more natural choice here
 
-3) For sparse mode, constructor will accept sparse matrix as a map of 3 component vectors (for csr) and use them to instantiate
+3) For sparse mode, constructor will accept sparse matrix as a collection of 3 component vectors (for csr) and use them to instantiate
 a sparse matrix object either using a custom utility class or using some high performance library like boost.
 
 */
@@ -37,7 +37,7 @@ public:
 	FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_);
 	
 	//For sparse similarity matrix
-	//FacilityLocation(ll n_, std::string mode_, std::map<std::string, std::vector<float>>k_sparse_, ll num_neighbors_, bool partial_, std::set<ll> ground_);
+	FacilityLocation(ll n_, std::string mode_, std::vector<float>arr_val, std::vector<float>arr_count, std::vector<float>arr_col, ll num_neighbors_, bool partial_, std::set<ll> ground_);
 
 	//For cluster mode
 	FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_, ll num_neighbors_, bool partial_, std::set<ll> ground_);
