@@ -1,5 +1,4 @@
-#A dryrun of evaluate() and marginalGain() functions of FacilityLocation
-#over dummy data
+#A dryrun of entire architecture over dummy data
 import numpy as np
 from submodlib.functions.facilityLocation import FacilityLocationFunction
 from submodlib.helper import create_kernel
