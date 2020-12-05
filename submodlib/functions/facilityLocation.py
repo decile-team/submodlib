@@ -67,21 +67,20 @@ class FacilityLocationFunction(SetFunction):
 		self.cpp_ground_sub = ground_sub
 
 		if self.n==0:
-			print("ERROR: Number of elements in ground set can't be 0")
-			return None
+			raise Exception("ERROR: Number of elements in ground set can't be 0")
 
 		if self.partial==True and self.ground_sub==None:
-			print("ERROR: Ground subset not specified")
-			return None
+			raise Exception("ERROR: Ground subset not specified")
 		
 		if mode!=None and mode not in ['dense', 'sparse', 'cluster']: # TODO implement code for cluster 
-			print("ERROR: Incorrect mode")
-			return None
+			raise Exception("ERROR: Incorrect mode")
 
 		if type(self.sijs)!=type(None): # User has provided matrix directly: simply consume it
+			if np.shape(self.sijs)[0]!=self.n:
+				raise Exception("ERROR: Inconsistentcy between n and no of examples in the given similarity matrix")
+			
 			if type(self.sijs) == scipy.sparse.csr.csr_matrix and num_neigh==-1:
-				print("ERROR: num_neigh for given sparse matrix not provided")
-				return None
+				raise Exception("ERROR: num_neigh for given sparse matrix not provided")
 			if self.mode!=None: # Ensure that there is no inconsistency in similarity matrix and provided mode
 				if type(self.sijs) == np.ndarray and self.mode!="dense":
 					print("WARNING: Incorrect mode provided for given similarity matrix, changing it to dense")
@@ -95,8 +94,11 @@ class FacilityLocationFunction(SetFunction):
 				if type(self.sijs) == scipy.sparse.csr.csr_matrix:
 					self.mode="sparse"
 		else:
-			if type(data)!=type(None): # User has only provided data: build similarity matrix and consume it
+			if type(self.data)!=type(None): # User has only provided data: build similarity matrix and consume it
 				
+				if np.shape(self.data)[0]!=self.n:
+					raise Exception("ERROR: Inconsistentcy between n and no of examples in the given data matrix")
+
 				if self.mode==None:
 					self.mode="sparse"
 
@@ -106,8 +108,7 @@ class FacilityLocationFunction(SetFunction):
 					self.num_neigh, self.sijs = create_kernel(self.data, self.mode, self.metric, self.num_neigh, n_jobs)
 			
 			else:
-				print("ERROR: Neither data nor similarity matrix provided")
-				return None
+				raise Exception("ERROR: Neither data nor similarity matrix provided")
 
 		
 		if self.partial==False: 
@@ -116,6 +117,15 @@ class FacilityLocationFunction(SetFunction):
 		#Breaking similarity matrix to simpler native data sturctures for implicit pybind11 binding
 		if self.mode=="dense":
 			self.cpp_sijs = self.sijs.tolist() #break numpy ndarray to native list of list datastructure
+			
+			if type(self.cpp_sijs[0])==int or type(self.cpp_sijs[0])==float: #Its critical that we pass a list of list to pybind11
+																			 #This condition ensures the same in case of a 1D numpy array (for 1x1 sim matrix)
+				l=[]
+				l.append(self.cpp_sijs)
+				self.cpp_sijs=l
+			if np.shape(self.cpp_sijs)[0]!=np.shape(self.cpp_sijs)[1]:
+				raise Exception("ERROR: Dense similarity matrix should be a square matrix")
+
 			self.cpp_obj = FacilityLocation(self.n, self.mode, self.cpp_sijs, self.num_neigh, self.partial, self.cpp_ground_sub)
 		
 		if self.mode=="sparse": #break scipy sparse matrix to native component lists (for csr implementation)
@@ -129,10 +139,8 @@ class FacilityLocationFunction(SetFunction):
 			#TODO
 			pass
 
-		
-		
-		
-
+		self.cpp_ground_sub=self.cpp_obj.getEffectiveGroundSet()
+		self.ground_sub=self.cpp_ground_sub
 
 	def evaluate(self, X):
 		"""Computes the score of a set
@@ -149,8 +157,10 @@ class FacilityLocationFunction(SetFunction):
 
 		"""
 		if type(X)!=set:
-			print("ERROR: X should be a set")
-			return None
+			raise Exception("ERROR: X should be a set")
+
+		if X.issubset(self.cpp_ground_sub)==False:
+			raise Exception("ERROR: X is not a subset of ground set")
 		
 		return self.cpp_obj.evaluate(X)
 
@@ -191,10 +201,12 @@ class FacilityLocationFunction(SetFunction):
 		"""
 
 		if type(X)!=set:
-			print("ERROR: X should be a set")
-			return None
+			raise Exception("ERROR: X should be a set")
+
 		if type(element)!=int:
-			print("ERROR: element should be an int")
-			return None
+			raise Exception("ERROR: element should be an int")
+
+		if X.issubset(self.cpp_ground_sub)==False:
+			raise Exception("ERROR: X is not a subset of ground set")
 
 		return self.cpp_obj.marginalGain(X, element)

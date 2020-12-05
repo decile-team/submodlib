@@ -11,8 +11,7 @@ def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1):
         num_neigh=np.shape(X)[0] #default is total no of datapoints
 
     if mode=='sparse' and num_neigh>np.shape(X)[0]:
-        print("ERROR: num of neighbors can't be more than no of datapoints")
-        return None
+        raise Exception("ERROR: num of neighbors can't be more than no of datapoints")
     
     if mode in ['dense', 'sparse']:
         dense=None
@@ -26,8 +25,7 @@ def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1):
                 #D = cosine_distances(X) 
                 dense = cosine_similarity(X) 
             else:
-                print("ERROR: unsupported metric")
-                return None
+                raise Exception("ERROR: unsupported metric")
         
         if mode=='dense':
             return dense
@@ -44,5 +42,4 @@ def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1):
             return num_neigh, sparse_csr
       
     else:
-        print("ERROR: unsupported mode")
-        return None
+        raise Exception("ERROR: unsupported mode")

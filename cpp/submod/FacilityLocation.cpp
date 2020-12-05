@@ -25,6 +25,7 @@ a sparse matrix object either using a custom utility class or using some high pe
 
 typedef long long int ll;
 
+//Note to self: Migrate all parameter related sanity/error checks from C++ FL to Python FL
 
 //For dense mode
 FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_)
@@ -105,9 +106,10 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::se
 float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj)
 {
 	ll i = datapoint_ind, j;
-	float m = 0;
+	auto it = dataset_ind.begin();
+	float m = obj.k_dense[i][*it];
 	
-	for (auto it = dataset_ind.begin(); it != dataset_ind.end(); ++it)//search max similarity wrt datapoints of given dataset
+	for (; it != dataset_ind.end(); ++it)//search max similarity wrt datapoints of given dataset
 	{
 		ll j = *it;
 		if (obj.k_dense[i][j] > m)
