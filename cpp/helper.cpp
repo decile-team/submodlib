@@ -70,7 +70,10 @@ bool operator < (datapoint_pair lval, datapoint_pair rval)
 }
 
 
-std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, std::string metric, ll num_neigh)//returns a similarity matrix where only num_neigh nearest neighbors are kept non-zero, rest are made zero
+std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, std::string metric, ll num_neigh)
+//returns a dense similarity matrix where only num_neigh nearest neighbors are kept non-zero, rest are made zero
+//It returns a vector of vector to pybind11 irrespective of the mode. Then pybind11 will forwards it as list of list to Python FL
+//which can use it to obtain matrix in desired mode.
 {
 	ll n = X.size();
 	const int def_unvisited = -2, def_visited = 2;//default values (for purpose of memoization check)
