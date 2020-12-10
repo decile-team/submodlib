@@ -1,6 +1,3 @@
-//Note that create_kernel() function is still in prototype phase. Although, numeric functions like cosine_similarity() etc. are ready to use
-//TODO: Wrap numeric functions in a class
-
 #include<iostream>
 #include<vector>
 #include<string>
@@ -34,6 +31,10 @@ float mag(std::vector<float>v)
 float cosine_similarity(std::vector<float>v1, std::vector<float>v2)
 {
 	float dp, mag_v1 = mag(v1), mag_v2 = mag(v2), res;
+	if(mag_v1==0 || mag_v2==0)//This is being done to keep results with sklearn (Otherwise, C++ would return NaN)
+	{
+		return 0; 
+	}
 	dp = dot_prod(v1, v2);
 	res = dp / (mag_v1*mag_v2);
 	return res;
@@ -82,8 +83,7 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, 
 
 	//Here, I have used the a min heap (not max heap) to mantain k highest similarities. This heap will be mantained such that
 	//smallest similarity (among k highest similarities ) is at the root and all larger similarity successors of this root.
-	std::vector<std::vector<datapoint_pair>>v_h; //vector of min heaps (here ith element is a min heap containing num_neigh nearest neighbors of ith example)
-
+	std::vector<std::vector<datapoint_pair>>v_h(n); //vector of min heaps (here ith element is a min heap containing num_neigh nearest neighbors of ith example)
 	float s;
 	ll count = 0;
 	for (ll r = 0; r < n; ++r)
@@ -102,11 +102,11 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, 
 			{
 				s = memo[r][c];
 			}
-
-			if (v_h[r].size() <= num_neigh)//populate heap till it has num_neigh elements
+			if (v_h[r].size() < num_neigh)//populate heap till it has num_neigh elements
 			{
+				//std::cout<<"within: "<< r<<" "<<c<<" "<<" "<<s<<"\n";
 				v_h[r].push_back(datapoint_pair(r, c, s));
-				std::push_heap(v_h.begin(), v_h.end()); //Insert takes O(log(num_neigh))
+				std::push_heap(v_h[r].begin(), v_h[r].end()); //Insert takes O(log(num_neigh))
 			}
 			else//once there are num_neigh elements in heap, there are 3 possibilities now
 				//1) All biggest num_neigh similarities are already in heap
@@ -115,11 +115,13 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, 
 				//So on further traversal of similarities, we insert a similarity in the heap only if its heavier/greater than root of heap.
 				//If that's the case, we delete the similarity at root of heap and insert the heavier/greater similarity in heap. Otherwise we skip the similarity.
 			{
+				//std::cout<<v_h[r].front().val<<" "<<s<<"\n";
 				if (v_h[r].front().val < s)
 				{
+					//std::cout<<"without: "<<v_h[r].front().val<<" "<<r<<" "<<c<<" "<<" "<<s<<"\n";
 					std::pop_heap(v_h[r].begin(), v_h[r].end());//smaller values are squeezed out of the heap 
-					v_h[r].push_back(datapoint_pair(r, c, s));//larger encountered values are inserted in the heap
-					std::push_heap(v_h.begin(), v_h.end());
+					v_h[r][v_h[r].size()-1] = datapoint_pair(r, c, s);
+					std::push_heap(v_h[r].begin(), v_h[r].end());//larger encountered values are inserted in the heap
 				}
 			}
 		}
@@ -127,11 +129,13 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, 
 
 	for (ll r = 0; r < v_h.size(); ++r)//build a matrix where for rth row only num_neigh nearest neighbors are assigned non-zero similarities
 	{
+		//std::cout<<r<<" "<<v_h[r].size()<<"\n";
 		while (v_h[r].size() != 0)//place nearest neighbors of rth datapoint in similarity matrix 
 		{
+			
 			datapoint_pair obj = v_h[r].front();
 			sim[obj.i1][obj.i2] = obj.val;
-
+			//std::cout<<obj.i1<<" "<<obj.i2<<" "<<obj.val<<"\n";
 			std::pop_heap(v_h[r].begin(), v_h[r].end());
 			v_h[r].erase(v_h[r].begin() + (v_h[r].size() - 1)); //TODO: Modify this part to avoid use of erase()
 		}

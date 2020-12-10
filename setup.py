@@ -14,7 +14,7 @@ exec(open('submodlib/version.py').read())
 
 ext_modules = [
     Pybind11Extension("submodlib_cpp",
-        ["cpp/submod/wrapper.cpp","cpp/submod/FacilityLocation.cpp", "cpp/submod/wr_FacilityLocation.cpp"],
+        ["cpp/submod/wrapper.cpp","cpp/submod/FacilityLocation.cpp", "cpp/submod/wr_FacilityLocation.cpp", "cpp/submod/helper.cpp", "cpp/submod/wr_helper.cpp"],
         # Example: passing in the version to the compiled code
         define_macros = [('VERSION_INFO', __version__)],
         ),

@@ -1,5 +1,6 @@
 namespace py = pybind11;
 
+void cl_helper(py::module &);
 void cl_FacilityLocation(py::module_ &); 
 //void cl_ClusteredFunction(py::module_ &); 
 //void cl_Helper(py::module_ &);

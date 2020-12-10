@@ -8,8 +8,5 @@ typedef long long int ll;
 PYBIND11_MODULE(submodlib_cpp, m) 
 {
     cl_FacilityLocation(m);
- //   cl_ClusteredFunction(m);
- //   cl_Helper(m);
- //   fun_NaiveGreedy(m);
-
+    cl_helper(m);
 }
