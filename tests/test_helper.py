@@ -26,13 +26,13 @@ class TestHelper:
         gamma = 1/np.shape(data)[1] 
         ES = np.exp(-ED* gamma) #sklearn ground truth 
 
-        assert np.array_equal(create_kernel(data, 'dense','euclidean'), ES)
+        assert np.allclose(create_kernel(data, 'dense','euclidean'), ES)
 
     @pytest.mark.parametrize("data", list_tests)
     def test_dense_cosine(self, data):
         CS = cosine_similarity(data)  #sklearn ground truth 
 
-        assert np.array_equal(create_kernel(data, 'dense','cosine'), CS)
+        assert np.allclose(create_kernel(data, 'dense','cosine'), CS)
 
 
     @pytest.mark.parametrize("data", list_tests)
@@ -42,14 +42,14 @@ class TestHelper:
         ES = np.exp(-ED* gamma)  
         ES_csr = sparse.csr_matrix(ES) #sklearn ground truth
         _, val = create_kernel(data, 'sparse','euclidean')
-        assert np.array_equal(val.todense(), ES_csr.todense())
+        assert np.allclose(val.todense(), ES_csr.todense())
 
     @pytest.mark.parametrize("data", list_tests)
     def test_sparse_cosine(self, data):
         CS = cosine_similarity(data) 
         CS_csr = sparse.csr_matrix(CS) #sklearn ground truth
         _, val = create_kernel(data, 'sparse','cosine')
-        assert np.array_equal(val.todense(), CS_csr.todense())
+        assert np.allclose(val.todense(), CS_csr.todense())
 
 
     #Negative test cases
