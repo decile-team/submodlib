@@ -42,8 +42,30 @@ def f_3(): #more realistic test case
     return obj
 
 
+
+'''This is the similarity matrix corrosponding to data matrix created in f_5() below
+[[ 1.        ,  0.18480505,  0.31649794,  0.01689587,  0.34060725],
+[ 0.18480505,  1.        ,  0.32673257, -0.09584317, -0.03871451],
+[ 0.31649794,  0.32673257,  1.        , -0.01977083,  0.14792658],
+[ 0.01689587, -0.09584317, -0.01977083,  1.        ,  0.94295957],
+[ 0.34060725, -0.03871451,  0.14792658,  0.94295957,  1.        ],]
+'''
+@pytest.fixture
+def f_5():
+    data=np.array([
+    [100, 21, 365, 5], 
+    [57, 18, -5, -6], 
+    [16, 255, 68, -8], 
+    [2,20,6, 2000], 
+    [12,20,68, 200]
+    ])
+    obj = FacilityLocationFunction(n=5, data=data, mode="dense", metric="cosine")
+    return obj
+
+
 class TestFL:
     
+    #Testing wrt similarity matrix
     def test_1_1(self, f_1):
         X = {1}
         assert f_1.evaluate(X)==14
@@ -80,6 +102,21 @@ class TestFL:
         item =1
         assert math.isclose(round(f_3.marginalGain(X, item),6), 0.475186)
 
+
+    #Testing wrt data
+    def test_5_1(self, f_5): 
+        X = {1}
+        assert math.isclose(round(f_5.evaluate(X),2), 1.38)
+    
+    def test_5_2(self, f_5):
+        X = {0,2}
+        assert math.isclose(round(f_5.evaluate(X),2), 2.68)
+
+    def test_5_3(self, f_5):
+        X = {0,2}
+        item = 1
+        assert math.isclose(round(f_5.marginalGain(X, item),3), 0.673)
+
     #Negative Test cases:
     def test_4_1(self): #Non-square dense similarity matrix 
         M = np.array([[1,2,3], [4,5,6]])
@@ -113,6 +150,12 @@ class TestFL:
         num_neigh, M = create_kernel(data, 'sparse','euclidean', num_neigh=1)
         FacilityLocationFunction(n=0, sijs=M, num_neigh=num_neigh)
     
+
+
+
+    
+
+
 
     
     
