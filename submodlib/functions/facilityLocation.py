@@ -2,8 +2,10 @@
 # Author: Vishal Kaushal <vishal.kaushal@gmail.com>
 import numpy as np
 import scipy
+from scipy import sparse
 from .setFunction import SetFunction
-from submodlib_cpp import FacilityLocation
+import submodlib_cpp as subcp
+from submodlib_cpp import FacilityLocation 
 from submodlib.helper import create_kernel
 
 class FacilityLocationFunction(SetFunction):
@@ -48,12 +50,9 @@ class FacilityLocationFunction(SetFunction):
 	ground_sub: set, optional
 		Specifies subset of ground set that will be used when partial is True. 
 
-	n_jobs: int, optional
-		Specifies number of parallel tasks to run while computing sparse matrix. By default, its 1.
-
 	"""
 
-	def __init__(self, n, sijs=None, data=None, mode=None, metric="cosine", num_neigh=-1, partial=False, ground_sub=None, n_jobs=1):
+	def __init__(self, n, sijs=None, data=None, mode=None, metric="cosine", num_neigh=-1, partial=False, ground_sub=None):
 		self.n = n
 		self.mode = mode
 		self.metric = metric
@@ -74,6 +73,9 @@ class FacilityLocationFunction(SetFunction):
 		
 		if mode!=None and mode not in ['dense', 'sparse', 'cluster']: # TODO implement code for cluster 
 			raise Exception("ERROR: Incorrect mode")
+		
+		if metric not in ['euclidean', 'cosine']:
+			raise Exception("ERROR: Unsupported metric")
 
 		if type(self.sijs)!=type(None): # User has provided matrix directly: simply consume it
 			if np.shape(self.sijs)[0]!=self.n:
@@ -102,11 +104,13 @@ class FacilityLocationFunction(SetFunction):
 				if self.mode==None:
 					self.mode="sparse"
 
-				if self.mode=="dense":
-					self.sijs = create_kernel(self.data, self.mode, self.metric, self.num_neigh, n_jobs)
-				else:
-					self.num_neigh, self.sijs = create_kernel(self.data, self.mode, self.metric, self.num_neigh, n_jobs)
-			
+				if self.num_neigh==-1:
+					self.num_neigh=np.shape(self.data)[0] #default is total no of datapoints
+
+				self.sijs = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neigh))
+				if self.mode=="sparse":
+					self.sijs = sparse.csr_matrix(self.sijs)
+
 			else:
 				raise Exception("ERROR: Neither data nor similarity matrix provided")
 
@@ -123,7 +127,7 @@ class FacilityLocationFunction(SetFunction):
 				l=[]
 				l.append(self.cpp_sijs)
 				self.cpp_sijs=l
-			if np.shape(self.cpp_sijs)[0]!=np.shape(self.cpp_sijs)[1]:
+			if np.shape(self.cpp_sijs)[0]!=np.shape(self.cpp_sijs)[1]: #TODO: relocate this check to some earlier part of code
 				raise Exception("ERROR: Dense similarity matrix should be a square matrix")
 
 			self.cpp_obj = FacilityLocation(self.n, self.mode, self.cpp_sijs, self.num_neigh, self.partial, self.cpp_ground_sub)
