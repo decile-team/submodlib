@@ -19,7 +19,7 @@ def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1):
         if metric=="euclidean":
             D = euclidean_distances(X) 
             gamma = 1/np.shape(X)[1]
-            dense = np.exp(-D * gamma) #Obtaining Similarity from distance
+            dense = np.exp(-D * gamma) #Obtaining Similarity from distance using heuristic mentioned in https://scikit-learn.org/stable/modules/metrics.html
         else:
             if metric=="cosine":
                 #D = cosine_distances(X) 
