@@ -9,10 +9,23 @@ from scipy import sparse
 import scipy
 import submodlib_cpp as subcp
 from submodlib.helper import create_kernel
+import random
+
+
+def f(arg):
+    random.seed(arg)
+    x=random.randrange(1000)-random.randrange(1000)
+    y=random.randrange(10)-random.randrange(10)
+    z=(random.randrange(100)/100)-(random.randrange(100)/100)
+    return (x,y,z)
+
+l = list(map(f, range(100000)))
+
 
 #data = np.array([[0, 1, 3, 5], [5, 1, 5, -6], [10, 2, 6, -8], [12,20,68, 200], [12,20,68, 200]])
-data = np.array([[0, 1, 3], [5, 1, 5], [10, 2, 6], [12,20,68]])
-num_neigh=3
+#data = np.array([[0, 1, 3], [5, 1, 5], [10, 2, 6], [12,20,68]])
+data = np.array(l)
+num_neigh=2
 #metric = "euclidean"
 
 def fun1():# cpp_helper_euclidean (Non-vectorized, min-heap based approach)
