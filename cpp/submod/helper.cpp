@@ -126,7 +126,7 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, 
 			}
 		}
 	}
-
+	//TODO: Instead of returning a NxN matrix, return 3 vectors containing non-zero values, their row id, their column id. scipy can create sparse matrix using these as well.
 	for (ll r = 0; r < v_h.size(); ++r)//build a matrix where for rth row only num_neigh nearest neighbors are assigned non-zero similarities
 	{
 		//std::cout<<r<<" "<<v_h[r].size()<<"\n";
