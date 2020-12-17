@@ -13,7 +13,12 @@ print("sklearn:", time()-t)
 print(CS.tolist())
 
 t = time()
-s = subcp.create_kernel(data.tolist(), 'cosine', num_neigh)
+c = subcp.create_kernel(data.tolist(), 'cosine', num_neigh)
+val = c[0]
+row = list(map(lambda arg: int(arg), c[1]))
+col = list(map(lambda arg: int(arg), c[2]))
+s = np.zeros((4,4))
+s[row, col] = val
 print("cpp:",time()-t) #Atleast 100 times faster
 print(s)
 
@@ -28,7 +33,12 @@ print("sklearn:", time()-t)
 print(ES.tolist())
 
 t = time()
-s = subcp.create_kernel(data.tolist(), 'euclidean', num_neigh)
+c = subcp.create_kernel(data.tolist(), 'euclidean', num_neigh)
+val = c[0]
+row = list(map(lambda arg: int(arg), c[1]))
+col = list(map(lambda arg: int(arg), c[2]))
+s = np.zeros((4,4))
+s[row, col] = val
 print("cpp:",time()-t) #Atleast 10 times faster
 print(s)
 

@@ -105,11 +105,12 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, 
 	ll n = X.size();
 	const int def_unvisited = -2, def_visited = 2;//default values (for purpose of memoization check)
 	//std::vector<std::vector<float>>memo(n, std::vector<float>(n, def_unvisited));//memoization matrix
-	std::vector<std::vector<float>>sim(n, std::vector<float>(n, 0));//result matrix
+	//std::vector<std::vector<float>>sim(n, std::vector<float>(n, 0));//result matrix
 
 	//Here, I have used the a min heap (not max heap) to mantain k highest similarities. This heap will be mantained such that
 	//smallest similarity (among k highest similarities ) is at the root and all larger similarity successors of this root.
 	std::vector<std::vector<datapoint_pair>>v_h(n); //vector of min heaps (here ith element is a min heap containing num_neigh nearest neighbors of ith example)
+	std::vector<std::vector<float>>content(3); //This vector will contain 3 vectors containing non-zero values, their row id and their column id respt.
 	float s;
 	ll count = 0;
 
@@ -132,17 +133,22 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, 
 	for (ll r = 0; r < v_h.size(); ++r)//build a matrix where for rth row only num_neigh nearest neighbors are assigned non-zero similarities
 	{
 		//std::cout<<r<<" "<<v_h[r].size()<<"\n";
-		while (v_h[r].size() != 0)//place nearest neighbors of rth datapoint in similarity matrix 
+		while (v_h[r].size() != 0)//place nearest neighbors of rth datapoint in content vector 
 		{
 			
 			datapoint_pair obj = v_h[r].front();
-			sim[obj.i1][obj.i2] = obj.val;
+			//sim[obj.i1][obj.i2] = obj.val;
 			//std::cout<<obj.i1<<" "<<obj.i2<<" "<<obj.val<<"\n";
+			content[0].push_back(obj.val);//non-zero values
+			content[1].push_back(obj.i1);//row id
+			content[2].push_back(obj.i2);//column id
+
 			std::pop_heap(v_h[r].begin(), v_h[r].end());
 			v_h[r].erase(v_h[r].begin() + (v_h[r].size() - 1)); //TODO: Modify this part to avoid use of erase()
 		}
 	}
 
-	return sim;
+	//return sim;
+	return content;
 }
 

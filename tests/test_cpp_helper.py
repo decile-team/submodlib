@@ -158,6 +158,10 @@ l_CS2 = list(zip(list_tests_neigh, list_val2_CS))
 l_ES3 = list(zip(list_tests_neigh, list_val3_ES))
 l_CS3 = list(zip(list_tests_neigh, list_val3_CS))
 
+
+
+
+
 class TestHelper:
     
     @pytest.mark.parametrize("data", list_tests)
@@ -166,38 +170,86 @@ class TestHelper:
         gamma = 1/np.shape(data)[1] 
         ES = np.exp(-ED* gamma) #sklearn ground truth 
         num_neigh=np.shape(data)[0]
-        assert np.allclose(subcp.create_kernel(data.tolist(),'euclidean',num_neigh), ES)
+        c = subcp.create_kernel(data.tolist(),'euclidean',num_neigh)
+        value = c[0]
+        row = list(map(lambda arg: int(arg), c[1]))
+        col = list(map(lambda arg: int(arg), c[2]))
+        s = np.zeros((np.shape(data)[0],np.shape(data)[0]))
+        s[row, col] = value
+        assert np.allclose(s, ES)
     
     @pytest.mark.parametrize("data", list_tests)
     def test_cosine_full(self, data):
         CS = cosine_similarity(data)  #sklearn ground truth 
         num_neigh=np.shape(data)[0]
-        assert np.allclose(subcp.create_kernel(data.tolist(),'cosine',num_neigh), CS)
+        c = subcp.create_kernel(data.tolist(),'cosine',num_neigh)
+        value = c[0]
+        row = list(map(lambda arg: int(arg), c[1]))
+        col = list(map(lambda arg: int(arg), c[2]))
+        s = np.zeros((np.shape(data)[0],np.shape(data)[0]))
+        s[row, col] = value
+        assert np.allclose(s, CS)
 
 
     @pytest.mark.parametrize("data, val", l_ES1)
     def test_euclidean_neigh1(self, data, val):
-        assert np.allclose(subcp.create_kernel(data.tolist(),'euclidean',1), val)
+        c = subcp.create_kernel(data.tolist(),'euclidean',1)
+        value = c[0]
+        row = list(map(lambda arg: int(arg), c[1]))
+        col = list(map(lambda arg: int(arg), c[2]))
+        s = np.zeros((np.shape(data)[0],np.shape(data)[0]))
+        s[row, col] = value
+        assert np.allclose(s, val)
 
     @pytest.mark.parametrize("data, val", l_CS1)
     def test_cosine_neigh1(self, data, val):
-        assert np.allclose(subcp.create_kernel(data.tolist(),'cosine',1), val)
+        c = subcp.create_kernel(data.tolist(),'cosine',1)
+        value = c[0]
+        row = list(map(lambda arg: int(arg), c[1]))
+        col = list(map(lambda arg: int(arg), c[2]))
+        s = np.zeros((np.shape(data)[0],np.shape(data)[0]))
+        s[row, col] = value
+        assert np.allclose(s, val)
 
 
     @pytest.mark.parametrize("data, val", l_ES2)
     def test_euclidean_neigh2(self, data, val):
-        assert np.allclose(subcp.create_kernel(data.tolist(),'euclidean',2), val)
+        c = subcp.create_kernel(data.tolist(),'euclidean',2)
+        value = c[0]
+        row = list(map(lambda arg: int(arg), c[1]))
+        col = list(map(lambda arg: int(arg), c[2]))
+        s = np.zeros((np.shape(data)[0],np.shape(data)[0]))
+        s[row, col] = value
+        assert np.allclose(s, val)
 
     @pytest.mark.parametrize("data, val", l_CS2)
     def test_cosine_neigh2(self, data, val):
-        assert np.allclose(subcp.create_kernel(data.tolist(),'cosine',2), val)
+        c = subcp.create_kernel(data.tolist(),'cosine',2)
+        value = c[0]
+        row = list(map(lambda arg: int(arg), c[1]))
+        col = list(map(lambda arg: int(arg), c[2]))
+        s = np.zeros((np.shape(data)[0],np.shape(data)[0]))
+        s[row, col] = value
+        assert np.allclose(s, val)
 
     @pytest.mark.parametrize("data, val", l_ES3)
     def test_euclidean_neigh3(self, data, val):
-        assert np.allclose(subcp.create_kernel(data.tolist(),'euclidean',3), val)
+        c = subcp.create_kernel(data.tolist(),'euclidean',3)
+        value = c[0]
+        row = list(map(lambda arg: int(arg), c[1]))
+        col = list(map(lambda arg: int(arg), c[2]))
+        s = np.zeros((np.shape(data)[0],np.shape(data)[0]))
+        s[row, col] = value
+        assert np.allclose(s, val)
 
     @pytest.mark.parametrize("data, val", l_CS3)
     def test_cosine_neigh3(self, data, val):
-        assert np.allclose(subcp.create_kernel(data.tolist(),'cosine',3), val)
+        c = subcp.create_kernel(data.tolist(),'cosine',3)
+        value = c[0]
+        row = list(map(lambda arg: int(arg), c[1]))
+        col = list(map(lambda arg: int(arg), c[2]))
+        s = np.zeros((np.shape(data)[0],np.shape(data)[0]))
+        s[row, col] = value
+        assert np.allclose(s, val)
 
       

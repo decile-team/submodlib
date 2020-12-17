@@ -64,6 +64,7 @@ class FacilityLocationFunction(SetFunction):
 		self.cpp_obj = None
 		self.cpp_sijs = None
 		self.cpp_ground_sub = ground_sub
+		self.cpp_content = None
 
 		if self.n==0:
 			raise Exception("ERROR: Number of elements in ground set can't be 0")
@@ -107,9 +108,16 @@ class FacilityLocationFunction(SetFunction):
 				if self.num_neigh==-1:
 					self.num_neigh=np.shape(self.data)[0] #default is total no of datapoints
 
-				self.sijs = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neigh))
+
+				self.cpp_content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neigh))
+				val = self.cpp_content[0]
+				row = list(map(lambda arg: int(arg), self.cpp_content[1]))
+				col = list(map(lambda arg: int(arg), self.cpp_content[2]))
+				if self.mode=="dense":
+					self.sijs = np.zeros((n,n))
+					self.sijs[row,col] = val
 				if self.mode=="sparse":
-					self.sijs = sparse.csr_matrix(self.sijs)
+					self.sijs = sparse.csr_matrix((val, (row, col)), [n,n])
 
 			else:
 				raise Exception("ERROR: Neither data nor similarity matrix provided")
