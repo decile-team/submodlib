@@ -70,6 +70,32 @@ bool operator < (datapoint_pair lval, datapoint_pair rval)
 	return lval.val > rval.val;//because we want to create min heap
 }
 
+void update_heap(std::vector<std::vector<datapoint_pair>>&v_h, ll num_neigh, ll r, ll c, float s)
+{
+	if (v_h[r].size() < num_neigh)//populate heap till it has num_neigh elements
+	{
+		//std::cout<<"within: "<< r<<" "<<c<<" "<<" "<<s<<"\n";
+		v_h[r].push_back(datapoint_pair(r, c, s));
+		std::push_heap(v_h[r].begin(), v_h[r].end()); //Insert takes O(log(num_neigh))
+	}
+	else//once there are num_neigh elements in heap, there are 3 possibilities now
+		//1) All biggest num_neigh similarities are already in heap
+		//2) Some of biggest num_neigh similarities are in heap.
+		//3) All biggest num_neigh similarities are not in heap
+		//So on further traversal of similarities, we insert a similarity in the heap only if its heavier/greater than root of heap.
+		//If that's the case, we delete the similarity at root of heap and insert the heavier/greater similarity in heap. Otherwise we skip the similarity.
+	{
+		//std::cout<<v_h[r].front().val<<" "<<s<<"\n";
+		if (v_h[r].front().val < s)
+		{
+			//std::cout<<"without: "<<v_h[r].front().val<<" "<<r<<" "<<c<<" "<<" "<<s<<"\n";
+			std::pop_heap(v_h[r].begin(), v_h[r].end());//smaller values are squeezed out of the heap 
+			v_h[r][v_h[r].size()-1] = datapoint_pair(r, c, s);
+			std::push_heap(v_h[r].begin(), v_h[r].end());//larger encountered values are inserted in the heap
+		}
+	}
+}
+
 
 std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, std::string metric, ll num_neigh)
 //returns a similarity matrix where only num_neigh nearest neighbors are kept non-zero, rest are made zero
@@ -78,7 +104,7 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, 
 {
 	ll n = X.size();
 	const int def_unvisited = -2, def_visited = 2;//default values (for purpose of memoization check)
-	std::vector<std::vector<float>>memo(n, std::vector<float>(n, def_unvisited));//memoization matrix
+	//std::vector<std::vector<float>>memo(n, std::vector<float>(n, def_unvisited));//memoization matrix
 	std::vector<std::vector<float>>sim(n, std::vector<float>(n, 0));//result matrix
 
 	//Here, I have used the a min heap (not max heap) to mantain k highest similarities. This heap will be mantained such that
@@ -86,47 +112,23 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, 
 	std::vector<std::vector<datapoint_pair>>v_h(n); //vector of min heaps (here ith element is a min heap containing num_neigh nearest neighbors of ith example)
 	float s;
 	ll count = 0;
+
+	//Upper triangular traversal
 	for (ll r = 0; r < n; ++r)
 	{
-		for (ll c = 0; c < n; ++c)
+		for (ll c = r; c < n; ++c)
 		{
-			if (memo[r][c] == def_unvisited)//if similarity for given vectors hasn't been previously computed only then compute
+			s = metric == "euclidean" ? euclidean_similarity(X[r], X[c]) : cosine_similarity(X[r], X[c]);
+			
+			update_heap(v_h, num_neigh, r, c, s);
+			if(r!=c)
 			{
-				s = metric == "euclidean" ? euclidean_similarity(X[r], X[c]) : cosine_similarity(X[r], X[c]);
+				update_heap(v_h, num_neigh, c, r, s);
+			}
 
-				memo[r][c] = s;
-				memo[c][r] = s;
-
-			}
-			else//if similarity for given vectors has been previously computed, simply reuse it
-			{
-				s = memo[r][c];
-			}
-			if (v_h[r].size() < num_neigh)//populate heap till it has num_neigh elements
-			{
-				//std::cout<<"within: "<< r<<" "<<c<<" "<<" "<<s<<"\n";
-				v_h[r].push_back(datapoint_pair(r, c, s));
-				std::push_heap(v_h[r].begin(), v_h[r].end()); //Insert takes O(log(num_neigh))
-			}
-			else//once there are num_neigh elements in heap, there are 3 possibilities now
-				//1) All biggest num_neigh similarities are already in heap
-				//2) Some of biggest num_neigh similarities are in heap.
-				//3) All biggest num_neigh similarities are not in heap
-				//So on further traversal of similarities, we insert a similarity in the heap only if its heavier/greater than root of heap.
-				//If that's the case, we delete the similarity at root of heap and insert the heavier/greater similarity in heap. Otherwise we skip the similarity.
-			{
-				//std::cout<<v_h[r].front().val<<" "<<s<<"\n";
-				if (v_h[r].front().val < s)
-				{
-					//std::cout<<"without: "<<v_h[r].front().val<<" "<<r<<" "<<c<<" "<<" "<<s<<"\n";
-					std::pop_heap(v_h[r].begin(), v_h[r].end());//smaller values are squeezed out of the heap 
-					v_h[r][v_h[r].size()-1] = datapoint_pair(r, c, s);
-					std::push_heap(v_h[r].begin(), v_h[r].end());//larger encountered values are inserted in the heap
-				}
-			}
 		}
 	}
-	//TODO: Instead of returning a NxN matrix, return 3 vectors containing non-zero values, their row id, their column id. scipy can create sparse matrix using these as well.
+
 	for (ll r = 0; r < v_h.size(); ++r)//build a matrix where for rth row only num_neigh nearest neighbors are assigned non-zero similarities
 	{
 		//std::cout<<r<<" "<<v_h[r].size()<<"\n";
