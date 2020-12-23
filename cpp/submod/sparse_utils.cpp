@@ -28,6 +28,8 @@ SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vec
 
 }
 
+SparseSim::SparseSim():arr_val(std::vector<float>()), arr_count(std::vector<ll>()), arr_col(std::vector<ll>()), num_ind(0){}
+
 float SparseSim::get_val(ll r, ll c)
 {
 	if (r >= num_ind || c >= num_ind || r < 0 || c < 0)

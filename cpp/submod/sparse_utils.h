@@ -12,6 +12,7 @@ class SparseSim
 
 public:
 	SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vector<ll> a_col);
+	SparseSim();
 	float get_val(ll r, ll c);
 	std::vector<float> get_row(ll r);
 	std::vector<float> get_col(ll c);

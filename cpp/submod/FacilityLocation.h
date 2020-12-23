@@ -11,13 +11,8 @@ set is a more natural choice here
 3) For sparse mode, constructor will accept sparse matrix as a collection of 3 component vectors (for csr) and use them to instantiate
 a sparse matrix object either using a custom utility class or using some high performance library like boost.
 
-Possible Improvement.
-If order of elements in X, groundset, effectiveGroundSet etc doesn't matter, we can improve the performance further by using unordered_set instead of 
-set. unordered_set is implemented using hashmap and has an average search complexity of O(1). Although, if this is done then we also need to write
-a custom function for "Intersection" because set_intersection() only work on containers with sorted data. Also, to avoid excessive rehashing, we will
-have to reserve a certain number of buckets in advance.
 */
-
+#include"sparse_utils.h"
 typedef long long int ll;
 
 class FacilityLocation
@@ -26,7 +21,7 @@ class FacilityLocation
 	ll n; 
 	std::string mode;
 	std::vector<std::vector<float>>k_dense;
-	//class_sparse k_sparse; 
+	SparseSim k_sparse = SparseSim(); 
 	std::vector<std::set<ll>>clusters; //vector of clusters (where each cluster is taken as a set of datapoint index)
 	ll num_neighbors;
 	bool partial;
@@ -42,7 +37,7 @@ public:
 	FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_);
 	
 	//For sparse similarity matrix
-	FacilityLocation(ll n_, std::string mode_, std::vector<float>arr_val, std::vector<float>arr_count, std::vector<float>arr_col, ll num_neighbors_, bool partial_, std::set<ll> ground_);
+	FacilityLocation(ll n_, std::string mode_, std::vector<float>arr_val, std::vector<ll>arr_count, std::vector<ll>arr_col, ll num_neighbors_, bool partial_, std::set<ll> ground_);
 
 	//For cluster mode
 	FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_, ll num_neighbors_, bool partial_, std::set<ll> ground_);
