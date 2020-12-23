@@ -7,18 +7,19 @@
 #include<map>
 #include"sparse_utils.h"
 
-SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vector<ll> a_col) : arr_val(a_val), arr_count(a_count), arr_col(a_col), num_ind(a_count.size()-1) 
+SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vector<ll> a_col) : arr_val(a_val), arr_count(a_count), arr_col(a_col), num_ind(a_count.size()-1) // O(num_ind*num_neigh*log(num_neigh)) (One time operation)
 {
 	v_col_ID.resize(num_ind);
 	v_val_map.resize(num_ind);
 	ll lower_r, upper_r;
 	for (ll r = 0; r < num_ind; ++r)
 	{
+		//Since, non-zero values have been stored in arr_val and arr_count in a row by row fashion, we can identify the range of indicies in arr_val and arr_count
+		//corrosponding to a particular row by using the arr_count as done below.
 		lower_r = arr_count[r];
-		upper_r = arr_count[r + 1]; //Since, non-zero values have been stored in a_val and a_count in a row by row fashion, we can identify the range of indicies in a_val and a_count
-									//corrosponding to a particular row by using the arr_count. 
+		upper_r = arr_count[r + 1]; 
 
-		//Storing non-zero values and columns corrosponding to r in efficient containers for optimal retrival (O(log(n)))
+		//In following loop, we are storing non-zero values and columns corrosponding to r in efficient containers for optimal retrival
 		for (ll i = lower_r; i < upper_r; ++i) //[arr_count[i], arr_count[i+1]) is the interval of indicies in arr_val and arr_col which corrospond to the ith row
 		{
 			v_col_ID[r].insert(arr_col[i]);
@@ -30,7 +31,7 @@ SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vec
 
 SparseSim::SparseSim():arr_val(std::vector<float>()), arr_count(std::vector<ll>()), arr_col(std::vector<ll>()), num_ind(0){}
 
-float SparseSim::get_val(ll r, ll c)
+float SparseSim::get_val(ll r, ll c) // O(log(num_neigh))
 {
 	if (r >= num_ind || c >= num_ind || r < 0 || c < 0)
 	{
@@ -48,9 +49,14 @@ float SparseSim::get_val(ll r, ll c)
 	}
 }
 
-std::vector<float> SparseSim::get_row(ll r)
+std::vector<float> SparseSim::get_row(ll r) // O(num_ind*log(num_neigh))
 {
-	std::vector<float>res(num_ind);
+	std::vector<float>res(num_ind, -2);
+	if (r >= num_ind || r < 0)
+	{
+		std::cerr << "ERROR: Incorrect row provided\n";
+		return res;
+	}
 	for(int i=0; i<num_ind; ++i)
 	{
 		res[i]=get_val(r,i);
@@ -58,9 +64,14 @@ std::vector<float> SparseSim::get_row(ll r)
 	return res;
 }
 
-std::vector<float> SparseSim::get_col(ll c)
+std::vector<float> SparseSim::get_col(ll c) // O(num_ind*log(num_neigh))
 {
-	std::vector<float>res(num_ind);
+	std::vector<float>res(num_ind, -2);
+	if (c >= num_ind || c < 0)
+	{
+		std::cerr << "ERROR: Incorrect column provided\n";
+		return res;
+	}
 	for(int i=0; i<num_ind; ++i)
 	{
 		res[i]=get_val(i,c);
