@@ -11,16 +11,16 @@ SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vec
 {
 	v_col_ID.resize(num_ind);
 	v_val_map.resize(num_ind);
-	ll lower_r, upper_r;
+	ll lower_i, upper_i;
 	for (ll r = 0; r < num_ind; ++r)
 	{
 		//Since, non-zero values have been stored in arr_val and arr_count in a row by row fashion, we can identify the range of indicies in arr_val and arr_count
 		//corrosponding to a particular row by using the arr_count as done below.
-		lower_r = arr_count[r];
-		upper_r = arr_count[r + 1]; 
+		lower_i = arr_count[r];
+		upper_i = arr_count[r + 1]; 
 
 		//In following loop, we are storing non-zero values and columns corrosponding to r in efficient containers for optimal retrival
-		for (ll i = lower_r; i < upper_r; ++i) //[arr_count[i], arr_count[i+1]) is the interval of indicies in arr_val and arr_col which corrospond to the ith row
+		for (ll i = lower_i; i < upper_i; ++i) //[arr_count[i], arr_count[i+1]) is the interval of indicies in arr_val and arr_col which corrospond to the ith row
 		{
 			v_col_ID[r].insert(arr_col[i]);
 			v_val_map[r][arr_col[i]] = arr_val[i];
@@ -58,10 +58,10 @@ std::vector<float> SparseSim::get_row(ll r) // O(num_ind) (More optimal then get
 		return std::vector<float>();
 	}
 
-	ll lower_r = arr_count[r];
-	ll upper_r = arr_count[r + 1]; 
+	ll lower_i = arr_count[r];
+	ll upper_i = arr_count[r + 1]; 
 
-	for (ll i = lower_r; i < upper_r; ++i) 
+	for (ll i = lower_i; i < upper_i; ++i) 
 	{
 		res[arr_col[i]] = arr_val[i];
 	}
