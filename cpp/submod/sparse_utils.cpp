@@ -49,28 +49,33 @@ float SparseSim::get_val(ll r, ll c) // O(log(num_neigh))
 	}
 }
 
-std::vector<float> SparseSim::get_row(ll r) // O(num_ind*log(num_neigh))
+std::vector<float> SparseSim::get_row(ll r) // O(num_ind) (More optimal then get_col() in case of csr)
 {
-	std::vector<float>res(num_ind, -2);
+	std::vector<float>res(num_ind,0);
 	if (r >= num_ind || r < 0)
 	{
 		std::cerr << "ERROR: Incorrect row provided\n";
-		return res;
+		return std::vector<float>();
 	}
-	for(int i=0; i<num_ind; ++i)
+
+	ll lower_r = arr_count[r];
+	ll upper_r = arr_count[r + 1]; 
+
+	for (ll i = lower_r; i < upper_r; ++i) 
 	{
-		res[i]=get_val(r,i);
+		res[arr_col[i]] = arr_val[i];
 	}
+
 	return res;
 }
 
 std::vector<float> SparseSim::get_col(ll c) // O(num_ind*log(num_neigh))
 {
-	std::vector<float>res(num_ind, -2);
+	std::vector<float>res(num_ind, 0);
 	if (c >= num_ind || c < 0)
 	{
 		std::cerr << "ERROR: Incorrect column provided\n";
-		return res;
+		return std::vector<float>();
 	}
 	for(int i=0; i<num_ind; ++i)
 	{
