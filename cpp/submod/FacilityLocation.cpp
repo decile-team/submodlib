@@ -62,11 +62,40 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::ve
 	similarityWithNearestInEffectiveX.resize(numEffectiveGroundset, 0);
 }
 
-//For sparse mode (TODO)
+//For sparse mode
 FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<float>arr_val, std::vector<ll>arr_count, std::vector<ll>arr_col, ll num_neighbors_, bool partial_, std::set<ll> ground_)
 {
+	if (mode_ != "sparse") 
+	{
+		std::cerr << "Error: Incorrect mode specified for the provided sparse similarity matrix\n";
+		return;
+	}
+
+	if (arr_val.size() == 0 || arr_count.size() == 0 || arr_col.size() == 0)
+	{
+		std::cerr << "Error: Empty/Corrupt similarity matrix\n";
+		return;
+	}
+
+	n = n_;
+	mode = mode_;
 	k_sparse = SparseSim(arr_val, arr_count, arr_col);
-	std::cerr<<"To be implemented\n";
+	num_neighbors = num_neighbors_;
+	partial = partial_;
+	if (partial == true)
+	{
+		effectiveGroundSet = ground_;
+	}
+	else
+	{
+		for (ll i = 0; i < n; ++i)
+		{
+			effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
+		}
+	}
+	numEffectiveGroundset = effectiveGroundSet.size();
+	similarityWithNearestInEffectiveX.resize(numEffectiveGroundset, 0);
+	//std::cerr<<"To be implemented\n";
 }
 
 //For cluster mode
