@@ -1,8 +1,9 @@
+from glob import glob
 from setuptools import find_packages, setup
 import sys
 
 try:
-    from pybind11.setup_helpers import Pybind11Extension
+    from pybind11.setup_helpers import Pybind11Extension, build_ext
 except ImportError:
     from setuptools import Extension as Pybind11Extension
 
@@ -14,8 +15,9 @@ exec(open('submodlib/version.py').read())
 
 ext_modules = [
     Pybind11Extension("submodlib_cpp",
-        ["cpp/submod/wrapper.cpp","cpp/submod/FacilityLocation.cpp", "cpp/submod/wr_FacilityLocation.cpp", "cpp/submod/helper.cpp", "cpp/submod/wr_helper.cpp","cpp/submod/sparse_utils.cpp", "cpp/submod/wr_sparse_utils.cpp"],
+        #["cpp/submod/wrapper.cpp","cpp/submod/FacilityLocation.cpp", "cpp/submod/wr_FacilityLocation.cpp", "cpp/submod/helper.cpp", "cpp/submod/wr_helper.cpp","cpp/submod/sparse_utils.cpp", "cpp/submod/wr_sparse_utils.cpp"],
         # Example: passing in the version to the compiled code
+        sorted(glob("cpp/submod/*.cpp")),
         define_macros = [('VERSION_INFO', __version__)],
         ),
 ]
@@ -33,6 +35,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     author='Vishal Kaushal',
+    cmdclass={"build_ext": build_ext},
     ext_modules=ext_modules,
     author_email='vishal.kaushal@gmail.com',
     url="https://github.com/vishkaush/submodlib",
