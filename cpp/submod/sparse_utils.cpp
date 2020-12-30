@@ -1,3 +1,4 @@
+  
 #include<iostream>
 #include<vector>
 #include<algorithm>
@@ -7,7 +8,7 @@
 #include<map>
 #include"sparse_utils.h"
 
-SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vector<ll> a_col) : arr_val(a_val), arr_count(a_count), arr_col(a_col), num_ind(a_count.size()-1) // O(num_ind*num_neigh*log(num_neigh)) (One time operation)
+SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vector<ll> a_col) : arr_val(a_val), arr_count(a_count), arr_col(a_col), num_ind(a_count.size()-1), alwaysNonZero(false) // O(num_ind*num_neigh*log(num_neigh)) (One time operation)
 {
 	v_col_ID.resize(num_ind);
 	v_val_map.resize(num_ind);
@@ -27,6 +28,27 @@ SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vec
 		}
 	}
 
+}
+
+SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_col, ll nn, ll num):arr_val(a_val), arr_col(a_col), num_neigh(nn), num_ind(num), alwaysNonZero(true) // O(num_ind*num_neigh*log(num_neigh)) (One time operation)
+{
+	v_col_ID.resize(num_ind);
+	v_val_map.resize(num_ind);
+	ll lower_i, upper_i;
+	for (ll r = 0; r < num_ind; ++r)
+	{
+		//In this constructor, we assume that all similarity values are non-zero and thus arr_count will be a constant vector
+		//whose elements can be inferred mathematically (as shown below) and thus there is no need to store it.
+		lower_i = r*num_neigh;
+		upper_i = (r + 1)*num_neigh; 
+
+		
+		for (ll i = lower_i; i < upper_i; ++i) 
+		{
+			v_col_ID[r].insert(arr_col[i]);
+			v_val_map[r][arr_col[i]] = arr_val[i];
+		}
+	}
 }
 
 SparseSim::SparseSim():arr_val(std::vector<float>()), arr_count(std::vector<ll>()), arr_col(std::vector<ll>()), num_ind(0){}
@@ -57,10 +79,19 @@ std::vector<float> SparseSim::get_row(ll r) // O(num_ind) (More optimal then get
 		std::cerr << "ERROR: Incorrect row provided\n";
 		return std::vector<float>();
 	}
-
-	ll lower_i = arr_count[r];
-	ll upper_i = arr_count[r + 1]; 
-
+	
+	ll lower_i, upper_i;
+	if(!alwaysNonZero)
+	{
+		lower_i = arr_count[r];
+		upper_i = arr_count[r + 1]; 
+	}
+	else
+	{
+		lower_i = r*num_neigh;
+		upper_i = (r + 1)*num_neigh; 	
+	}
+	
 	for (ll i = lower_i; i < upper_i; ++i) 
 	{
 		res[arr_col[i]] = arr_val[i];
@@ -83,4 +114,3 @@ std::vector<float> SparseSim::get_col(ll c) // O(num_ind*log(num_neigh))
 	}
 	return res;
 }
-
