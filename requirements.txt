@@ -1,1 +1,5 @@
 sphinxcontrib_bibtex
+sklearn
+numpy
+scipy
+pybind11

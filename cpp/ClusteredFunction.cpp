@@ -3,12 +3,12 @@ constructor() {
     Input: (int) number of elements in the ground set (n)
     Input: (vector of sets) c1, c2, ... cm (clustering)
     Input: (string) name of the function, say "FacilityLocation"
-    Input: (vector<vector<float>>) dense similarity matrix kernel (k_dense)
+    Input: (vector<vector<vector<float>>>) dense similarity matrix kernels for each cluster (k_dense)
 
     (vector of functions) funcs;
 
     for each cluster ci {
-        Instantiate f with ci
+        Instantiate f with ci (n, dense, )
         funcs.push_back(fi)
     }
 }

@@ -7,8 +7,8 @@ class SparseSim
 	std::vector<ll>arr_col; //contains col index corrosponding to non-zero values in arr_val
 	ll num_ind;//num of rows/cols in the similarity matrix
 
-	std::vector<std::set<ll>>v_col_ID;
-	std::vector<std::map<ll, float>>v_val_map;
+	std::vector<std::set<ll> > v_col_ID;
+	std::vector<std::map<ll, float> > v_val_map;
 
 public:
 	SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vector<ll> a_col);

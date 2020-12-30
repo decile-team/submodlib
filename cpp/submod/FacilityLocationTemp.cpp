@@ -46,7 +46,7 @@ constructor() {
         invalid mode
     }
 }
-    
+
 evaluate() {
     Input: X
 

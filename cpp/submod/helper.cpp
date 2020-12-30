@@ -1,3 +1,5 @@
+//this is called by python when we want kernel to be made in C++
+
 #include<iostream>
 #include<vector>
 #include<string>

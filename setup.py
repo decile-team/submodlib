@@ -1,8 +1,11 @@
 from setuptools import find_packages, setup
 import sys
 
+#More guidelines here: https://pybind11.readthedocs.io/en/stable/compiling.html
+
+#required for pybind helper for packaging
 try:
-    from pybind11.setup_helpers import Pybind11Extension
+    from pybind11.setup_helpers import Pybind11Extension, build_ext
 except ImportError:
     from setuptools import Extension as Pybind11Extension
 
@@ -22,7 +25,7 @@ ext_modules = [
 
 
 setup(
-    name='submodlib6',
+    name='submodlib',
     #packages=find_packages(include=['submodlib']),
     packages=['submodlib', 'submodlib/functions'],
     #packages=find_packages('submodlib'),
@@ -33,6 +36,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     author='Vishal Kaushal',
+    cmdclass={"build_ext": build_ext},
     ext_modules=ext_modules,
     author_email='vishal.kaushal@gmail.com',
     url="https://github.com/vishkaush/submodlib",
@@ -47,7 +51,7 @@ setup(
     #     "nose"
     # ],
     install_requires=[],
-    setup_requires=['pybind11','pytest-runner'],
+    setup_requires=['sklearn', 'numpy', 'scipy', 'pybind11','pytest-runner'],
     tests_require=['pytest'],
     test_suite='tests',
     #classifiers=[

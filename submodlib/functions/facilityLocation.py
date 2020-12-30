@@ -145,6 +145,7 @@ class FacilityLocationFunction(SetFunction):
 			self.cpp_sijs['arr_val'] = self.sijs.data.tolist() #contains non-zero values in matrix (row major traversal)
 			self.cpp_sijs['arr_count'] = self.sijs.indptr.tolist() #cumulitive count of non-zero elements upto but not including current row
 			self.cpp_sijs['arr_col'] = self.sijs.indices.tolist() #contains col index corrosponding to non-zero values in arr_val
+			#TODO: since self.cpp_sijs['arr_count'] is ALWAYS going to be 0, num_neighbors, 2*num_neihbors, 3*num_neighbors...., we need not explicitly store/pass it
 			self.cpp_obj = FacilityLocation(self.n, self.mode, self.cpp_sijs['arr_val'], self.cpp_sijs['arr_count'], self.cpp_sijs['arr_col'], self.num_neigh, self.partial, self.cpp_ground_sub)
 		
 		if self.mode=="cluster":
