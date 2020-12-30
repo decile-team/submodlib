@@ -1,3 +1,4 @@
+  
 typedef long long int ll;
 
 class SparseSim 
@@ -6,12 +7,15 @@ class SparseSim
 	std::vector<ll>arr_count; //contains cumulitive count of non-zero elements upto but not including current row
 	std::vector<ll>arr_col; //contains col index corrosponding to non-zero values in arr_val
 	ll num_ind;//num of rows/cols in the similarity matrix
-
-	std::vector<std::set<ll> > v_col_ID;
-	std::vector<std::map<ll, float> > v_val_map;
+	ll num_neigh;//num of nearest neighbors being considered
+	bool alwaysNonZero;//This flag tells if similarity values will be always (exactly) non Zero 
+					   //or if zero values are also possible (say in case of orthogonal datapoints)
+	std::vector<std::set<ll>>v_col_ID;
+	std::vector<std::map<ll, float>>v_val_map;
 
 public:
-	SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vector<ll> a_col);
+	SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vector<ll> a_col);//Use this signature if (exact) 0 similarity is possible
+	SparseSim(std::vector<float> a_val, std::vector<ll> a_col, ll nn, ll num);//Use this signature if (exact) zero similarity is impossible
 	SparseSim();
 	float get_val(ll r, ll c);
 	std::vector<float> get_row(ll r);
