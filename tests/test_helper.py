@@ -164,14 +164,14 @@ class TestHelper:
         ED = euclidean_distances(data) 
         gamma = 1/np.shape(data)[1] 
         ES = np.exp(-ED* gamma) #sklearn ground truth 
-
-        assert np.allclose(create_kernel(data, 'dense','euclidean'), ES)
+        _, M = create_kernel(data, 'dense','euclidean')
+        assert np.allclose(M, ES)
 
     @pytest.mark.parametrize("data", list_tests)
     def test_dense_cosine(self, data):
         CS = cosine_similarity(data)  #sklearn ground truth 
-
-        assert np.allclose(create_kernel(data, 'dense','cosine'), CS)
+        _, M = create_kernel(data, 'dense','cosine')
+        assert np.allclose(M, CS)
 
 
     @pytest.mark.parametrize("data", list_tests)

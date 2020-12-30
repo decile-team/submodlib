@@ -1,4 +1,4 @@
-#A dryrun of entire architecture over dummy data
+#A dryrun of implemented code with dummy data
 import numpy as np
 from submodlib.functions.facilityLocation import FacilityLocationFunction
 from submodlib.helper import create_kernel
@@ -6,8 +6,9 @@ from submodlib.helper import create_kernel
 
 data = np.array([[1,2, 3], [3,4, 5], [4, 5,6]])
 
+
 #dryrun of create_kernel
-K_dense = create_kernel(data, 'dense','euclidean')
+n_, K_dense = create_kernel(data, 'dense','euclidean')
 print(K_dense)
 n_, K_sparse = create_kernel(data, 'sparse','euclidean', num_neigh=2)
 print(K_sparse)
