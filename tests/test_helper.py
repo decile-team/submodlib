@@ -226,13 +226,23 @@ class TestHelper:
     #Negative test cases
     def test_neg1(self): # Number of neighbors more than no of data points
         data = np.array([[0, 1, 3], [5, 1, 5], [10, 2, 6], [12,20,68]])
-        create_kernel(data, 'sparse','cosine', num_neigh=6)
+        try:
+            create_kernel(data, 'sparse','cosine', num_neigh=6)
+        except Exception as e:
+            assert str(e)=="ERROR: num of neighbors can't be more than no of datapoints"
+
 
     def test_neg2(self): # Incorrect mode
         data = np.array([[0, 1, 3], [5, 1, 5], [10, 2, 6], [12,20,68]])
-        create_kernel(data, 'sparss','cosine', num_neigh=3)
+        try:
+            create_kernel(data, 'sparss','cosine', num_neigh=3)
+        except Exception as e:
+            assert str(e)=="ERROR: unsupported mode"
 
     def test_neg3(self): # Incorrect metric
         data = np.array([[0, 1, 3], [5, 1, 5], [10, 2, 6], [12,20,68]])
-        create_kernel(data, 'sparse','cosinee', num_neigh=3)
+        try:
+            create_kernel(data, 'sparse','cosinee', num_neigh=3)
+        except Exception as e:
+            assert str(e)=="ERROR: unsupported metric"
     

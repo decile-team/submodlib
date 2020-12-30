@@ -120,35 +120,56 @@ class TestFL:
     #Negative Test cases:
     def test_4_1(self): #Non-square dense similarity matrix 
         M = np.array([[1,2,3], [4,5,6]])
-        FacilityLocationFunction(n=2, sijs=M)
-    
+        try:
+            FacilityLocationFunction(n=2, sijs=M)
+        except Exception as e:
+            assert str(e)=="ERROR: Dense similarity matrix should be a square matrix"
+
     def test_4_2(self): #Inconsistency between n and no of examples in M
         M = np.array([[1,2,3], [4,5,6]])
-        FacilityLocationFunction(n=1, sijs=M)
+        try:
+            FacilityLocationFunction(n=1, sijs=M)
+        except Exception as e:
+            assert str(e)=="ERROR: Inconsistentcy between n and no of examples in the given similarity matrix"
 
     def test_4_3(self): # X not a subset of ground set for evaluate()
         M = np.array([[1,2], [3,4]])
         obj = FacilityLocationFunction(n=2, sijs=M)
         X={0,2}
-        obj.evaluate(X)
+        try:
+            obj.evaluate(X)
+        except Exception as e:
+            assert str(e)=="ERROR: X is not a subset of ground set"
 
     def test_4_4(self): # X not a subset of ground set for marginalGain()
         M = np.array([[1,2], [3,4]])
         obj = FacilityLocationFunction(n=2, sijs=M)
         X={0,2}
-        obj.marginalGain(X, 1)
+        try:
+            obj.marginalGain(X, 1)
+        except Exception as e:
+            assert str(e)=="ERROR: X is not a subset of ground set"
 
     def test_4_5(self): # If sparse matrix is provided but without providing number of neighbors that were used to create it
         data = np.array([[1,2], [3,4]])
         num_neigh, M = create_kernel(data, 'sparse','euclidean', num_neigh=1)
-        FacilityLocationFunction(n=2, sijs=M) #its important for user to pass num_neigh with sparse matrix because otherwise
+        try:
+            FacilityLocationFunction(n=2, sijs=M) #its important for user to pass num_neigh with sparse matrix because otherwise
                                               #there is no way for Python FL and C++ FL to know how many nearest neighours were
                                               #reatined in sparse matrix
+        except Exception as e:
+            assert str(e)=="ERROR: num_neigh for given sparse matrix not provided"
+
         
     def test_4_6(self): # n==0
         data = np.array([[1,2], [3,4]])
         num_neigh, M = create_kernel(data, 'sparse','euclidean', num_neigh=1)
-        FacilityLocationFunction(n=0, sijs=M, num_neigh=num_neigh)
+        try:
+            FacilityLocationFunction(n=0, sijs=M, num_neigh=num_neigh)
+        except Exception as e:
+            assert str(e)=="ERROR: Number of elements in ground set can't be 0"
+    
+
     
 
 
