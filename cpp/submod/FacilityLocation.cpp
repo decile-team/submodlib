@@ -28,7 +28,7 @@ typedef long long int ll;
 //Note to self: Migrate all parameter related sanity/error checks from C++ FL to Python FL
 
 //For dense mode
-FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_)
+FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_, bool seperateMaster_)
 {
 	if (mode_ != "dense") 
 	{
@@ -47,6 +47,8 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::ve
 	k_dense = k_dense_;
 	num_neighbors = num_neighbors_;
 	partial = partial_;
+	seperateMaster = seperateMaster_;
+	//Populating effectiveGroundSet
 	if (partial == true)
 	{
 		effectiveGroundSet = ground_;
@@ -58,6 +60,23 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::ve
 			effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
 		}
 	}
+	
+	//Populating masterSet
+	if(mode=="dense" && seperateMaster==true)
+	{
+		n_master = k_dense.size();	
+		for (ll i = 0; i < n_master; ++i)
+		{
+			masterSet.insert(i); //each insert takes O(log(n)) time
+		}
+	}
+	else
+	{
+		n_master=n;
+		masterSet=effectiveGroundSet;
+	}
+	
+	
 	numEffectiveGroundset = effectiveGroundSet.size();
 	similarityWithNearestInEffectiveX.resize(numEffectiveGroundset, 0);
 }
@@ -135,7 +154,7 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::se
 //helper friend function
 float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj)
 {
-	ll i = datapoint_ind, j;
+	ll i = datapoint_ind, j; //i comes from masterSet and j comes from X (which is a subset of groundSet)
 	auto it = dataset_ind.begin();
 	float m = obj.k_dense[i][*it];
 	
@@ -170,7 +189,7 @@ float FacilityLocation::evaluate(std::set<ll> X)
 	if (mode == "dense")
 	{
 		//Implementing f(X)=Sum_i_V ( max_j_X ( s_ij ) )
-		for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it) //O(n^2) where n=num of elements in effective GS 
+		for (auto it = masterSet.begin(); it != masterSet.end(); ++it) //O(n^2) where n=num of elements in effective GS 
 		{
 			ll ind = *it;
 			result += get_max_sim_dense(ind, effectiveX, *this);
@@ -218,7 +237,7 @@ float FacilityLocation::evaluateSequential(std::set<ll> X) //assumes that pre co
 
 	if (mode == "dense")
 	{
-		for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it)
+		for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
 		{
 			ll ind = *it;
 			result += similarityWithNearestInEffectiveX[ind];
@@ -276,7 +295,7 @@ float FacilityLocation::marginalGain(std::set<ll> X, ll item)
 
 	if (mode == "dense")
 	{
-		for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it)
+		for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
 		{
 			ll ind = *it;
 			float m = get_max_sim_dense(ind, effectiveX, *this);
@@ -338,7 +357,7 @@ float FacilityLocation::marginalGainSequential(std::set<ll> X, ll item)
 
 	if (mode == "dense")
 	{
-		for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it)
+		for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
 		{
 			ll ind = *it;
 			if (k_dense[ind][item] > similarityWithNearestInEffectiveX[ind])
@@ -393,7 +412,7 @@ void FacilityLocation::sequentialUpdate(std::set<ll> X, ll item)
 			return;
 		}
 
-		for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it)
+		for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
 		{
 			ll ind = *it;
 			if (k_dense[ind][item] > similarityWithNearestInEffectiveX[ind])

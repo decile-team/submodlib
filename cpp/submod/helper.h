@@ -16,3 +16,4 @@ struct datapoint_pair
 bool operator < (datapoint_pair lval, datapoint_pair rval);
 
 std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, std::string metric, ll num_neigh);
+std::vector<std::vector<float>> create_kernel_NS(std::vector<std::vector<float>>X_ground,std::vector<std::vector<float>>X_master, std::string metric);

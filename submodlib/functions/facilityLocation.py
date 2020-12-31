@@ -52,15 +52,18 @@ class FacilityLocationFunction(SetFunction):
 
 	"""
 
-	def __init__(self, n, sijs=None, data=None, mode=None, metric="cosine", num_neigh=-1, partial=False, ground_sub=None):
+	def __init__(self, n, n_master=-1, sijs=None, data=None, data_master=None, mode=None, metric="cosine", num_neigh=-1, partial=False, ground_sub=None):
 		self.n = n
+		self.n_master = n_master
 		self.mode = mode
 		self.metric = metric
 		self.sijs = sijs
 		self.data = data
+		self.data_master=data_master
 		self.num_neigh = num_neigh
 		self.partial = partial
 		self.ground_sub = ground_sub
+		self.separateMaster=False
 		self.cpp_obj = None
 		self.cpp_sijs = None
 		self.cpp_ground_sub = ground_sub
@@ -102,22 +105,33 @@ class FacilityLocationFunction(SetFunction):
 				if np.shape(self.data)[0]!=self.n:
 					raise Exception("ERROR: Inconsistentcy between n and no of examples in the given data matrix")
 
+				if type(self.data_master)!=type(None):
+					self.seperateMaster=True
+					if np.shape(self.data_master)[0]!=self.n_master:
+						raise Exception("ERROR: Inconsistentcy between n_master and no of examples in the given data_master matrix")
+					if self.mode=="sparse" or self.mode=="cluster":
+						raise Exception("ERROR: mode can't be sparse or cluster if ground and master datasets are different")
+					if partial==True:
+						raise Exception("ERROR: partial can't be True if ground and master datasets are different")
+
 				if self.mode==None:
 					self.mode="sparse"
 
-				if self.num_neigh==-1:
+				if self.num_neigh==-1 and self.seperateMaster==False:
 					self.num_neigh=np.shape(self.data)[0] #default is total no of datapoints
 
-
-				self.cpp_content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neigh))
-				val = self.cpp_content[0]
-				row = list(map(lambda arg: int(arg), self.cpp_content[1]))
-				col = list(map(lambda arg: int(arg), self.cpp_content[2]))
-				if self.mode=="dense":
-					self.sijs = np.zeros((n,n))
-					self.sijs[row,col] = val
-				if self.mode=="sparse":
-					self.sijs = sparse.csr_matrix((val, (row, col)), [n,n])
+				if self.seperateMaster==True: #mode in this case will always be dense
+					self.sijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_master.tolist(), self.metric)
+				else:
+					self.cpp_content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neigh))
+					val = self.cpp_content[0]
+					row = list(map(lambda arg: int(arg), self.cpp_content[1]))
+					col = list(map(lambda arg: int(arg), self.cpp_content[2]))
+					if self.mode=="dense":
+						self.sijs = np.zeros((n,n))
+						self.sijs[row,col] = val
+					if self.mode=="sparse":
+						self.sijs = sparse.csr_matrix((val, (row, col)), [n,n])
 
 			else:
 				raise Exception("ERROR: Neither data nor similarity matrix provided")
@@ -135,8 +149,8 @@ class FacilityLocationFunction(SetFunction):
 				l=[]
 				l.append(self.cpp_sijs)
 				self.cpp_sijs=l
-			if np.shape(self.cpp_sijs)[0]!=np.shape(self.cpp_sijs)[1]: #TODO: relocate this check to some earlier part of code
-				raise Exception("ERROR: Dense similarity matrix should be a square matrix")
+			if np.shape(self.cpp_sijs)[0]!=np.shape(self.cpp_sijs)[1] and seperateMaster==False: #TODO: relocate this check to some earlier part of code
+				raise Exception("ERROR: Dense similarity matrix should be a square matrix if ground and master datasets are same")
 
 			self.cpp_obj = FacilityLocation(self.n, self.mode, self.cpp_sijs, self.num_neigh, self.partial, self.cpp_ground_sub)
 		
@@ -145,7 +159,6 @@ class FacilityLocationFunction(SetFunction):
 			self.cpp_sijs['arr_val'] = self.sijs.data.tolist() #contains non-zero values in matrix (row major traversal)
 			self.cpp_sijs['arr_count'] = self.sijs.indptr.tolist() #cumulitive count of non-zero elements upto but not including current row
 			self.cpp_sijs['arr_col'] = self.sijs.indices.tolist() #contains col index corrosponding to non-zero values in arr_val
-			#TODO: since self.cpp_sijs['arr_count'] is ALWAYS going to be 0, num_neighbors, 2*num_neihbors, 3*num_neighbors...., we need not explicitly store/pass it
 			self.cpp_obj = FacilityLocation(self.n, self.mode, self.cpp_sijs['arr_val'], self.cpp_sijs['arr_count'], self.cpp_sijs['arr_col'], self.num_neigh, self.partial, self.cpp_ground_sub)
 		
 		if self.mode=="cluster":
@@ -177,7 +190,7 @@ class FacilityLocationFunction(SetFunction):
 		
 		return self.cpp_obj.evaluate(X)
 
-	def maximize(self, budget, optimizer, ):
+	def maximize(self, budget, optimizer):
 		"""Find the optimal subset with maximum score
 
 		Parameters

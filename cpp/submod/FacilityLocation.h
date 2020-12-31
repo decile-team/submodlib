@@ -19,13 +19,16 @@ class FacilityLocation
 {
 
 	ll n; 
+	ll n_master;
 	std::string mode;
 	std::vector<std::vector<float>>k_dense;
 	SparseSim k_sparse = SparseSim(); 
 	std::vector<std::set<ll>>clusters; //vector of clusters (where each cluster is taken as a set of datapoint index)
 	ll num_neighbors;
 	bool partial;
+	bool seperateMaster;
 	std::set<ll> effectiveGroundSet;
+	std::set<ll> masterSet;
 	ll numEffectiveGroundset;
 	std::vector<float> similarityWithNearestInEffectiveX;
 	//std::map<std::vector<float>, ll>map_data_to_ind;
@@ -34,7 +37,7 @@ public:
 	//constructor(no_of_elem_in_ground, mode, sim_matrix or cluster, num_neigh, partial, ground_subset )
 
 	//For dense similarity matrix
-	FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_);
+	FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_, bool seperateMaster_);
 	
 	//For sparse similarity matrix
 	FacilityLocation(ll n_, std::string mode_, std::vector<float>arr_val, std::vector<ll>arr_count, std::vector<ll>arr_col, ll num_neighbors_, bool partial_, std::set<ll> ground_);

@@ -1,5 +1,3 @@
-//this is called by python when we want kernel to be made in C++
-
 #include<iostream>
 #include<vector>
 #include<string>
@@ -152,5 +150,29 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, 
 
 	//return sim;
 	return content;
+}
+
+
+
+//Returns a Dense of n_master x n_ground
+std::vector<std::vector<float>> create_kernel_NS(std::vector<std::vector<float>>X_ground,std::vector<std::vector<float>>X_master, std::string metric)
+{
+	ll n_ground = X_ground.size();
+	ll n_master = X_master.size();
+ 
+	std::vector<std::vector<float>>k_dense(n_master, std::vector<float>(n_ground)); 
+	float s;
+	ll count = 0;
+
+	for(int r=0;r<X_master.size();++r)
+	{
+		for(int c=0;c<X_ground.size();++c)
+		{
+			k_dense[r][c]= metric == "euclidean" ? euclidean_similarity(X_master[r], X_ground[c]) : cosine_similarity(X_master[r], X_ground[c]);
+		}
+	}
+
+	return k_dense;
+	
 }
 
