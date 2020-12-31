@@ -62,6 +62,19 @@ def f_5():
     obj = FacilityLocationFunction(n=5, data=data, mode="dense", metric="cosine")
     return obj
 
+@pytest.fixture
+def f_6():
+    data=np.array([
+    [100, 21, 365, 5], 
+    [57, 18, -5, -6], 
+    [16, 255, 68, -8], 
+    [2,20,6, 2000], 
+    [12,20,68, 200]
+    ])
+
+    obj = FacilityLocationFunction(n=5, data=data, mode="sparse", metric="cosine")
+    return obj
+
 
 class TestFL:
     
@@ -116,6 +129,20 @@ class TestFL:
         X = {0,2}
         item = 1
         assert math.isclose(round(f_5.marginalGain(X, item),3), 0.673)
+
+    def test_6_1(self, f_6): 
+        X = {1}
+        assert math.isclose(round(f_6.evaluate(X),2), 1.38)
+    
+    def test_6_2(self, f_6):
+        X = {0,2}
+        assert math.isclose(round(f_6.evaluate(X),2), 2.68)
+
+    def test_6_3(self, f_6):
+        X = {0,2}
+        item = 1
+        assert math.isclose(round(f_6.marginalGain(X, item),3), 0.673)
+
 
     #Negative Test cases:
     def test_4_1(self): #Non-square dense similarity matrix 

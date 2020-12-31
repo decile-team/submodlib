@@ -84,6 +84,8 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::ve
 //For sparse mode
 FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<float>arr_val, std::vector<ll>arr_count, std::vector<ll>arr_col, ll num_neighbors_, bool partial_, std::set<ll> ground_)
 {
+
+	//std::cout<<n_<<" "<<mode_<<" "<<num_neighbors_<<" "<<partial_<<"\n";
 	if (mode_ != "sparse") 
 	{
 		std::cerr << "Error: Incorrect mode specified for the provided sparse similarity matrix\n";
@@ -101,6 +103,8 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<float>a
 	k_sparse = SparseSim(arr_val, arr_count, arr_col);
 	num_neighbors = num_neighbors_;
 	partial = partial_;
+	seperateMaster = false;
+	//Populating effectiveGroundSet
 	if (partial == true)
 	{
 		effectiveGroundSet = ground_;
@@ -112,6 +116,23 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<float>a
 			effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
 		}
 	}
+	
+	//Populating masterSet
+	if(mode=="dense" && seperateMaster==true)
+	{
+		n_master = k_dense.size();	
+		for (ll i = 0; i < n_master; ++i)
+		{
+			masterSet.insert(i); //each insert takes O(log(n)) time
+		}
+	}
+	else
+	{
+		n_master=n;
+		masterSet=effectiveGroundSet;
+	}
+	
+	
 	numEffectiveGroundset = effectiveGroundSet.size();
 	similarityWithNearestInEffectiveX.resize(numEffectiveGroundset, 0);
 	//std::cerr<<"To be implemented\n";
@@ -169,8 +190,30 @@ float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLoca
 
 	return m;
 }
+float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj)
+{
+	//std::cout<<"C\n";
+	ll i = datapoint_ind, j; //i comes from masterSet and j comes from X (which is a subset of groundSet)
+	auto it = dataset_ind.begin();
+	float m = obj.k_sparse.get_val(i,*it);
+	//std::cout<<m<<"\n";
+	
+	for (; it != dataset_ind.end(); ++it)//search max similarity wrt datapoints of given dataset
+	{
+		//std::cout<<"D\n";
+		ll j = *it;
+		float temp_val = obj.k_sparse.get_val(i,j);
+		if (temp_val > m)
+		{
+			m = temp_val;
+		}
+	}
+
+	return m;
+}
 
 
+//TODO: In all the methods below, get rid of code redundancy by merging dense and sparse mode blocks together
 float FacilityLocation::evaluate(std::set<ll> X)
 {
 	std::set<ll> effectiveX;
@@ -199,8 +242,12 @@ float FacilityLocation::evaluate(std::set<ll> X)
 	{
 		if (mode == "sparse")
 		{
-			//TODO
-
+			//std::cout<<"A\n";
+			for (auto it = masterSet.begin(); it != masterSet.end(); ++it) //O(n^2) where n=num of elements in effective GS 
+			{
+				ll ind = *it;
+				result += get_max_sim_sparse(ind, effectiveX, *this);
+			}
 		}
 		else
 		{
@@ -247,7 +294,11 @@ float FacilityLocation::evaluateSequential(std::set<ll> X) //assumes that pre co
 	{
 		if (mode == "sparse")
 		{
-			//TODO
+			for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
+			{
+				ll ind = *it;
+				result += similarityWithNearestInEffectiveX[ind];
+			}
 
 		}
 		else
@@ -309,7 +360,18 @@ float FacilityLocation::marginalGain(std::set<ll> X, ll item)
 	{
 		if (mode == "sparse")
 		{
-			//TODO
+			//std::cout<<"A\n";
+			for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
+			{
+				//std::cout<<"B\n";
+				ll ind = *it;
+				float m = get_max_sim_sparse(ind, effectiveX, *this);
+				float temp_val = k_sparse.get_val(ind,item);
+				if (temp_val > m)
+				{
+					gain += (temp_val - m);
+				}
+			}
 
 		}
 		else
@@ -371,8 +433,16 @@ float FacilityLocation::marginalGainSequential(std::set<ll> X, ll item)
 	{
 		if (mode == "sparse")
 		{
-			//TODO
+			for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
+			{
+				ll ind = *it;
+				float temp_val = k_sparse.get_val(ind,item);
+				if (temp_val > similarityWithNearestInEffectiveX[ind])
+				{
+					gain += (temp_val - similarityWithNearestInEffectiveX[ind]);
+				}
 
+			}
 		}
 		else
 		{
@@ -426,8 +496,21 @@ void FacilityLocation::sequentialUpdate(std::set<ll> X, ll item)
 	{
 		if (mode == "sparse")
 		{
-			//TODO
+			if (effectiveGroundSet.find(item) == effectiveGroundSet.end())
+			{
+				return;
+			}
 
+			for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
+			{
+				ll ind = *it;
+				float temp_val = k_sparse.get_val(ind,item);
+				if (temp_val > similarityWithNearestInEffectiveX[ind])
+				{
+					similarityWithNearestInEffectiveX[ind] = temp_val;
+				}
+
+			}
 		}
 		else
 		{
