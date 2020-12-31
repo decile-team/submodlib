@@ -177,7 +177,7 @@ class FacilityLocationFunction(SetFunction):
 		
 		return self.cpp_obj.evaluate(X)
 
-	def maximize(self, budget, optimizer):
+	def maximize(self, budget, optimizer, ):
 		"""Find the optimal subset with maximum score
 
 		Parameters

@@ -8,7 +8,7 @@ constructor() {
     (vector of functions) funcs;
 
     for each cluster ci {
-        Instantiate f with ci (n, dense, )
+        Instantiate f with ci (appropriately in partial mode)
         funcs.push_back(fi)
     }
 }
@@ -52,8 +52,7 @@ sequentialUpdate() {
     Input: X
     Input: item
 
-    for i = 1 to m {
-        fi.sequentialUpdate(X, item)
-    }
+    Find which cluster ck item belongs to
+    fk.sequentialUpdate(X, item)
 }
 */
