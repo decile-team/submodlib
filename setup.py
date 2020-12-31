@@ -2,9 +2,6 @@ from glob import glob
 from setuptools import find_packages, setup
 import sys
 
-#More guidelines here: https://pybind11.readthedocs.io/en/stable/compiling.html
-
-#required for pybind helper for packaging
 try:
     from pybind11.setup_helpers import Pybind11Extension, build_ext
 except ImportError:
@@ -18,16 +15,16 @@ exec(open('submodlib/version.py').read())
 
 ext_modules = [
     Pybind11Extension("submodlib_cpp",
-        #["cpp/submod/wrapper.cpp","cpp/submod/FacilityLocation.cpp", "cpp/submod/wr_FacilityLocation.cpp", "cpp/submod/helper.cpp", "cpp/submod/wr_helper.cpp","cpp/submod/sparse_utils.cpp", "cpp/submod/wr_sparse_utils.cpp"],
+        ["cpp/submod/wrapper.cpp","cpp/submod/FacilityLocation.cpp", "cpp/submod/wr_FacilityLocation.cpp", "cpp/submod/helper.cpp", "cpp/submod/wr_helper.cpp","cpp/submod/sparse_utils.cpp", "cpp/submod/wr_sparse_utils.cpp","cpp/optimizers/NaiveGreedyOptimizer.cpp", "cpp/optimizers/wr_NaiveGreedyOptimizer.cpp", "cpp/optimizers/optimizers.cpp", "cpp/submod/SetFunction.cpp"],
         # Example: passing in the version to the compiled code
-        sorted(glob("cpp/submod/*.cpp")),
+        #sorted(glob("cpp/submod/*.cpp")),
         define_macros = [('VERSION_INFO', __version__)],
         ),
 ]
 
 
 setup(
-    name='submodlib',
+    name='submodlib6',
     #packages=find_packages(include=['submodlib']),
     packages=['submodlib', 'submodlib/functions'],
     #packages=find_packages('submodlib'),
@@ -53,7 +50,7 @@ setup(
     #     "nose"
     # ],
     install_requires=[],
-    setup_requires=['sklearn', 'numpy', 'scipy', 'pybind11','pytest-runner'],
+    setup_requires=['pybind11','pytest-runner'],
     tests_require=['pytest'],
     test_suite='tests',
     #classifiers=[

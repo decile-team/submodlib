@@ -1,5 +1,3 @@
-//the topmost wrapper which in turn defines individual wrappers
-
 #include <pybind11/pybind11.h>
 #include<pybind11/stl.h>
 #include "wrapper.h"
@@ -12,4 +10,5 @@ PYBIND11_MODULE(submodlib_cpp, m)
     cl_FacilityLocation(m);
     cl_helper(m);
     cl_sparse_utils(m);
+    cl_NaiveGreedyOptimizer(m);
 }

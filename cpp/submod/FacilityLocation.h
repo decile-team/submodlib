@@ -12,10 +12,11 @@ set is a more natural choice here
 a sparse matrix object either using a custom utility class or using some high performance library like boost.
 
 */
+#include"SetFunction.h"
 #include"sparse_utils.h"
 typedef long long int ll;
 
-class FacilityLocation
+class FacilityLocation :public SetFunction
 {
 
 	ll n; 

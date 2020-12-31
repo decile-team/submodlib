@@ -6,40 +6,49 @@
 #include<string>
 #include<algorithm>
 #include<cmath>
-#include"NaiveGreedy.h"
+#include<utility>
+#include"NaiveGreedyOptimizer.h"
 
+NaiveGreedyOptimizer::NaiveGreedyOptimizer(){}
+//NaiveGreedyOptimizer::NaiveGreedyOptimizer(FacilityLocation obj_):f_obj(obj_) {}
 
-std::vector<float> naiveGreedyMax(FacilityLocation f_obj, float budget)//Possibly we need a template type instead of a fixed type for f_obj 
+std::vector<std::pair<ll, float>> NaiveGreedyOptimizer::maximize(SetFunction &f_obj, float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbosity=false)
+//std::vector<std::pair<int, float>> NaiveGreedyOptimizer::maximize(float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbosity=false)
 {
-	std::vector<float>greedyVector;
+	std::vector<std::pair<ll, float>>greedyVector;
 	std::set<ll>greedySet;
 	float rem_budget = budget;
 	
 	while (rem_budget > 0)
 	{
-		//In pseudo code, a single variable "best" was used for storing both marginal gain and datapoint index which seemed incorrect.
-		//Therefore, I have instead used 2 variables viz. best_i and best_val
-		ll best_i;
-		float best_val;
+		ll best_i = -1;
+		float best_val = -1 * std::numeric_limits<float>::max();
 		for (auto it = f_obj.getEffectiveGroundSet().begin(); it != f_obj.getEffectiveGroundSet().end(); ++it)
 		{
 			ll i = *it;
-			if (greedySet.find(i) != greedySet.end())
+			if (greedySet.find(i) != greedySet.end())//if a datapoint has already been included in greedySet, skip to next datapoint
 			{
 				continue;
 			}
-			if (f_obj.marginalGainSequential(greedySet, i) > best_val)//Bug: uninitilized variable best_val is getting consumed
+			float gain = f_obj.marginalGainSequential(greedySet, i);
+			if (gain > best_val)
 			{
 				best_i = i;
-				best_val = f_obj.marginalGainSequential(greedySet, i);
+				best_val = gain;
 			}
 		}
-
-		//Bugs: Uninitilized variable best_i is getting used below.
-		f_obj.sequentialUpdate(greedySet, best_i); 
-		greedySet.insert(best_i); 
-		greedyVector.push_back(best_i);//Verify weather greedyVector contains datapoint indicies or marginal gains
-		--rem_budget;
+		if ( (best_val < 0 && stopIfNegativeGain) || (best_val == 0 && stopIfZeroGain) ) 
+		{
+			break;
+		}
+		else
+		{
+			f_obj.sequentialUpdate(greedySet, best_i); //memoize the result of current iteration of while loop
+			greedySet.insert(best_i); //greedily insert the best datapoint index of current iteration of while loop
+			greedyVector.push_back(std::pair<ll, float>(best_i, best_val));
+			rem_budget-=1;
+		}
+		
 	}
 
 	return greedyVector;
