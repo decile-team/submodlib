@@ -123,7 +123,7 @@ class TestFL:
         try:
             FacilityLocationFunction(n=2, sijs=M)
         except Exception as e:
-            assert str(e)=="ERROR: Dense similarity matrix should be a square matrix"
+            assert str(e)=="ERROR: Dense similarity matrix should be a square matrix if ground and master datasets are same"
 
     def test_4_2(self): #Inconsistency between n and no of examples in M
         M = np.array([[1,2,3], [4,5,6]])

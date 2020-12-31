@@ -63,7 +63,7 @@ class FacilityLocationFunction(SetFunction):
 		self.num_neigh = num_neigh
 		self.partial = partial
 		self.ground_sub = ground_sub
-		self.separateMaster=False
+		self.seperateMaster=False
 		self.cpp_obj = None
 		self.cpp_sijs = None
 		self.cpp_ground_sub = ground_sub
@@ -121,7 +121,7 @@ class FacilityLocationFunction(SetFunction):
 					self.num_neigh=np.shape(self.data)[0] #default is total no of datapoints
 
 				if self.seperateMaster==True: #mode in this case will always be dense
-					self.sijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_master.tolist(), self.metric)
+					self.sijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_master.tolist(), self.metric))
 				else:
 					self.cpp_content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neigh))
 					val = self.cpp_content[0]
@@ -149,10 +149,10 @@ class FacilityLocationFunction(SetFunction):
 				l=[]
 				l.append(self.cpp_sijs)
 				self.cpp_sijs=l
-			if np.shape(self.cpp_sijs)[0]!=np.shape(self.cpp_sijs)[1] and seperateMaster==False: #TODO: relocate this check to some earlier part of code
+			if np.shape(self.cpp_sijs)[0]!=np.shape(self.cpp_sijs)[1] and self.seperateMaster==False: #TODO: relocate this check to some earlier part of code
 				raise Exception("ERROR: Dense similarity matrix should be a square matrix if ground and master datasets are same")
 
-			self.cpp_obj = FacilityLocation(self.n, self.mode, self.cpp_sijs, self.num_neigh, self.partial, self.cpp_ground_sub)
+			self.cpp_obj = FacilityLocation(self.n, self.mode, self.cpp_sijs, self.num_neigh, self.partial, self.cpp_ground_sub, self.seperateMaster)
 		
 		if self.mode=="sparse": #break scipy sparse matrix to native component lists (for csr implementation)
 			self.cpp_sijs = {}

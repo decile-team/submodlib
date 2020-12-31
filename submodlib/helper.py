@@ -6,7 +6,7 @@ from sklearn.neighbors import NearestNeighbors
 from scipy import sparse
 
 
-def create_kernel(X, X_master=None, mode, metric, num_neigh=-1, n_jobs=1):
+def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1, X_master=None):
     
     if X_master!=None and mode=="sparse":
         raise Exception("ERROR: mode can't be sparse if X_master isn't None")
