@@ -1,13 +1,13 @@
 /*
 constructor() {
-    Input: (bool) is master set same as ground set (separateMaster)
+    Input: (bool) is master set different from ground set (separateMaster)
     Input: (int) number of elements in the ground set (nv)
     Input: (int) number of elements in the master set (nu)
     Input: (string) mode - dense | sparse | clustered (mode)
     Input: (vector<vector<float>>) dense similarity matrix kernel of size U X V (k_dense)
     Input: sparse similarity matrix kernel (k_sparse)
     Input: number of neighbors (num_neighbors)
-    Input: (vector<set>) clustering (clusters)
+    Input: (vector<set>) clustering (clusters) size = num_clusters
     Input: vector of dense kernels (one for each cluster)
     Input: (bool) partial  #only to be used with ClusteredFunction
     Input: (set) items in the partial ground set (ground_subset)

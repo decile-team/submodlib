@@ -11,6 +11,8 @@ constructor() {
         Instantiate f with ci (appropriately in partial mode)
         funcs.push_back(fi)
     }
+
+    //possibly construct a vector clusterIDs such that clusterId[i] gives the cluster id where i belongs
 }
 
 evaluate() {
@@ -36,7 +38,7 @@ marginalGain() {
     Input: X 
     Input: item
 
-    Find which cluster ck item belongs to
+    Find which cluster ck item belongs to (ck = clusterIDs[item])
     return fk.marginalGain(X, item)
 }
 
@@ -44,7 +46,7 @@ marginalGainSequential() {
     Input: X 
     Input: item
 
-    Find which cluster ck item belongs to
+    Find which cluster ck item belongs to (ck = clusterIDs[item])
     return fk.marginalGainSequential(X, item)
 }
 
@@ -52,7 +54,7 @@ sequentialUpdate() {
     Input: X
     Input: item
 
-    Find which cluster ck item belongs to
+    Find which cluster ck item belongs to (ck = clusterIDs[item])
     fk.sequentialUpdate(X, item)
 }
 */
