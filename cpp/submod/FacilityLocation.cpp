@@ -78,7 +78,7 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::ve
 	
 	
 	numEffectiveGroundset = effectiveGroundSet.size();
-	similarityWithNearestInEffectiveX.resize(numEffectiveGroundset, 0);
+	similarityWithNearestInEffectiveX.resize(n_master, 0);
 }
 
 //For sparse mode
@@ -134,7 +134,7 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<float>a
 	
 	
 	numEffectiveGroundset = effectiveGroundSet.size();
-	similarityWithNearestInEffectiveX.resize(numEffectiveGroundset, 0);
+	similarityWithNearestInEffectiveX.resize(n_master, 0);
 	//std::cerr<<"To be implemented\n";
 }
 
@@ -396,7 +396,7 @@ float FacilityLocation::marginalGainSequential(std::set<ll> X, ll item)
 {
 	std::set<ll> effectiveX;
 	float gain = 0;
-
+	//std::cout<<"G\n";
 	if (partial == true)
 	{
 		//effectiveX = intersect(X, effectiveGroundSet)
@@ -409,18 +409,22 @@ float FacilityLocation::marginalGainSequential(std::set<ll> X, ll item)
 
 	if (effectiveGroundSet.find(item) == effectiveGroundSet.end())
 	{
+		//std::cout<<"J1\n";
 		return 0;
 	}
 
 	if (effectiveX.find(item) != effectiveX.end())
 	{
+		//std::cout<<"J2\n";
 		return 0;
 	}
 
 	if (mode == "dense")
 	{
+		//std::cout<<"H\n";
 		for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
 		{
+			//std::cout<<"I\n";
 			ll ind = *it;
 			if (k_dense[ind][item] > similarityWithNearestInEffectiveX[ind])
 			{
@@ -463,6 +467,8 @@ float FacilityLocation::marginalGainSequential(std::set<ll> X, ll item)
 
 void FacilityLocation::sequentialUpdate(std::set<ll> X, ll item)
 {
+
+	//std::cout<<"E\n";
 	std::set<ll> effectiveX;
 
 	if (partial == true)
@@ -485,6 +491,7 @@ void FacilityLocation::sequentialUpdate(std::set<ll> X, ll item)
 		for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
 		{
 			ll ind = *it;
+			//std::cout<<ind<<" "<<item<<"\n";
 			if (k_dense[ind][item] > similarityWithNearestInEffectiveX[ind])
 			{
 				similarityWithNearestInEffectiveX[ind] = k_dense[ind][item];
@@ -532,4 +539,28 @@ std::set<ll> FacilityLocation::getEffectiveGroundSet()
 	return effectiveGroundSet;
 }
 
+
+std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string s,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbosity=false)//TODO: migrate fixed things to constructor
+{
+	/*
+	std::map<std::string, int>map_ID;
+	map_ID["NaiveGreedy"] = 0;
+	map_ID["LazyGreedy"] = 1;
+	map_ID["RandomGreedy"] = 2;
+
+	//std::vector<optimizers *>v_opt;
+	//v_opt.push_back(new NaiveGreedyOptimizer);
+
+	optimizers* arr_opt[] = {new NaiveGreedyOptimizer};
+
+	int opt_ID = map_ID[s];
+
+	return *arr_opt[opt_ID].maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbosity);
+	*/
+	//std::cout<<"A\n";
+	if(s=="NaiveGreedy")
+	{
+		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbosity);
+	} 
+}
 

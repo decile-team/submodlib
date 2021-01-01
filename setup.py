@@ -15,7 +15,7 @@ exec(open('submodlib/version.py').read())
 
 ext_modules = [
     Pybind11Extension("submodlib_cpp",
-        ["cpp/submod/wrapper.cpp","cpp/submod/FacilityLocation.cpp", "cpp/submod/wr_FacilityLocation.cpp", "cpp/submod/helper.cpp", "cpp/submod/wr_helper.cpp","cpp/submod/sparse_utils.cpp", "cpp/submod/wr_sparse_utils.cpp","cpp/optimizers/NaiveGreedyOptimizer.cpp", "cpp/optimizers/wr_NaiveGreedyOptimizer.cpp", "cpp/optimizers/optimizers.cpp", "cpp/submod/SetFunction.cpp"],
+        ["cpp/submod/wrapper.cpp","cpp/submod/FacilityLocation.cpp", "cpp/submod/wr_FacilityLocation.cpp", "cpp/submod/helper.cpp", "cpp/submod/wr_helper.cpp","cpp/submod/sparse_utils.cpp", "cpp/submod/wr_sparse_utils.cpp","cpp/optimizers/NaiveGreedyOptimizer.cpp", "cpp/submod/SetFunction.cpp"],
         # Example: passing in the version to the compiled code
         #sorted(glob("cpp/submod/*.cpp")),
         define_macros = [('VERSION_INFO', __version__)],

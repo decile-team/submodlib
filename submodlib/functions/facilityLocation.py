@@ -190,7 +190,7 @@ class FacilityLocationFunction(SetFunction):
 		
 		return self.cpp_obj.evaluate(X)
 
-	def maximize(self, budget, optimizer):
+	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbosity=False):
 		"""Find the optimal subset with maximum score
 
 		Parameters
@@ -207,7 +207,7 @@ class FacilityLocationFunction(SetFunction):
 
 		"""
 
-		pass
+		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, verbosity)
 	
 	def marginalGain(self, X, element):
 		"""Find the marginal gain of adding an item to a set

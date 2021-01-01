@@ -8,5 +8,6 @@ class SetFunction
     virtual float marginalGainSequential(std::set<ll> X, ll item);
     virtual void sequentialUpdate(std::set<ll> X, ll item);
     virtual std::set<ll> getEffectiveGroundSet();
+    virtual std::vector<std::pair<ll, float>> maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbosity);
 
 };

@@ -1,3 +1,5 @@
+
+
 /*
 Implementation decisions.
 1) Considering the possibility of very large datasets, its safer to use long long int (alias ll) in place of int (for storing size/index of data)
@@ -12,7 +14,15 @@ set is a more natural choice here
 a sparse matrix object either using a custom utility class or using some high performance library like boost.
 
 */
+#ifndef NAIVEGREEDYOPTIMIZER_H
+#define NAIVEGREEDYOPTIMIZER_H
+#include"../optimizers/NaiveGreedyOptimizer.h"
+#endif
+
+#ifndef SETFUNCTION_H
+#define SETFUNCTION_H
 #include"SetFunction.h"
+#endif
 #include"sparse_utils.h"
 typedef long long int ll;
 
@@ -53,6 +63,7 @@ public:
 	float marginalGainSequential(std::set<ll> X, ll item);
 	void sequentialUpdate(std::set<ll> X, ll item);
 	std::set<ll> getEffectiveGroundSet();
+	std::vector<std::pair<ll, float>> maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbosity);
 
 	friend float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj);
 	friend float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj);
@@ -61,3 +72,4 @@ public:
 
 float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj);
 float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj);
+

@@ -19,6 +19,7 @@ void cl_FacilityLocation(py::module &m)
         .def("marginalGain", &FacilityLocation::marginalGain)
         .def("marginalGainSequential", &FacilityLocation::marginalGainSequential)
         .def("sequentialUpdate", &FacilityLocation::sequentialUpdate)
-        .def("getEffectiveGroundSet", &FacilityLocation::getEffectiveGroundSet);
+        .def("getEffectiveGroundSet", &FacilityLocation::getEffectiveGroundSet)
+        .def("maximize", &FacilityLocation::maximize);
         
 }

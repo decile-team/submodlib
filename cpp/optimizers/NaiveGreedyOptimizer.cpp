@@ -7,6 +7,7 @@
 #include<algorithm>
 #include<cmath>
 #include<utility>
+//#include"optimizers.h"
 #include"NaiveGreedyOptimizer.h"
 
 NaiveGreedyOptimizer::NaiveGreedyOptimizer(){}
@@ -15,17 +16,22 @@ NaiveGreedyOptimizer::NaiveGreedyOptimizer(){}
 std::vector<std::pair<ll, float>> NaiveGreedyOptimizer::maximize(SetFunction &f_obj, float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbosity=false)
 //std::vector<std::pair<int, float>> NaiveGreedyOptimizer::maximize(float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbosity=false)
 {
+	//std::cout<<"B\n";
 	std::vector<std::pair<ll, float>>greedyVector;
 	std::set<ll>greedySet;
 	float rem_budget = budget;
-	
+	std::set<ll> groundSet = f_obj.getEffectiveGroundSet();
+
 	while (rem_budget > 0)
 	{
+		//std::cout<<"C\n";
 		ll best_i = -1;
 		float best_val = -1 * std::numeric_limits<float>::max();
-		for (auto it = f_obj.getEffectiveGroundSet().begin(); it != f_obj.getEffectiveGroundSet().end(); ++it)
+		for (auto it = groundSet.begin(); it != groundSet.end(); ++it)
 		{
+			//std::cout<<"D\n";
 			ll i = *it;
+			//std::cout<<i<<" ";
 			if (greedySet.find(i) != greedySet.end())//if a datapoint has already been included in greedySet, skip to next datapoint
 			{
 				continue;
