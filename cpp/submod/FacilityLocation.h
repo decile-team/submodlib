@@ -45,7 +45,7 @@ class FacilityLocation :public SetFunction
 	SparseSim k_sparse = SparseSim(); 
 	std::vector<std::set<ll>>clusters; //vector of clusters (where each cluster is taken as a set of datapoint index)
 	std::vector<std::vector<std::vector<float>>>v_k_cluster;//vector which contains dense similarity matrix for each cluster
-	
+	std::vector<ll>v_k_ind;
 
 	//Specific to dense and sparse mode only
 	std::vector<float> similarityWithNearestInEffectiveX;//memoization vector for dense and sparse mode
@@ -67,7 +67,7 @@ public:
 	FacilityLocation(ll n_, std::string mode_, std::vector<float>arr_val, std::vector<ll>arr_count, std::vector<ll>arr_col, ll num_neighbors_, bool partial_, std::set<ll> ground_);
 
 	//For cluster mode
-	FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_, std::vector<std::vector<std::vector<float>>>v_k_cluster_, ll num_neighbors_, bool partial_, std::set<ll> ground_);
+	FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_, std::vector<std::vector<std::vector<float>>>v_k_cluster_, std::vector<ll>v_k_ind_, ll num_neighbors_, bool partial_, std::set<ll> ground_);
 
 
 	float evaluate(std::set<ll> X);

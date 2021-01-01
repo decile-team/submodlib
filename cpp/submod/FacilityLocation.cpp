@@ -127,7 +127,7 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<float>a
 }
 
 //For cluster mode
-FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_,std::vector<std::vector<std::vector<float>>>v_k_cluster_, ll num_neighbors_, bool partial_, std::set<ll> ground_ )
+FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_,std::vector<std::vector<std::vector<float>>>v_k_cluster_, std::vector<ll>v_k_ind_, ll num_neighbors_, bool partial_, std::set<ll> ground_ )
 {
 	if (mode_ != "cluster")
 	{
@@ -146,6 +146,7 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::se
 	mode = mode_;
 	clusters = clusters_;
 	v_k_cluster = v_k_cluster_;
+	v_k_ind = v_k_ind_;
 	num_neighbors = num_neighbors_;
 	partial = partial_;
 	seperateMaster = false;
@@ -234,10 +235,13 @@ float get_max_sim_cluster(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLo
 	ll i = datapoint_ind, j; 
 	auto it = dataset_ind.begin();
 	float m = obj.v_k_cluster[cluster_id][i][*it];
-	
+	//Possibly transform i,j to local kernel index
 	for (; it != dataset_ind.end(); ++it)
 	{
 		ll j = *it;
+		//Obtain local kernel indicies for given cluster
+		i=obj.v_k_ind[i];
+		j=obj.v_k_ind[j];
 		if (obj.v_k_cluster[cluster_id][i][j] > m)
 		{
 			m = obj.v_k_cluster[cluster_id][i][j];
@@ -454,7 +458,9 @@ float FacilityLocation::marginalGain(std::set<ll> X, ll item)
 					for (auto it = ci.begin(); it != ci.end(); ++it)
 					{
 						ll ind = *it;
-						gain+=v_k_cluster[i][ind][item];
+						ll ind_=v_k_ind[ind];
+						ll item_ = v_k_ind[item];
+						gain+=v_k_cluster[i][ind_][item_];
 					}
 				}
 				else
@@ -462,10 +468,12 @@ float FacilityLocation::marginalGain(std::set<ll> X, ll item)
 					for (auto it = ci.begin(); it != ci.end(); ++it)
 					{
 						ll ind = *it;
+						ll ind_=v_k_ind[ind];
+						ll item_ = v_k_ind[item];
 						float m = get_max_sim_cluster(ind, releventSubset, *this, i);
-						if (v_k_cluster[i][ind][item] > m)
+						if (v_k_cluster[i][ind_][item_] > m)
 						{
-							gain += (v_k_cluster[i][ind][item] - m);
+							gain += (v_k_cluster[i][ind_][item_] - m);
 						}
 					}
 								
@@ -554,7 +562,9 @@ float FacilityLocation::marginalGainSequential(std::set<ll> X, ll item)
 					for (auto it = ci.begin(); it != ci.end(); ++it)
 					{
 						ll ind = *it;
-						gain+=v_k_cluster[i][ind][item];
+						ll ind_=v_k_ind[ind];
+						ll item_ = v_k_ind[item];
+						gain+=v_k_cluster[i][ind_][item_];
 					}
 				}
 				else
@@ -562,7 +572,9 @@ float FacilityLocation::marginalGainSequential(std::set<ll> X, ll item)
 					for (auto it = ci.begin(); it != ci.end(); ++it)
 					{
 						ll ind = *it;
-						float temp_val = v_k_cluster[i][ind][item];
+						ll ind_=v_k_ind[ind];
+						ll item_ = v_k_ind[item];
+						float temp_val = v_k_cluster[i][ind_][item_];
 						
 						if (temp_val > clusteredSimilarityWithNearestInRelevantX[ind])
 						{
@@ -647,7 +659,9 @@ void FacilityLocation::sequentialUpdate(std::set<ll> X, ll item)
 				for (auto it = ci.begin(); it != ci.end(); ++it)
 				{
 					ll ind = *it;
-					float temp_val = v_k_cluster[i][ind][item];	
+					ll ind_=v_k_ind[ind];
+					ll item_ = v_k_ind[item];
+					float temp_val = v_k_cluster[i][ind_][item_];	
 					if (temp_val > clusteredSimilarityWithNearestInRelevantX[ind])
 					{
 						clusteredSimilarityWithNearestInRelevantX[ind]= temp_val;
