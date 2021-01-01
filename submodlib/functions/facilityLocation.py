@@ -52,7 +52,7 @@ class FacilityLocationFunction(SetFunction):
 
 	"""
 
-	def __init__(self, n, n_master=-1, sijs=None, data=None, data_master=None, mode=None, metric="cosine", num_neigh=-1, partial=False, ground_sub=None):
+	def __init__(self, n, n_master=-1, sijs=None, data=None, clusters=None, cluster_sijs=None, data_master=None, mode=None, metric="cosine", num_neigh=-1, partial=False, ground_sub=None):
 		self.n = n
 		self.n_master = n_master
 		self.mode = mode
@@ -81,7 +81,7 @@ class FacilityLocationFunction(SetFunction):
 		if metric not in ['euclidean', 'cosine']:
 			raise Exception("ERROR: Unsupported metric")
 
-		if type(self.sijs)!=type(None): # User has provided matrix directly: simply consume it
+		if type(self.sijs)!=type(None): # User has provided sim matrix directly: simply consume it
 			if np.shape(self.sijs)[0]!=self.n:
 				raise Exception("ERROR: Inconsistentcy between n and no of examples in the given similarity matrix")
 			
@@ -134,7 +134,15 @@ class FacilityLocationFunction(SetFunction):
 						self.sijs = sparse.csr_matrix((val, (row, col)), [n,n])
 
 			else:
-				raise Exception("ERROR: Neither data nor similarity matrix provided")
+				if type(self.cluster)!=type(None) and type(self.cluster_sijs)!=type(None):#User has provided cluster-info
+					if self.mode!="cluster":
+						print("WARNING: Incorrect mode provided for given cluster-info, changing it to cluster")
+						self.mode="cluster"
+				else:
+					if type(self.cluster)!=type(None) or type(self.cluster_sijs)!=type(None):
+						raise Exception("ERROR: Both the cluster and corrosponding list of kernels should be provided")
+					else:
+						raise Exception("ERROR: Neither data nor similarity matrix nor cluster-info provided")
 
 		
 		if self.partial==False: 

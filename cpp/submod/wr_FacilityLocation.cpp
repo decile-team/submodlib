@@ -13,7 +13,7 @@ void cl_FacilityLocation(py::module &m)
         //constructor(no_of_elem_in_ground, mode, sim_matrix or cluster, num_neigh, partial, ground_subset )
         .def(py::init<ll, std::string, std::vector<std::vector<float>>, ll, bool, std::set<ll>, bool >()) //dense matrix
         .def(py::init<ll, std::string, std::vector<float>, std::vector<ll>, std::vector<ll>, ll, bool, std::set<ll>>()) //sparse matrix
-        .def(py::init<ll, std::string, std::vector<std::set<ll>>, ll, bool, std::set<ll>>()) //cluster
+        .def(py::init<ll, std::string, std::vector<std::set<ll>>, std::vector<std::vector<std::vector<float>>>, ll, bool, std::set<ll>>()) //cluster
         .def("evaluate", &FacilityLocation::evaluate)
         .def("evaluateSequential", &FacilityLocation::evaluateSequential)
         .def("marginalGain", &FacilityLocation::marginalGain)

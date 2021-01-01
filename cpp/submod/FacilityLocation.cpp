@@ -118,20 +118,8 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<float>a
 	}
 	
 	//Populating masterSet
-	if(mode=="dense" && seperateMaster==true)
-	{
-		n_master = k_dense.size();	
-		for (ll i = 0; i < n_master; ++i)
-		{
-			masterSet.insert(i); //each insert takes O(log(n)) time
-		}
-	}
-	else
-	{
-		n_master=n;
-		masterSet=effectiveGroundSet;
-	}
-	
+	n_master=n;
+	masterSet=effectiveGroundSet;
 	
 	numEffectiveGroundset = effectiveGroundSet.size();
 	similarityWithNearestInEffectiveX.resize(n_master, 0);
@@ -139,7 +127,7 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<float>a
 }
 
 //For cluster mode
-FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_, ll num_neighbors_, bool partial_, std::set<ll> ground_ )
+FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_,std::vector<std::vector<std::vector<float>>>v_k_cluster_, ll num_neighbors_, bool partial_, std::set<ll> ground_ )
 {
 	if (mode_ != "cluster")
 	{
@@ -154,10 +142,14 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::se
 	}
 
 	n = n_;
+	num_cluster = clusters_.size();
 	mode = mode_;
 	clusters = clusters_;
+	v_k_cluster = v_k_cluster_;
 	num_neighbors = num_neighbors_;
 	partial = partial_;
+	seperateMaster = false;
+	//Populating ground set
 	if (partial == true)
 	{
 		effectiveGroundSet = ground_;
@@ -169,7 +161,32 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::se
 			effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
 		}
 	}
+
+	//Populating masterSet
+	n_master=n;
+	masterSet=effectiveGroundSet;
+
 	numEffectiveGroundset = effectiveGroundSet.size();
+	clusterIDs.resize(n);
+
+	for(int i=0;i<num_cluster;++i)//O(n) (One time operation)
+	{
+		std::set<ll>ci=clusters[i];
+		for (auto it = ci.begin(); it != ci.end(); ++it)
+		{
+			ll ind = *it;
+			clusterIDs[ind]=i;
+		}
+	}
+
+	relevantX.resize(num_cluster);
+	clusteredSimilarityWithNearestInRelevantX.resize(n, 0);
+	
+	/*for(ll i=0;i<num_cluster;++i)//////////
+	{
+		std::set<ll>temp;
+		relevantX.push_back(temp);
+	}*/
 }
 
 //helper friend function
@@ -206,6 +223,24 @@ float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLoc
 		if (temp_val > m)
 		{
 			m = temp_val;
+		}
+	}
+
+	return m;
+}
+
+float get_max_sim_cluster(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj, ll cluster_id)
+{
+	ll i = datapoint_ind, j; 
+	auto it = dataset_ind.begin();
+	float m = obj.v_k_cluster[cluster_id][i][*it];
+	
+	for (; it != dataset_ind.end(); ++it)
+	{
+		ll j = *it;
+		if (obj.v_k_cluster[cluster_id][i][j] > m)
+		{
+			m = obj.v_k_cluster[cluster_id][i][j];
 		}
 	}
 
@@ -253,7 +288,24 @@ float FacilityLocation::evaluate(std::set<ll> X)
 		{
 			if (mode == "clustered")
 			{
-				//TODO
+				for(ll i=0;i<num_cluster;++i)
+				{
+					std::set<ll>releventSubset;
+					std::set<ll>ci = clusters[i];
+					std::set_intersection(X.begin(), X.end(), ci.begin(), ci.end(), std::inserter(releventSubset, releventSubset.begin()));
+
+					if(releventSubset.size()==0)//if no intersection, skip to next cluster
+					{
+						continue;
+					}
+					
+					for (auto it = ci.begin(); it != ci.end(); ++it)
+					{
+						ll ind = *it;
+						result += get_max_sim_cluster(ind, releventSubset, *this, i);
+					}
+					
+				}
 			}
 			else
 			{
@@ -305,7 +357,21 @@ float FacilityLocation::evaluateSequential(std::set<ll> X) //assumes that pre co
 		{
 			if (mode == "clustered")
 			{
-				//TODO
+				for(ll i=0;i<num_cluster;++i)
+				{
+					std::set<ll>ci = clusters[i];
+					if(relevantX[i].size()==0)
+					{
+						continue;
+					}
+					
+					for (auto it = ci.begin(); it != ci.end(); ++it)
+					{
+						ll ind = *it;
+						result += clusteredSimilarityWithNearestInRelevantX[ind];
+					}
+
+				}
 			}
 			else
 			{
@@ -378,7 +444,34 @@ float FacilityLocation::marginalGain(std::set<ll> X, ll item)
 		{
 			if (mode == "clustered")
 			{
-				//TODO
+				ll i = clusterIDs[item];
+				std::set<ll>releventSubset;
+				std::set<ll>ci = clusters[i];
+				std::set_intersection(X.begin(), X.end(), ci.begin(), ci.end(), std::inserter(releventSubset, releventSubset.begin()));
+
+				if(releventSubset.size()==0)
+				{
+					for (auto it = ci.begin(); it != ci.end(); ++it)
+					{
+						ll ind = *it;
+						gain+=v_k_cluster[i][ind][item];
+					}
+				}
+				else
+				{
+					for (auto it = ci.begin(); it != ci.end(); ++it)
+					{
+						ll ind = *it;
+						float m = get_max_sim_cluster(ind, releventSubset, *this, i);
+						if (v_k_cluster[i][ind][item] > m)
+						{
+							gain += (v_k_cluster[i][ind][item] - m);
+						}
+					}
+								
+				}
+				
+
 			}
 			else
 			{
@@ -452,7 +545,33 @@ float FacilityLocation::marginalGainSequential(std::set<ll> X, ll item)
 		{
 			if (mode == "clustered")
 			{
-				//TODO
+				ll i = clusterIDs[item];
+				std::set<ll>releventSubset = relevantX[i];
+				std::set<ll>ci = clusters[i];
+				
+				if(releventSubset.size()==0)
+				{
+					for (auto it = ci.begin(); it != ci.end(); ++it)
+					{
+						ll ind = *it;
+						gain+=v_k_cluster[i][ind][item];
+					}
+				}
+				else
+				{
+					for (auto it = ci.begin(); it != ci.end(); ++it)
+					{
+						ll ind = *it;
+						float temp_val = v_k_cluster[i][ind][item];
+						
+						if (temp_val > clusteredSimilarityWithNearestInRelevantX[ind])
+						{
+							gain += (temp_val - clusteredSimilarityWithNearestInRelevantX[ind]);
+						}
+					}
+					
+				}
+				
 			}
 			else
 			{
@@ -481,12 +600,17 @@ void FacilityLocation::sequentialUpdate(std::set<ll> X, ll item)
 		effectiveX = X;
 	}
 
+	if (effectiveGroundSet.find(item) == effectiveGroundSet.end())
+	{
+		return;
+	}
+	if (X.find(item) != X.end())
+	{
+		return;
+	}
+
 	if (mode == "dense")
 	{
-		if (effectiveGroundSet.find(item) == effectiveGroundSet.end())
-		{
-			return;
-		}
 
 		for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
 		{
@@ -503,11 +627,6 @@ void FacilityLocation::sequentialUpdate(std::set<ll> X, ll item)
 	{
 		if (mode == "sparse")
 		{
-			if (effectiveGroundSet.find(item) == effectiveGroundSet.end())
-			{
-				return;
-			}
-
 			for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
 			{
 				ll ind = *it;
@@ -523,7 +642,20 @@ void FacilityLocation::sequentialUpdate(std::set<ll> X, ll item)
 		{
 			if (mode == "clustered")
 			{
-				//TODO
+				ll i = clusterIDs[item];
+				std::set<ll>ci = clusters[i];
+				for (auto it = ci.begin(); it != ci.end(); ++it)
+				{
+					ll ind = *it;
+					float temp_val = v_k_cluster[i][ind][item];	
+					if (temp_val > clusteredSimilarityWithNearestInRelevantX[ind])
+					{
+						clusteredSimilarityWithNearestInRelevantX[ind]= temp_val;
+					}		 
+		
+				}
+				relevantX[i].insert(item);
+
 			}
 			else
 			{

@@ -29,23 +29,36 @@ typedef long long int ll;
 class FacilityLocation :public SetFunction
 {
 
-	ll n; 
-	ll n_master;
+	//Generic stuff
+	ll n; //number of datapoints in ground set
+	ll n_master; //number of datapoints in master set
 	std::string mode;
-	std::vector<std::vector<float>>k_dense;
-	SparseSim k_sparse = SparseSim(); 
-	std::vector<std::set<ll>>clusters; //vector of clusters (where each cluster is taken as a set of datapoint index)
 	ll num_neighbors;
 	bool partial;
 	bool seperateMaster;
 	std::set<ll> effectiveGroundSet;
 	std::set<ll> masterSet;
 	ll numEffectiveGroundset;
-	std::vector<float> similarityWithNearestInEffectiveX;
-	//std::map<std::vector<float>, ll>map_data_to_ind;
+	
+	//Main kernels and containers for all 3 modes
+	std::vector<std::vector<float>>k_dense;
+	SparseSim k_sparse = SparseSim(); 
+	std::vector<std::set<ll>>clusters; //vector of clusters (where each cluster is taken as a set of datapoint index)
+	std::vector<std::vector<std::vector<float>>>v_k_cluster;//vector which contains dense similarity matrix for each cluster
+	
+
+	//Specific to dense and sparse mode only
+	std::vector<float> similarityWithNearestInEffectiveX;//memoization vector for dense and sparse mode
+	
+	//Specific to cluster mode only
+	ll num_cluster;
+	std::vector<float>clusteredSimilarityWithNearestInRelevantX;//memoization vector for cluster mode
+	std::vector<ll>clusterIDs;//maps index of a datapoint to the ID of cluster where its present.
+	std::vector<std::set<ll>>relevantX;
+	
+
 
 public:
-	//constructor(no_of_elem_in_ground, mode, sim_matrix or cluster, num_neigh, partial, ground_subset )
 
 	//For dense similarity matrix
 	FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_, bool seperateMaster_);
@@ -54,7 +67,7 @@ public:
 	FacilityLocation(ll n_, std::string mode_, std::vector<float>arr_val, std::vector<ll>arr_count, std::vector<ll>arr_col, ll num_neighbors_, bool partial_, std::set<ll> ground_);
 
 	//For cluster mode
-	FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_, ll num_neighbors_, bool partial_, std::set<ll> ground_);
+	FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_, std::vector<std::vector<std::vector<float>>>v_k_cluster_, ll num_neighbors_, bool partial_, std::set<ll> ground_);
 
 
 	float evaluate(std::set<ll> X);
@@ -67,9 +80,11 @@ public:
 
 	friend float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj);
 	friend float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj);
+	friend float get_max_sim_cluster(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj, ll cluster_id);
 };
 
 
 float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj);
 float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj);
+float get_max_sim_cluster(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj, ll cluster_id);
 
