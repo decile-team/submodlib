@@ -79,7 +79,7 @@ class FacilityLocationFunction(SetFunction):
 		if self.partial==True and self.ground_sub==None:
 			raise Exception("ERROR: Ground subset not specified")
 		
-		if mode!=None and mode not in ['dense', 'sparse', 'cluster']: # TODO implement code for cluster 
+		if mode!=None and mode not in ['dense', 'sparse', 'clustered']: # TODO implement code for cluster 
 			raise Exception("ERROR: Incorrect mode")
 		
 		if metric not in ['euclidean', 'cosine']:
@@ -124,7 +124,7 @@ class FacilityLocationFunction(SetFunction):
 				if self.num_neigh==-1 and self.seperateMaster==False:
 					self.num_neigh=np.shape(self.data)[0] #default is total no of datapoints
 
-				if self.mode=="cluster":
+				if self.mode=="clustered":
 					self.clusters, self.cluster_sijs, self.cluster_map = create_cluster(self.data.tolist(), self.metric, self.num_cluster)
 				else:
 					if self.seperateMaster==True: #mode in this case will always be dense
@@ -178,7 +178,7 @@ class FacilityLocationFunction(SetFunction):
 			self.cpp_sijs['arr_col'] = self.sijs.indices.tolist() #contains col index corrosponding to non-zero values in arr_val
 			self.cpp_obj = FacilityLocation(self.n, self.mode, self.cpp_sijs['arr_val'], self.cpp_sijs['arr_count'], self.cpp_sijs['arr_col'], self.num_neigh, self.partial, self.cpp_ground_sub)
 		
-		if self.mode=="cluster":
+		if self.mode=="clustered":
 			l_temp = []
 			for el in self.cluster_sijs:
 				temp=el.tolist()
@@ -188,6 +188,8 @@ class FacilityLocationFunction(SetFunction):
 					temp=l
 				l_temp.append(temp)
 			self.cluster_sijs = l_temp
+
+			self.cpp_obj = FacilityLocation(self.n, self.mode, self.clusters, self.cluster_sijs, self.cluster_map, self.num_neigh, self.partial, self.cpp_ground_sub)
 			
 
 		self.cpp_ground_sub=self.cpp_obj.getEffectiveGroundSet()

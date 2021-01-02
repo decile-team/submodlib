@@ -73,8 +73,8 @@ def create_cluster(X, metric, num_cluster=None):#Here, metric only controls the 
     if num_cluster==None:
         num_cluster=len(obj.subcluster_labels_)
     
-    l_cluster = [set()] * num_cluster
-    l_ind = [0]*np.shape(data)[0]
+    l_cluster= [set() for _ in range(num_cluster)]
+    l_ind = [0]*np.shape(X)[0]
     l_count = [0]*num_cluster
     
     for i, el in enumerate(lab):#For any cluster ID (el), smallest datapoint (i) is filled first
@@ -90,12 +90,12 @@ def create_cluster(X, metric, num_cluster=None):#Here, metric only controls the 
     
     M=None
     if metric=="euclidean":
-        D = euclidean_distances(X_master, X)
+        D = euclidean_distances(X)
         gamma = 1/np.shape(X)[1]
         M = np.exp(-D * gamma) #Obtaining Similarity from distance
     else:
         if metric=="cosine":
-            M = cosine_similarity(X_master, X)
+            M = cosine_similarity(X)
         else:
             raise Exception("ERROR: unsupported metric")
     

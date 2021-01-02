@@ -129,7 +129,19 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<float>a
 //For cluster mode
 FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_,std::vector<std::vector<std::vector<float>>>v_k_cluster_, std::vector<ll>v_k_ind_, ll num_neighbors_, bool partial_, std::set<ll> ground_ )
 {
-	if (mode_ != "cluster")
+	//std::cout<<"A\n";
+	/*
+	for(int i=0;i<clusters_.size();++i)
+	{	
+		std::set<ll>ci = clusters_[i];
+		for (auto it = ci.begin(); it != ci.end(); ++it)
+		{
+			std::cout<<*it<<" ";
+		}
+		std::cout<<"\n";
+	}*/
+
+	if (mode_ != "clustered")
 	{
 		std::cerr << "Error: Incorrect mode specified for the provided cluster\n";
 		return;
@@ -232,19 +244,23 @@ float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLoc
 
 float get_max_sim_cluster(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj, ll cluster_id)
 {
-	ll i = datapoint_ind, j; 
+
+	ll i = datapoint_ind, j, i_, j_; 
 	auto it = dataset_ind.begin();
-	float m = obj.v_k_cluster[cluster_id][i][*it];
+	i_ = obj.v_k_ind[i];
+	j_ = obj.v_k_ind[*it]; 
+	float m = obj.v_k_cluster[cluster_id][i_][j_];
 	//Possibly transform i,j to local kernel index
+
 	for (; it != dataset_ind.end(); ++it)
 	{
 		ll j = *it;
 		//Obtain local kernel indicies for given cluster
-		i=obj.v_k_ind[i];
-		j=obj.v_k_ind[j];
-		if (obj.v_k_cluster[cluster_id][i][j] > m)
+		i_ = obj.v_k_ind[i];
+		j_ = obj.v_k_ind[j];
+		if (obj.v_k_cluster[cluster_id][i_][j_] > m)
 		{
-			m = obj.v_k_cluster[cluster_id][i][j];
+			m = obj.v_k_cluster[cluster_id][i_][j_];
 		}
 	}
 
@@ -292,8 +308,10 @@ float FacilityLocation::evaluate(std::set<ll> X)
 		{
 			if (mode == "clustered")
 			{
+				std::cout<<"A\n";
 				for(ll i=0;i<num_cluster;++i)
 				{
+					std::cout<<"B\n";
 					std::set<ll>releventSubset;
 					std::set<ll>ci = clusters[i];
 					std::set_intersection(X.begin(), X.end(), ci.begin(), ci.end(), std::inserter(releventSubset, releventSubset.begin()));
@@ -305,6 +323,7 @@ float FacilityLocation::evaluate(std::set<ll> X)
 					
 					for (auto it = ci.begin(); it != ci.end(); ++it)
 					{
+						std::cout<<"C\n";
 						ll ind = *it;
 						result += get_max_sim_cluster(ind, releventSubset, *this, i);
 					}
