@@ -27,6 +27,8 @@ typedef long long int ll;
 
 //Note to self: Migrate all parameter related sanity/error checks from C++ FL to Python FL
 
+FacilityLocation::FacilityLocation(){}
+
 //For dense mode
 FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_, bool seperateMaster_)
 {
@@ -75,6 +77,7 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::ve
 		n_master=n;
 		masterSet=effectiveGroundSet;
 	}
+	
 	
 	
 	numEffectiveGroundset = effectiveGroundSet.size();
@@ -208,7 +211,7 @@ float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLoca
 	ll i = datapoint_ind, j; //i comes from masterSet and j comes from X (which is a subset of groundSet)
 	auto it = dataset_ind.begin();
 	float m = obj.k_dense[i][*it];
-	
+
 	for (; it != dataset_ind.end(); ++it)//search max similarity wrt datapoints of given dataset
 	{
 		ll j = *it;
@@ -278,6 +281,10 @@ float FacilityLocation::evaluate(std::set<ll> X)
 	{
 		//effectiveX = intersect(X, effectiveGroundSet)
 		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+		if(effectiveX.size()==0)//verify if returning 0 here is correct
+		{
+			return 0;
+		}
 	}
 	else
 	{
@@ -290,6 +297,7 @@ float FacilityLocation::evaluate(std::set<ll> X)
 		for (auto it = masterSet.begin(); it != masterSet.end(); ++it) //O(n^2) where n=num of elements in effective GS 
 		{
 			ll ind = *it;
+			//std::cout<<ind<<" "<<get_max_sim_dense(ind, effectiveX, *this)<<"\n";
 			result += get_max_sim_dense(ind, effectiveX, *this);
 		}
 	}
@@ -308,10 +316,10 @@ float FacilityLocation::evaluate(std::set<ll> X)
 		{
 			if (mode == "clustered")
 			{
-				std::cout<<"A\n";
+				//std::cout<<"A\n";
 				for(ll i=0;i<num_cluster;++i)
 				{
-					std::cout<<"B\n";
+					//std::cout<<"B\n";
 					std::set<ll>releventSubset;
 					std::set<ll>ci = clusters[i];
 					std::set_intersection(X.begin(), X.end(), ci.begin(), ci.end(), std::inserter(releventSubset, releventSubset.begin()));
@@ -323,7 +331,7 @@ float FacilityLocation::evaluate(std::set<ll> X)
 					
 					for (auto it = ci.begin(); it != ci.end(); ++it)
 					{
-						std::cout<<"C\n";
+						//std::cout<<"C\n";
 						ll ind = *it;
 						result += get_max_sim_cluster(ind, releventSubset, *this, i);
 					}
@@ -351,6 +359,10 @@ float FacilityLocation::evaluateSequential(std::set<ll> X) //assumes that pre co
 	{
 		//effectiveX = intersect(X, effectiveGroundSet)
 		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+		if(effectiveX.size()==0)//verify if returning 0 here is correct
+		{
+			return 0;
+		}
 	}
 	else
 	{
@@ -729,3 +741,8 @@ std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string s,float
 	} 
 }
 
+
+void FacilityLocation::cluster_init(ll n_, std::vector<std::vector<float>>k_dense_, std::set<ll> ground_)
+{
+	*this = FacilityLocation(n_, "dense", k_dense_, -1, true, ground_, false);
+}

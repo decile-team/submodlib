@@ -9,5 +9,5 @@ class SetFunction
     virtual void sequentialUpdate(std::set<ll> X, ll item);
     virtual std::set<ll> getEffectiveGroundSet();
     virtual std::vector<std::pair<ll, float>> maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbosity);
-
+    virtual void cluster_init(ll n_, std::vector<std::vector<float>>k_dense_, std::set<ll> ground_);
 };

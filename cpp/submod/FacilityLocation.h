@@ -60,6 +60,8 @@ class FacilityLocation :public SetFunction
 
 public:
 
+	FacilityLocation();
+
 	//For dense similarity matrix
 	FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_, bool seperateMaster_);
 	
@@ -77,6 +79,8 @@ public:
 	void sequentialUpdate(std::set<ll> X, ll item);
 	std::set<ll> getEffectiveGroundSet();
 	std::vector<std::pair<ll, float>> maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbosity);
+	void cluster_init(ll n_, std::vector<std::vector<float>>k_dense_, std::set<ll> ground_);
+
 
 	friend float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj);
 	friend float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj);
