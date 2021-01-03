@@ -75,6 +75,20 @@ def f_6():
     obj = FacilityLocationFunction(n=5, data=data, mode="sparse", metric="cosine")
     return obj
 
+@pytest.fixture
+def f_7():
+    data=np.array([
+    [100, 21, 365, 5], 
+    [57, 18, -5, -6], 
+    [16, 255, 68, -8], 
+    [2,20,6, 2000], 
+    [12,20,68, 200]
+    ])
+
+    num_cluster=2
+    obj = FacilityLocationFunction(n=5, data=data, mode="clustered", metric="euclidean", num_cluster=num_cluster)
+    return obj
+
 
 class TestFL:
     
@@ -142,6 +156,19 @@ class TestFL:
         X = {0,2}
         item = 1
         assert math.isclose(round(f_6.marginalGain(X, item),3), 0.673)
+
+    def test_7_1(self, f_7): 
+        X = {1}
+        assert math.isclose(round(f_7.evaluate(X),2), 1)
+    
+    def test_7_2(self, f_7):
+        X = {0,2}
+        assert math.isclose(round(f_7.evaluate(X),2), 2)
+
+    def test_7_3(self, f_7):
+        X = {0,2}
+        item = 1
+        assert math.isclose(round(f_7.marginalGain(X, item),2), 1)
 
 
     #Negative Test cases:
