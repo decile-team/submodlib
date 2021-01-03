@@ -52,7 +52,7 @@ class FacilityLocationFunction(SetFunction):
 
 	"""
 
-	def __init__(self, n, n_master=-1, sijs=None, data=None, data_master=None, mode=None, metric="cosine", num_neigh=-1, num_cluster=None, partial=False, ground_sub=None):
+	def __init__(self, n, n_master=-1, sijs=None, data=None, data_master=None, cluster_lab=None, mode=None, metric="cosine", num_neigh=-1, num_cluster=None, partial=False, ground_sub=None):
 		self.n = n
 		self.n_master = n_master
 		self.mode = mode
@@ -67,6 +67,7 @@ class FacilityLocationFunction(SetFunction):
 		self.clusters=None
 		self.cluster_sijs=None
 		self.cluster_map=None
+		self.cluster_lab=cluster_lab
 		self.num_cluster=num_cluster
 		self.cpp_obj = None
 		self.cpp_sijs = None
@@ -104,7 +105,7 @@ class FacilityLocationFunction(SetFunction):
 				if type(self.sijs) == scipy.sparse.csr.csr_matrix:
 					self.mode="sparse"
 		else:
-			if type(self.data)!=type(None): # User has only provided data: build similarity matrix/cluster and consume it
+			if type(self.data)!=type(None): # User has only provided data: build similarity matrix/cluster-info and consume it
 				
 				if np.shape(self.data)[0]!=self.n:
 					raise Exception("ERROR: Inconsistentcy between n and no of examples in the given data matrix")
@@ -125,7 +126,7 @@ class FacilityLocationFunction(SetFunction):
 					self.num_neigh=np.shape(self.data)[0] #default is total no of datapoints
 
 				if self.mode=="clustered":
-					self.clusters, self.cluster_sijs, self.cluster_map = create_cluster(self.data.tolist(), self.metric, self.num_cluster)
+					self.clusters, self.cluster_sijs, self.cluster_map = create_cluster(self.data.tolist(), self.metric, self.cluster_lab, self.num_cluster)
 				else:
 					if self.seperateMaster==True: #mode in this case will always be dense
 						self.sijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_master.tolist(), self.metric))
@@ -141,17 +142,6 @@ class FacilityLocationFunction(SetFunction):
 							self.sijs = sparse.csr_matrix((val, (row, col)), [n,n])
 
 			else:
-				'''
-				if type(self.cluster)!=type(None) and type(self.cluster_sijs)!=type(None):#User has provided cluster-info
-					if self.mode!="cluster":
-						print("WARNING: Incorrect mode provided for given cluster-info, changing it to cluster")
-						self.mode="cluster"
-				else:
-					if type(self.cluster)!=type(None) or type(self.cluster_sijs)!=type(None):
-						raise Exception("ERROR: Both the cluster and corrosponding list of kernels should be provided")
-					else:
-						raise Exception("ERROR: Neither data nor similarity matrix nor cluster-info provided")
-				'''
 				raise Exception("ERROR: Neither data nor similarity matrix provided")
 		
 		if self.partial==False: 
@@ -190,7 +180,6 @@ class FacilityLocationFunction(SetFunction):
 			self.cluster_sijs = l_temp
 
 			self.cpp_obj = FacilityLocation(self.n, self.mode, self.clusters, self.cluster_sijs, self.cluster_map, self.num_neigh, self.partial, self.cpp_ground_sub)
-			
 
 		self.cpp_ground_sub=self.cpp_obj.getEffectiveGroundSet()
 		self.ground_sub=self.cpp_ground_sub

@@ -65,14 +65,21 @@ def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1, X_master=None):
 
 
 
-def create_cluster(X, metric, num_cluster=None):#Here, metric only controls the similarity scores in sim-kernel of each cluster. 
-                                                #Clustering always happens using Euclidean Distance
-    obj = Birch(n_clusters=num_cluster)
-    obj = obj.fit(X)
-    lab = obj.predict(X).tolist()
-    if num_cluster==None:
-        num_cluster=len(obj.subcluster_labels_)
+def create_cluster(X, metric, cluster_lab=None, num_cluster=None): #Here cluster_lab is a list which specifies custom cluster mapping of a datapoint to a cluster
     
+    lab=[]
+    if cluster_lab==None:
+        obj = Birch(n_clusters=num_cluster)
+        obj = obj.fit(X)
+        lab = obj.predict(X).tolist()
+        if num_cluster==None:
+            num_cluster=len(obj.subcluster_labels_)
+    else:
+        if num_cluster==None:
+            raise Exception("ERROR: num_cluster needs to be specified if cluster_lab is provided")
+        lab=cluster_lab
+
+
     l_cluster= [set() for _ in range(num_cluster)]
     l_ind = [0]*np.shape(X)[0]
     l_count = [0]*num_cluster
@@ -84,9 +91,9 @@ def create_cluster(X, metric, num_cluster=None):#Here, metric only controls the 
         l_count[el]=l_count[el]+1
         
     l_kernel =[]
-    for el in l_cluster:
+    for el in l_cluster: 
         k = len(el)
-        l_kernel.append(np.zeros((k,k)))
+        l_kernel.append(np.zeros((k,k))) #putting placeholder matricies of suitable size
     
     M=None
     if metric=="euclidean":
