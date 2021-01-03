@@ -5,7 +5,6 @@
 #include<string>
 #include<cmath>
 #include<set>
-#include<map>
 #include"sparse_utils.h"
 
 SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vector<ll> a_col) : arr_val(a_val), arr_count(a_count), arr_col(a_col), num_ind(a_count.size()-1), alwaysNonZero(false) // O(num_ind*num_neigh*log(num_neigh)) (One time operation)

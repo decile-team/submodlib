@@ -4,7 +4,7 @@
 
 #include <pybind11/pybind11.h>
 #include<pybind11/stl.h>
-#include"sparse_utils.h"
+#include"../utils/sparse_utils.h"
 #include "wrapper.h"
 
 namespace py = pybind11;

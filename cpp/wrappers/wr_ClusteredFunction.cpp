@@ -1,6 +1,6 @@
 #include <pybind11/pybind11.h>
 #include<pybind11/stl.h>
-#include"ClusteredFunction.h"
+#include"../submod/ClusteredFunction.h"
 #include "wrapper.h"
 
 namespace py = pybind11;
