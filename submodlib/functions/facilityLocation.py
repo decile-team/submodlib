@@ -29,11 +29,20 @@ class FacilityLocationFunction(SetFunction):
 	n : int
 		Number of elements in the ground set
 	
+	n_master : int
+		Number of elements in the ground set
+	
 	sijs : numpy ndarray or scipy sparse matrix, optional
 		Similarity matrix to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed based on the following additional parameters
 
 	data : numpy ndarray, optional
 		Data matrix which will be used for computing the similarity matrix
+
+	data_master : numpy ndarray, optional
+		Data matrix which will be used for computing rectangular similarity matrix in case ground and master are different
+
+	cluster_lab : list, optional
+		Its a list that contains cluster label corrosponding to ith datapoint
 
 	mode: str, optional
 		It specifies weather similarity matrix will be dense or sparse. By default, its sparse
@@ -43,6 +52,10 @@ class FacilityLocationFunction(SetFunction):
 	
 	num_neigh : int, optional
 		While constructing similarity matrix, number of nearest neighbors whose similarity values will be kept resulting in a sparse similarity matrix for computation speed up (at the cost of accuracy)
+
+	num_cluster : int, optional
+		number of clusters to be created (if only data matrix is provided) or number of clusters being used (if precreated cluster labels are also provided along with data matrix).
+		Note that num_cluster must be provided if cluster_lab has been provided 
 
 	partial: bool, optional
 		if True, a subset of ground set will be used. By default, its False. 
@@ -80,7 +93,7 @@ class FacilityLocationFunction(SetFunction):
 		if self.partial==True and self.ground_sub==None:
 			raise Exception("ERROR: Ground subset not specified")
 		
-		if mode!=None and mode not in ['dense', 'sparse', 'clustered']: # TODO implement code for cluster 
+		if mode!=None and mode not in ['dense', 'sparse', 'clustered']:
 			raise Exception("ERROR: Incorrect mode")
 		
 		if metric not in ['euclidean', 'cosine']:

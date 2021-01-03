@@ -16,6 +16,7 @@ void cl_ClusteredFunction(py::module &m)
         .def("marginalGain", &ClusteredFunction::marginalGain)
         .def("marginalGainSequential", &ClusteredFunction::marginalGainSequential)
         .def("sequentialUpdate", &ClusteredFunction::sequentialUpdate)
+        .def("getEffectiveGroundSet", &ClusteredFunction::getEffectiveGroundSet)
         .def("maximize", &ClusteredFunction::maximize);
         
 }
