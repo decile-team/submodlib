@@ -25,7 +25,7 @@ ext_modules = [
 
 
 setup(
-    name='submodlib6',
+    name='submodlib',
     #packages=find_packages(include=['submodlib']),
     packages=['submodlib', 'submodlib/functions'],
     #packages=find_packages('submodlib'),
