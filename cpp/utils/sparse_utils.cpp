@@ -7,6 +7,45 @@
 #include<set>
 #include"sparse_utils.h"
 
+
+/*//A proposed optimization
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Change in constructor: Remove the body, it contains a nested loop that fills information from csr matrix in set for efficien access.
+SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vector<ll> a_col) : arr_val(a_val), arr_count(a_count), arr_col(a_col), num_ind(a_count.size()-1), alwaysNonZero(false) // O(num_ind*num_neigh*log(num_neigh)) (One time operation){}
+
+//Reason: This loop takes O(num_ind*num_neigh*log(num_neigh)) and thus might be acting as a bottleneck.
+//I have realized that, we can still have the efficient log(num_neigh) access without this preprocessing loop. 
+
+
+
+//Change in get_val(): Column indicies (for a particular row) in arr_col vector will be present in sorted order. Therefore, we can simply use binary binary search to
+//check if corrosponding to a given row, given column has a non-zero value or not.
+//Here we can use std::binary_search() and std::lower_bound() to do this as shown next. 
+float SparseSim::get_val(ll r, ll c) // O(log(num_neigh))
+{
+	if (r >= num_ind || c >= num_ind || r < 0 || c < 0)
+	{
+		std::cerr << "ERROR: Incorrect row/column provided\n";
+		return -2;
+	}
+
+	ll lower_i = arr_count[r];
+	ll upper_i = arr_count[r + 1]; 
+	
+	if (std::binary_search(arr_col.begin()+lower_i, arr_col.begin()+upper_i, c))//if column c wrt row r has a non-zero value 
+	{	
+		//obtain non-zero value stored at (r,c) 
+		auto it = std::lower_bound(arr_col.begin()+lower_i, arr_col.begin()+upper_i, c);
+		return arr_val[*it];
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+*/
+
 SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vector<ll> a_col) : arr_val(a_val), arr_count(a_count), arr_col(a_col), num_ind(a_count.size()-1), alwaysNonZero(false) // O(num_ind*num_neigh*log(num_neigh)) (One time operation)
 {
 	v_col_ID.resize(num_ind);
