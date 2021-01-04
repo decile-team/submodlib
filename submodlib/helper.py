@@ -69,7 +69,7 @@ def create_cluster(X, metric, cluster_lab=None, num_cluster=None): #Here cluster
     
     lab=[]
     if cluster_lab==None:
-        obj = Birch(n_clusters=num_cluster)
+        obj = Birch(n_clusters=num_cluster) #https://scikit-learn.org/stable/modules/clustering.html#birch
         obj = obj.fit(X)
         lab = obj.predict(X).tolist()
         if num_cluster==None:
