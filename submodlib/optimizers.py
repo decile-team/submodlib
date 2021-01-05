@@ -25,7 +25,7 @@ class NaiveGreedy(Optimizer):
     """
 
     def __init__():
-        #
+        pass
 
     def run():
         pass

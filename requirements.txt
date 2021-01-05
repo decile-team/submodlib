@@ -1,6 +1,4 @@
-sphinxcontrib_bibtex
 pybind11>=2.6.0
 numpy
 scipy
 sklearn
-pytest

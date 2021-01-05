@@ -22,7 +22,8 @@ copyright = '2020, Vishal Kaushal'
 author = 'Vishal Kaushal'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.3'
+version = '0.0.7'
+release = '0.0.7'
 
 
 # -- General configuration ---------------------------------------------------
@@ -45,6 +46,8 @@ extensions = [
     'sphinxcontrib.bibtex'
 ]
 
+bibtex_bibfiles = ['ref.bib']
+
 #mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js'
 
 autosummary_generate = True
@@ -63,8 +66,8 @@ exclude_patterns = []
 source_suffix = '.rst'
 
 import submodlib
-version = submodlib.__version__
-release = submodlib.__version__
+#version = submodlib.__version__
+#release = submodlib.__version__
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
