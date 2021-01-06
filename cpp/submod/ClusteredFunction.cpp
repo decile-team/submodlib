@@ -46,6 +46,8 @@ ClusteredFunction::ClusteredFunction(ll n_, std::string fun_name_, std::vector<s
         if(fun_name=="FacilityLocation")
         {
             f_obj = new FacilityLocation;
+        } else if(fun_name == "DisparitySum") {
+            f_obj = new DisparitySum;
         }
         //std::cout<<i<<"\n";
         f_obj->cluster_init(ci.size(),kernel,ci); 
@@ -134,5 +136,7 @@ std::vector<std::pair<ll, float>> ClusteredFunction::maximize(std::string s,floa
 	if(s=="NaiveGreedy")
 	{
 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbosity);
-	} 
+	} else {
+        std::cerr << "Not yet implemented" << std::endl;
+    }
 }

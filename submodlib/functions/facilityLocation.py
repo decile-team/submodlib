@@ -18,6 +18,11 @@ class FacilityLocationFunction(SetFunction):
 	
 	For each image :math:`i` in the ground set :math:`V`, we compute the representative from subset :math:`X` which is closest to :math:`i` and add these similarities for all images. 
 
+	In a more generic setting, the set whose representation is desired (we call it master set :math:`U`) may be different from the set whose subset is desired (we call it ground set :math:`V`). The expression for Facility-Location function then becomes
+
+	.. math::
+			f(X) = \\sum_{i \\in U} \\max_{j \\in X} s_{ij} 
+
 	Facility-Location is monotone submodular.
 	
 	.. note:: 

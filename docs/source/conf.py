@@ -22,8 +22,8 @@ copyright = '2020, Vishal Kaushal'
 author = 'Vishal Kaushal'
 
 # The full version, including alpha/beta/rc tags
-version = '0.0.7'
-release = '0.0.7'
+#version = '0.0.7'
+#release = '0.0.7'
 
 
 # -- General configuration ---------------------------------------------------
@@ -66,8 +66,8 @@ exclude_patterns = []
 source_suffix = '.rst'
 
 import submodlib
-#version = submodlib.__version__
-#release = submodlib.__version__
+version = submodlib.__version__
+release = submodlib.__version__
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

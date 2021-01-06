@@ -23,7 +23,12 @@ a sparse matrix object either using a custom utility class or using some high pe
 #define SETFUNCTION_H
 #include"SetFunction.h"
 #endif
+
+#ifndef SPARSEUTILS_H
+#define SPARSEUTILS_H
 #include"../utils/sparse_utils.h"
+#endif
+
 typedef long long int ll;
 
 class FacilityLocation :public SetFunction

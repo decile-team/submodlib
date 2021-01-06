@@ -11,7 +11,8 @@
 
 #ifndef FACILITYLOCATION_H
 #define FACILITYLOCATION_H
-#include"FacilityLocation.h"
+#include "FacilityLocation.h"
+#include "DisparitySum.h"
 #endif
 
 typedef long long int ll;

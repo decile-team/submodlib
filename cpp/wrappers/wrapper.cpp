@@ -8,6 +8,7 @@ typedef long long int ll;
 PYBIND11_MODULE(submodlib_cpp, m) 
 {
     cl_FacilityLocation(m);
+    cl_DisparitySum(m);
     cl_helper(m);
     cl_sparse_utils(m);
     cl_ClusteredFunction(m);
