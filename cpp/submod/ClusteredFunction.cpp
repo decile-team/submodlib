@@ -103,9 +103,25 @@ float ClusteredFunction::evaluateSequential(std::set<ll> X)
 
 float ClusteredFunction::marginalGain(std::set<ll> X, ll item)
 {
+    
     ll i = clusterIDs[item];
     std::set<ll>X_temp = translate_X(X, *this, i);
     ll item_temp = v_k_ind[item];
+    
+    if(X_temp.size()==0)
+    {
+        float gain=0;
+        std::set<ll>ci = clusters[i];
+
+        for (auto it = ci.begin(); it != ci.end(); ++it)
+        {
+            ll ind = *it;
+            ll ind_=v_k_ind[ind];
+            ll item_ = v_k_ind[item];
+            gain+=v_k_cluster[i][ind_][item_];
+        }
+        return gain;
+    }
     return v_fun[i]->marginalGain(X_temp, item_temp);
 }
 
@@ -114,6 +130,21 @@ float ClusteredFunction::marginalGainSequential(std::set<ll> X, ll item)
     ll i = clusterIDs[item];
     std::set<ll>X_temp = translate_X(X, *this, i);
     ll item_temp = v_k_ind[item];
+
+    if(X_temp.size()==0)
+    {
+        float gain=0;
+        std::set<ll>ci = clusters[i];
+
+        for (auto it = ci.begin(); it != ci.end(); ++it)
+        {
+            ll ind = *it;
+            ll ind_=v_k_ind[ind];
+            ll item_ = v_k_ind[item];
+            gain+=v_k_cluster[i][ind_][item_];
+        }
+        return gain;
+    }
     return v_fun[i]->marginalGainSequential(X_temp, item_temp);
 }
 
