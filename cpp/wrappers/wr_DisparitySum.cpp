@@ -19,5 +19,6 @@ void cl_DisparitySum(py::module &m)
         .def("marginalGainSequential", &DisparitySum::marginalGainSequential)
         .def("sequentialUpdate", &DisparitySum::sequentialUpdate)
         .def("getEffectiveGroundSet", &DisparitySum::getEffectiveGroundSet)
+        .def("clearPreCompute", &DisparitySum::clearPreCompute)
         .def("maximize", &DisparitySum::maximize);
 }

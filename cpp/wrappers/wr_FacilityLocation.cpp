@@ -20,6 +20,7 @@ void cl_FacilityLocation(py::module &m)
         .def("marginalGainSequential", &FacilityLocation::marginalGainSequential)
         .def("sequentialUpdate", &FacilityLocation::sequentialUpdate)
         .def("getEffectiveGroundSet", &FacilityLocation::getEffectiveGroundSet)
+        .def("clearPreCompute", &FacilityLocation::clearPreCompute)
         .def("maximize", &FacilityLocation::maximize);
         
 }

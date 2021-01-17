@@ -97,7 +97,7 @@ def f_7():
 def f_test_content(): #Using the data in Basic_Usage Notebook for testing (tests 8,9,10)       
     num_clusters = 10
     cluster_std_dev = 4
-    points, cluster_ids = make_blobs(n_samples=500, centers=num_clusters, n_features=2, cluster_std=cluster_std_dev, center_box=(0,100))
+    points, cluster_ids = make_blobs(n_samples=500, centers=num_clusters, n_features=30, cluster_std=cluster_std_dev, center_box=(0,100))
     data = list(map(tuple, points))
     dataArray = np.array(data)
     #Set1

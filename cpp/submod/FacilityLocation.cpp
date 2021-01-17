@@ -281,15 +281,19 @@ float FacilityLocation::evaluate(std::set<ll> X)
 	{
 		//effectiveX = intersect(X, effectiveGroundSet)
 		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
-		if(effectiveX.size()==0)//verify if returning 0 here is correct
-		{
-			return 0;
-		}
+
 	}
 	else
 	{
 		effectiveX = X;
 	}
+
+	if(effectiveX.size()==0)//verify if returning 0 here is correct
+	{
+		return 0;
+	}
+	
+
 
 	if (mode == "dense")
 	{
@@ -359,14 +363,16 @@ float FacilityLocation::evaluateSequential(std::set<ll> X) //assumes that pre co
 	{
 		//effectiveX = intersect(X, effectiveGroundSet)
 		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
-		if(effectiveX.size()==0)//verify if returning 0 here is correct
-		{
-			return 0;
-		}
+
 	}
 	else
 	{
 		effectiveX = X;
+	}
+
+	if(effectiveX.size()==0)//verify if returning 0 here is correct
+	{
+		return 0;
 	}
 
 	if (mode == "dense")
@@ -745,4 +751,17 @@ std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string s,float
 void FacilityLocation::cluster_init(ll n_, std::vector<std::vector<float>>k_dense_, std::set<ll> ground_)
 {
 	*this = FacilityLocation(n_, "dense", k_dense_, -1, true, ground_, false);
+}
+
+void FacilityLocation::clearPreCompute()
+{
+	for(int i=0;i<similarityWithNearestInEffectiveX.size();++i)
+	{
+		similarityWithNearestInEffectiveX[i]=0;
+	}
+	for(int i=0;i<clusteredSimilarityWithNearestInRelevantX.size();++i)
+	{
+		clusteredSimilarityWithNearestInRelevantX[i]=0;
+	}
+		
 }

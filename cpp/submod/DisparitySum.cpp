@@ -220,3 +220,17 @@ void DisparitySum::cluster_init(ll n_, std::vector<std::vector<float>> k_dense_,
                                 std::set<ll> ground_) {
     *this = DisparitySum(n_, "dense", k_dense_, -1, true, ground_);
 }
+
+void DisparitySum::clearPreCompute()
+{
+    /*//Uncomment this after implementing memoization for DisparityMin
+	for(int i=0;i<similarityWithNearestInEffectiveX.size();++i)
+	{
+		similarityWithNearestInEffectiveX[i]=0;
+	}
+	for(int i=0;i<clusteredSimilarityWithNearestInRelevantX.size();++i)
+	{
+		clusteredSimilarityWithNearestInRelevantX[i]=0;
+	}
+	*/	
+}
