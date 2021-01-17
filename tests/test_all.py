@@ -6,8 +6,8 @@ from sklearn.metrics.pairwise import cosine_distances
 from sklearn.neighbors import NearestNeighbors
 from scipy import sparse
 import scipy
-from submodlib_cpp import FacilityLocation, ClusteredFunction, DisparitySum 
-#from submodlib import ClusteredFunction, FacilityLocationFunction
+#from submodlib_cpp import FacilityLocation, DisparitySum 
+from submodlib import FacilityLocationFunction, DisparitySumFunction
 from submodlib.helper import create_kernel
 import math
 import random
@@ -15,10 +15,6 @@ import copy
 from sklearn.datasets import make_blobs
 random.seed(1)
 
-l_name = ["FacilityLocation", "ClusteredFunction", "DisparitySum"]
-
-#@pytest.fixture
-#def f_test_content():
 num_clusters = 10
 cluster_std_dev = 4
 points, cluster_ids = make_blobs(n_samples=100, centers=num_clusters, n_features=10, cluster_std=cluster_std_dev, center_box=(0,100))
@@ -33,18 +29,16 @@ l_order2 = l_order1.copy()
 random.shuffle(l_order2)
 l_order = [l_order1, l_order2]
 
-#l_K = [
- #   create_kernel(dataArray, 'dense','euclidean'),
-  #  ]
 _, K_dense = create_kernel(dataArray, 'dense','euclidean')
 
 l_fun=[
-    FacilityLocation(100, "dense", K_dense.tolist(), 100, False, ground_sub, False),
-    DisparitySum(100, "dense", K_dense.tolist(), 100, False, ground_sub)
+    FacilityLocationFunction(n=100, data=dataArray, mode="dense", metric="euclidean"),#obj0
+    DisparitySumFunction(n=100, data=dataArray, mode="dense", metric="euclidean"),#obj1
     ]
 
 
 class TestAll:
+
     @pytest.mark.parametrize("obj", l_fun)
     def test_order(self, obj): #Testing that order of insertions doesn't affect memoization
         flag = [True, True]
@@ -75,5 +69,43 @@ class TestAll:
             obj.clearPreCompute()
         assert flag[0]==flag[1] and flag[0]==True
         
+    @pytest.mark.parametrize("obj", l_fun)
+    def test_eval(self, obj): #Validating that normal eval and memoized eval produce same results
+        set_ = set()
+        l = l_ind[:10]
+        for el in l:
+            #print("id", el)
+            obj.sequentialUpdate(set_, el)
+            set_.add(el)
+            ev = obj.evaluate(set_)
+            evalSeq = obj.evaluateSequential(set_)
+        
+        obj.clearPreCompute()
+        assert math.isclose(round(ev,3), round(evalSeq,3))
+    
+    @pytest.mark.parametrize("obj", l_fun)
+    def test_gain(self, obj): #Validating that naive gain, normal gain and memoized gain produce same results
+        set_ = set()
+        l = l_ind[:10]
+        for el in l:
+            #print("id", el)
+            obj.sequentialUpdate(set_, el)
+            set_.add(el)
+            ev = obj.evaluate(set_)
+            evalSeq = obj.evaluateSequential(set_)
 
+        item = l_ind[11]
+        set_.add(item)
+        naiveGain = obj.evaluate(set_) - ev
+        set_.remove(item)
+        simpleGain = obj.marginalGain(set_, item)
+        memoGain = obj.marginalGainSequential(set_, item)
 
+        assert math.isclose(round(naiveGain,3), round(simpleGain,3)) and math.isclose(round(memoGain,3), round(simpleGain,3))
+    
+    @pytest.mark.parametrize("obj", l_fun)
+    def test_ground_eval(self, obj): #Validating that eval on ground set is non-negative, non-zero, non-nan and non-infinity
+        set_ = obj.getEffectiveGroundSet()
+        ev = obj.evaluate(set_)
+
+        assert ev>0 and not math.isnan(ev) and not math.isinf(ev)

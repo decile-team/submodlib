@@ -270,3 +270,18 @@ class FacilityLocationFunction(SetFunction):
 			raise Exception("ERROR: X is not a subset of ground set")
 
 		return self.cpp_obj.marginalGain(X, element)
+
+	def marginalGainSequential(self, X, element):
+		return self.cpp_obj.marginalGainSequential(X, element)
+
+	def evaluateSequential(self, X):
+		return self.cpp_obj.evaluateSequential(X)
+
+	def sequentialUpdate(self, X, element):
+		self.cpp_obj.sequentialUpdate(X, element)
+	
+	def clearPreCompute(self):
+		self.cpp_obj.clearPreCompute()
+	
+	def getEffectiveGroundSet(self):
+		return self.cpp_obj.getEffectiveGroundSet()
