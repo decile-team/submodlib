@@ -128,8 +128,8 @@ def f_9(f_test_content): #For C++ Sparse VS Python Sparse
     set1 = set(subset1[:-1])
     set2 = set(subset2[:-1])
     obj1 = FacilityLocationFunction(n=500, data=dataArray, mode="sparse", metric="euclidean", num_neigh=10)
-    _, K_dense = create_kernel(dataArray, "sparse",'euclidean', num_neigh=10)
-    obj2 = FacilityLocationFunction(n=500, sijs = K_dense, num_neigh=10)
+    _, K_sparse = create_kernel(dataArray, "sparse",'euclidean', num_neigh=10)
+    obj2 = FacilityLocationFunction(n=500, sijs = K_sparse, num_neigh=10)
     return (obj1, obj2)
 
 
@@ -163,8 +163,32 @@ def f_12(f_test_content): #For FL clustered mode VS ClusteredFunction (When clus
     return (obj1, obj2)
 
 
-class TestFL:
+@pytest.fixture
+def f_14(f_test_content): #For FL dense VS FL sparse (C++ kernel)
+    dataArray, subset1, subset2, cluster_ids = f_test_content
+    set1 = set(subset1[:-1])
+    set2 = set(subset2[:-1])
+    obj1 = FacilityLocationFunction(n=500, data=dataArray, mode="dense", metric="euclidean", num_neigh=10)
+    obj2 = FacilityLocationFunction(n=500, data=dataArray, mode="sparse", metric="euclidean", num_neigh=10)
+    return (obj1, obj2)
 
+
+
+@pytest.fixture
+def f_15(f_test_content): #For FL dense VS FL sparse (Python kernel)
+    dataArray, subset1, subset2, cluster_ids = f_test_content
+    set1 = set(subset1[:-1])
+    set2 = set(subset2[:-1])
+    _, K_dense = create_kernel(dataArray, 'dense','euclidean', num_neigh=10)
+    obj1 = FacilityLocationFunction(n=500, sijs = K_dense, num_neigh=10)
+    
+    _, K_sparse = create_kernel(dataArray, "sparse",'euclidean', num_neigh=10)
+    obj2 = FacilityLocationFunction(n=500, sijs = K_sparse, num_neigh=10)
+    return (obj1, obj2)
+
+
+class TestFL:
+    
     #Testing wrt similarity matrix
     def test_1_1(self, f_1):
         X = {1}
@@ -385,6 +409,73 @@ class TestFL:
         set1 = set(subset1[:-1])
         set2 = set(subset2[:-1])
         assert math.isclose(round(obj1.marginalGain(set1, subset2[-1]),2), round(obj2.marginalGain(set1, subset2[-1]),2))
+
+
+
+    def test_14_1(self, f_test_content, f_14): #eval on set1
+        obj1, obj2 = f_14
+        dataArray, subset1, subset2, _ = f_test_content
+        set1 = set(subset1[:-1])
+        set2 = set(subset2[:-1])
+        assert math.isclose(round(obj1.evaluate(set1),2), round(obj2.evaluate(set1),2))
+
+    def test_14_2(self, f_test_content, f_14):#eval on set2
+        obj1, obj2 = f_14
+        dataArray, subset1, subset2, _ = f_test_content
+        set1 = set(subset1[:-1])
+        set2 = set(subset2[:-1])
+        assert math.isclose(round(obj1.evaluate(set2),2), round(obj2.evaluate(set2),2))
+
+    def test_14_3(self, f_test_content, f_14):#marginal on same cluster
+        obj1, obj2 = f_14
+        dataArray, subset1, subset2, _ = f_test_content
+        set1 = set(subset1[:-1])
+        set2 = set(subset2[:-1])
+        assert math.isclose(round(obj1.marginalGain(set1, subset1[-1]),2), round(obj2.marginalGain(set1, subset1[-1]),2))
+
+    def test_14_4(self, f_test_content, f_14):#marginal on different cluster
+        obj1, obj2 = f_14
+        dataArray, subset1, subset2, _ = f_test_content
+        set1 = set(subset1[:-1])
+        set2 = set(subset2[:-1])
+        assert math.isclose(round(obj1.marginalGain(set1, subset2[-1]),2), round(obj2.marginalGain(set1, subset2[-1]),2))
+
+
+
+
+    def test_15_1(self, f_test_content, f_15): #eval on set1
+        obj1, obj2 = f_15
+        dataArray, subset1, subset2, _ = f_test_content
+        set1 = set(subset1[:-1])
+        set2 = set(subset2[:-1])
+        assert math.isclose(round(obj1.evaluate(set1),2), round(obj2.evaluate(set1),2))
+
+    def test_15_2(self, f_test_content, f_15):#eval on set2
+        obj1, obj2 = f_15
+        dataArray, subset1, subset2, _ = f_test_content
+        set1 = set(subset1[:-1])
+        set2 = set(subset2[:-1])
+        assert math.isclose(round(obj1.evaluate(set2),2), round(obj2.evaluate(set2),2))
+
+    def test_15_3(self, f_test_content, f_15):#marginal on same cluster
+        obj1, obj2 = f_15
+        dataArray, subset1, subset2, _ = f_test_content
+        set1 = set(subset1[:-1])
+        set2 = set(subset2[:-1])
+        assert math.isclose(round(obj1.marginalGain(set1, subset1[-1]),2), round(obj2.marginalGain(set1, subset1[-1]),2))
+
+    def test_15_4(self, f_test_content, f_15):#marginal on different cluster
+        obj1, obj2 = f_15
+        dataArray, subset1, subset2, _ = f_test_content
+        set1 = set(subset1[:-1])
+        set2 = set(subset2[:-1])
+        assert math.isclose(round(obj1.marginalGain(set1, subset2[-1]),2), round(obj2.marginalGain(set1, subset2[-1]),2))
+
+
+
+
+
+
 
 
     #Negative Test cases:
