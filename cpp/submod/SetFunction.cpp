@@ -13,4 +13,4 @@ std::set<ll> SetFunction::getEffectiveGroundSet(){}
 std::vector<std::pair<ll, float>> SetFunction::maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbosity){}
 void SetFunction::cluster_init(ll n_, std::vector<std::vector<float>>k_dense_, std::set<ll> ground_){}
 void SetFunction::setMemoization(std::set<ll> X){}
-void SetFunction::clearPreCompute(){}
+void SetFunction::clearMemoization(){}

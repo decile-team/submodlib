@@ -66,7 +66,7 @@ class TestAll:
                 obj.updateMemoization(set_, l_order[ord_id][i])
                 set_.add(l_order[ord_id][i])
 
-            obj.clearPreCompute() #Remeber to clear the memoization just before the assert of each function
+            obj.clearMemoization() #Remeber to clear the memoization just before the assert of each function
         assert flag[0]==flag[1] and flag[0]==True
         
     @pytest.mark.parametrize("obj", l_fun)
@@ -80,7 +80,7 @@ class TestAll:
             ev = obj.evaluate(set_)
             evalSeq = obj.evaluateWithMemoization(set_)
         
-        obj.clearPreCompute() #Remeber to clear the memoization just before the assert of each function
+        obj.clearMemoization() #Remeber to clear the memoization just before the assert of each function
         assert math.isclose(round(ev,3), round(evalSeq,3))
     
     @pytest.mark.parametrize("obj", l_fun)
@@ -101,7 +101,7 @@ class TestAll:
         simpleGain = obj.marginalGain(set_, item)
         memoGain = obj.marginalGainWithMemoization(set_, item)
         
-        obj.clearPreCompute() #Remeber to clear the memoization just before the assert of each function
+        obj.clearMemoization() #Remeber to clear the memoization just before the assert of each function
         assert math.isclose(round(naiveGain,3), round(simpleGain,3)) and math.isclose(round(memoGain,3), round(simpleGain,3))
     
     @pytest.mark.parametrize("obj", l_fun)
@@ -119,5 +119,5 @@ class TestAll:
         ev = obj.evaluate(X)
         evalSeq = obj.evaluateWithMemoization(X)
         
-        obj.clearPreCompute() #Remeber to clear the memoization just before the assert of each function
+        obj.clearMemoization() #Remeber to clear the memoization just before the assert of each function
         assert math.isclose(round(ev,3), round(evalSeq,3))

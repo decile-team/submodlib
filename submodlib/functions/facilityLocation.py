@@ -301,8 +301,8 @@ class FacilityLocationFunction(SetFunction):
 	def updateMemoization(self, X, element):
 		self.cpp_obj.updateMemoization(X, element)
 	
-	def clearPreCompute(self):
-		self.cpp_obj.clearPreCompute()
+	def clearMemoization(self):
+		self.cpp_obj.clearMemoization()
 	
 	def setMemoization(self, X):
 		self.cpp_obj.setMemoization(X)

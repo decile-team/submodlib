@@ -743,7 +743,7 @@ void FacilityLocation::cluster_init(ll n_, std::vector<std::vector<float>>k_dens
 	*this = FacilityLocation(n_, "dense", k_dense_, -1, true, ground_, false);
 }
 
-void FacilityLocation::clearPreCompute()
+void FacilityLocation::clearMemoization()
 {
 	//TODO: essentially we want to reset similarityWithNearestInEffectiveX for dense and sparse modes and we want to reset relevantX and clusteredSimilarityWithNearestInRelevantX for clustered mode
 
@@ -768,7 +768,7 @@ void FacilityLocation::clearPreCompute()
 
 void FacilityLocation::setMemoization(std::set<ll> X) 
 {
-    clearPreCompute();
+    clearMemoization();
     std::set<ll>temp;
 	for (auto it = X.begin(); it != X.end(); ++it)
 	{	

@@ -56,7 +56,7 @@ class DisparitySum : public SetFunction {
                                                bool verbosity);
     void cluster_init(ll n_, std::vector<std::vector<float>> k_dense_,
                       std::set<ll> ground_);
-    void clearPreCompute();
+    void clearMemoization();
     void setMemoization(std::set<ll> X);
 
     friend float get_sum_dense(std::set<ll> dataset_ind, DisparitySum obj);

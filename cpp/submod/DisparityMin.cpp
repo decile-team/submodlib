@@ -221,7 +221,7 @@ void DisparityMin::cluster_init(ll n_, std::vector<std::vector<float>> k_dense_,
     *this = DisparityMin(n_, "dense", k_dense_, -1, true, ground_);
 }
 
-void DisparityMin::clearPreCompute()
+void DisparityMin::clearMemoization()
 {
     currentSum=0;	
 }

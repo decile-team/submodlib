@@ -221,7 +221,7 @@ void DisparitySum::cluster_init(ll n_, std::vector<std::vector<float>> k_dense_,
     *this = DisparitySum(n_, "dense", k_dense_, -1, true, ground_);
 }
 
-void DisparitySum::clearPreCompute()
+void DisparitySum::clearMemoization()
 {
     currentSum=0;	
 }

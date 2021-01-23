@@ -20,7 +20,7 @@ void cl_FacilityLocation(py::module &m)
         .def("marginalGainWithMemoization", &FacilityLocation::marginalGainWithMemoization)
         .def("updateMemoization", &FacilityLocation::updateMemoization)
         .def("getEffectiveGroundSet", &FacilityLocation::getEffectiveGroundSet)
-        .def("clearPreCompute", &FacilityLocation::clearPreCompute)
+        .def("clearMemoization", &FacilityLocation::clearMemoization)
         .def("setMemoization", &FacilityLocation::setMemoization)
         .def("maximize", &FacilityLocation::maximize);
         

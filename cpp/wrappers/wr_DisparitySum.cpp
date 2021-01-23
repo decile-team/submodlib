@@ -19,7 +19,7 @@ void cl_DisparitySum(py::module &m)
         .def("marginalGainWithMemoization", &DisparitySum::marginalGainWithMemoization)
         .def("updateMemoization", &DisparitySum::updateMemoization)
         .def("getEffectiveGroundSet", &DisparitySum::getEffectiveGroundSet)
-        .def("clearPreCompute", &DisparitySum::clearPreCompute)
+        .def("clearMemoization", &DisparitySum::clearMemoization)
         .def("setMemoization", &DisparitySum::setMemoization)
         .def("maximize", &DisparitySum::maximize);
 }
