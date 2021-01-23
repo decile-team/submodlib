@@ -8,11 +8,14 @@ from sklearn.cluster import Birch #https://scikit-learn.org/stable/modules/clust
 
 
 def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1, X_master=None):
-    
-    if X_master!=None and mode=="sparse":
-        raise Exception("ERROR: mode can't be sparse if X_master isn't None")
+    #print(type(X_master))
+    if type(X_master)!=type(None) and mode=="sparse":
+        raise Exception("ERROR: sparse mode not allowed when using rectangular kernel")
 
-    if num_neigh==-1 and X_master==None:
+    if type(X_master)!=type(None) and num_neigh!=-1:
+        raise Exception("ERROR: num_neigh can't be specified when using rectangular kernel")
+
+    if num_neigh==-1 and type(X_master)==type(None):
         num_neigh=np.shape(X)[0] #default is total no of datapoints
 
     if num_neigh>np.shape(X)[0]:
@@ -22,7 +25,7 @@ def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1, X_master=None):
         dense=None
         D=None
         if metric=="euclidean":
-            if X_master==None:
+            if type(X_master)==type(None):
                 D = euclidean_distances(X)
             else:
                 D = euclidean_distances(X_master, X)
@@ -31,7 +34,7 @@ def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1, X_master=None):
         else:
             if metric=="cosine":
                 #D = cosine_distances(X) 
-                if X_master==None:
+                if type(X_master)==type(None):
                     dense = cosine_similarity(X)
                 else:
                     dense = cosine_similarity(X_master, X)
@@ -40,7 +43,7 @@ def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1, X_master=None):
         
         #nbrs = NearestNeighbors(n_neighbors=2, metric='precomputed', n_jobs=n_jobs).fit(D)
         dense_ = None
-        if X_master==None:
+        if type(X_master)==type(None):
             nbrs = NearestNeighbors(n_neighbors=num_neigh, metric=metric, n_jobs=n_jobs).fit(X)
             _, ind = nbrs.kneighbors(X)
             ind_l = [(index[0],x) for index, x in np.ndenumerate(ind)]
@@ -55,7 +58,7 @@ def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1, X_master=None):
             if num_neigh!=-1:       
                 return num_neigh, dense_
             else:
-                return dense_
+                return dense_ #num_neigh is not returned because its not a sensible value in case of rectangular kernel
         else:
             sparse_csr = sparse.csr_matrix(dense_)
             return num_neigh, sparse_csr

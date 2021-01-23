@@ -70,7 +70,7 @@ class FacilityLocationFunction(SetFunction):
 
 	"""
 
-	def __init__(self, n, n_master=-1, sijs=None, data=None, data_master=None, cluster_lab=None, mode=None, metric="cosine", num_neigh=-1, num_cluster=None, partial=False, ground_sub=None):
+	def __init__(self, n, n_master=-1, sijs=None, data=None, data_master=None, cluster_lab=None, mode=None, metric="cosine", num_neigh=-1, num_cluster=None, partial=False, ground_sub=None, seperateMaster=None):
 		self.n = n
 		self.n_master = n_master
 		self.mode = mode
@@ -81,7 +81,7 @@ class FacilityLocationFunction(SetFunction):
 		self.num_neigh = num_neigh
 		self.partial = partial
 		self.ground_sub = ground_sub
-		self.seperateMaster=False
+		self.seperateMaster=seperateMaster
 		self.clusters=None
 		self.cluster_sijs=None
 		self.cluster_map=None
@@ -105,11 +105,12 @@ class FacilityLocationFunction(SetFunction):
 			raise Exception("ERROR: Unsupported metric")
 
 		if type(self.sijs)!=type(None): # User has provided sim matrix directly: simply consume it
-			if np.shape(self.sijs)[0]!=self.n:
-				raise Exception("ERROR: Inconsistentcy between n and no of examples in the given similarity matrix")
-			
+
 			if type(self.sijs) == scipy.sparse.csr.csr_matrix and num_neigh==-1:
 				raise Exception("ERROR: num_neigh for given sparse matrix not provided")
+			if type(self.sijs) == np.ndarray and type(self.seperateMaster)==type(None):
+				raise Exception("ERROR: seperateMaster bool must be specified with custom dense kernal")
+
 			if self.mode!=None: # Ensure that there is no inconsistency in similarity matrix and provided mode
 				if type(self.sijs) == np.ndarray and self.mode!="dense":
 					print("WARNING: Incorrect mode provided for given similarity matrix, changing it to dense")
@@ -121,24 +122,40 @@ class FacilityLocationFunction(SetFunction):
 				if type(self.sijs) == np.ndarray:
 					self.mode="dense"
 				if type(self.sijs) == scipy.sparse.csr.csr_matrix:
-					self.mode="sparse"
+					self.mode="sparse"	
+
+			if self.seperateMaster == True:
+				if self.mode=="sparse" or self.mode=="cluster":
+						raise Exception("ERROR: mode can't be sparse or cluster if ground and master datasets are different")
+				if partial==True:
+						raise Exception("ERROR: partial can't be True if ground and master datasets are different")	
+				if np.shape(self.sijs)[1]!=self.n or (self.n_master!=-1 and np.shape(self.sijs)[0]!=self.n_master):
+					raise Exception("ERROR: Inconsistentcy between n_master, n and no of rows, columns of given similarity matrix")
+			else:
+				if np.shape(self.sijs)[0]!=self.n:
+					raise Exception("ERROR: Inconsistentcy between n and no of examples in the given similarity matrix")
+
 		else:
 			if type(self.data)!=type(None): # User has only provided data: build similarity matrix/cluster-info and consume it
 				
-				if np.shape(self.data)[0]!=self.n:
-					raise Exception("ERROR: Inconsistentcy between n and no of examples in the given data matrix")
-
 				if type(self.data_master)!=type(None):
 					self.seperateMaster=True
-					if np.shape(self.data_master)[0]!=self.n_master:
-						raise Exception("ERROR: Inconsistentcy between n_master and no of examples in the given data_master matrix")
+					if type(self.mode)==type(None):
+						self.mode = "dense"
+
 					if self.mode=="sparse" or self.mode=="cluster":
 						raise Exception("ERROR: mode can't be sparse or cluster if ground and master datasets are different")
 					if partial==True:
 						raise Exception("ERROR: partial can't be True if ground and master datasets are different")
+					if np.shape(self.data)[0]!=self.n or (self.n_master!=-1 and np.shape(self.data_master)[0]!=self.n_master):
+						raise Exception("ERROR: Inconsistentcy between n, n_master and no of examples in the given ground data matrix and master data matrix")
+				else:
+					self.seperateMaster=False
+					if type(self.mode)==type(None):
+						self.mode = "sparse"
 
-				if self.mode==None:
-					self.mode="sparse"
+					if np.shape(self.data)[0]!=self.n:
+						raise Exception("ERROR: Inconsistentcy between n and no of examples in the given data matrix")
 
 				if self.num_neigh==-1 and self.seperateMaster==False:
 					self.num_neigh=np.shape(self.data)[0] #default is total no of datapoints

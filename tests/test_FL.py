@@ -24,13 +24,13 @@ def f_1():# A simple easy to calculate test case
         [5,4,3],
         [4,7,5]
         ]) 
-    obj = FacilityLocationFunction(n=3, sijs=M)
+    obj = FacilityLocationFunction(n=3, sijs=M, seperateMaster=False)
     return obj
 
 @pytest.fixture
 def f_2(): #Boundary case of just one element
     M = np.array([-0.78569]) 
-    obj = FacilityLocationFunction(n=1, sijs=M)
+    obj = FacilityLocationFunction(n=1, sijs=M, seperateMaster=False)
     return obj
 
 @pytest.fixture
@@ -42,7 +42,7 @@ def f_3(): #more realistic test case
         [-0.1, 0.1, 0.1405, 0.0023, 0.3], 
         [-0.123456, 0.0789, 0.00456, 0.001, -0.9]
         ]) 
-    obj = FacilityLocationFunction(n=5, sijs=M)
+    obj = FacilityLocationFunction(n=5, sijs=M, seperateMaster=False)
     return obj
 
 
@@ -119,7 +119,7 @@ def f_8(f_test_content): #For C++ Dense VS Python Dense
     set2 = set(subset2[:-1])
     obj1 = FacilityLocationFunction(n=500, data=dataArray, mode="dense", metric="euclidean")
     _, K_dense = create_kernel(dataArray, 'dense','euclidean')
-    obj2 = FacilityLocationFunction(n=500, sijs = K_dense)
+    obj2 = FacilityLocationFunction(n=500, sijs = K_dense, seperateMaster=False)
     return (obj1, obj2)
 
 @pytest.fixture
@@ -180,15 +180,23 @@ def f_15(f_test_content): #For FL dense VS FL sparse (Python kernel)
     set1 = set(subset1[:-1])
     set2 = set(subset2[:-1])
     _, K_dense = create_kernel(dataArray, 'dense','euclidean', num_neigh=10)
-    obj1 = FacilityLocationFunction(n=500, sijs = K_dense, num_neigh=10)
+    obj1 = FacilityLocationFunction(n=500, sijs = K_dense, num_neigh=10, seperateMaster=False)
     
     _, K_sparse = create_kernel(dataArray, "sparse",'euclidean', num_neigh=10)
     obj2 = FacilityLocationFunction(n=500, sijs = K_sparse, num_neigh=10)
     return (obj1, obj2)
-
+    
+@pytest.fixture
+def f_16(): #For Rectangular Kernel
+    data = np.array([[5, 6],  [1, 3], [2,20], [5,45], [16, -8]])
+    data_master = np.array([[0, 1],  [10, 2], [12,20]])
+    obj1 = FacilityLocationFunction(n=5, n_master = 3, data=data, data_master = data_master, metric='euclidean')
+    K_dense = create_kernel(X = data, X_master = data_master, mode = 'dense', metric = 'euclidean')
+    obj2 = FacilityLocationFunction(n=5, sijs = K_dense, seperateMaster=True)
+    return (obj1, obj2)
 
 class TestFL:
-    
+
     #Testing wrt similarity matrix
     def test_1_1(self, f_1):
         X = {1}
@@ -471,31 +479,37 @@ class TestFL:
         set2 = set(subset2[:-1])
         assert math.isclose(round(obj1.marginalGain(set1, subset2[-1]),2), round(obj2.marginalGain(set1, subset2[-1]),2))
 
+    
+    def test_16_1(self, f_test_content, f_16): #eval on rectangular kernel
+        obj1, obj2 = f_16
+        set1 = {0,2}
+        assert math.isclose(round(obj1.evaluate(set1),3), round(obj2.evaluate(set1),3)) and math.isclose(round(obj1.evaluate(set1),3), round(0.0765797184,3))
 
 
-
-
-
+    def test_16_2(self, f_test_content, f_16): #eval on rectangular kernel
+        obj1, obj2 = f_16
+        set1 = {0,2}
+        assert math.isclose(round(obj1.marginalGain(set1,1),3), round(obj2.marginalGain(set1,1),3)) and math.isclose(round(obj1.marginalGain(set1,1),3), round(0.2977787019,3))
 
 
     #Negative Test cases:
     def test_4_1(self): #Non-square dense similarity matrix 
         M = np.array([[1,2,3], [4,5,6]])
         try:
-            FacilityLocationFunction(n=2, sijs=M)
+            FacilityLocationFunction(n=2, sijs=M, seperateMaster=False)
         except Exception as e:
             assert str(e)=="ERROR: Dense similarity matrix should be a square matrix if ground and master datasets are same"
 
     def test_4_2(self): #Inconsistency between n and no of examples in M
         M = np.array([[1,2,3], [4,5,6]])
         try:
-            FacilityLocationFunction(n=1, sijs=M)
+            FacilityLocationFunction(n=1, sijs=M, seperateMaster=False)
         except Exception as e:
             assert str(e)=="ERROR: Inconsistentcy between n and no of examples in the given similarity matrix"
 
     def test_4_3(self): # X not a subset of ground set for evaluate()
         M = np.array([[1,2], [3,4]])
-        obj = FacilityLocationFunction(n=2, sijs=M)
+        obj = FacilityLocationFunction(n=2, sijs=M, seperateMaster=False)
         X={0,2}
         try:
             obj.evaluate(X)
@@ -504,7 +518,7 @@ class TestFL:
 
     def test_4_4(self): # X not a subset of ground set for marginalGain()
         M = np.array([[1,2], [3,4]])
-        obj = FacilityLocationFunction(n=2, sijs=M)
+        obj = FacilityLocationFunction(n=2, sijs=M, seperateMaster=False)
         X={0,2}
         try:
             obj.marginalGain(X, 1)
@@ -530,20 +544,3 @@ class TestFL:
         except Exception as e:
             assert str(e)=="ERROR: Number of elements in ground set can't be 0"
     
-
-    
-
-
-
-    
-
-
-
-    
-    
-
-
-
-
-
-        

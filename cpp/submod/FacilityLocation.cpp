@@ -11,6 +11,13 @@ set is a more natural choice here
 3) For sparse mode, constructor will accept sparse matrix as a collection of 3 component vectors (for csr) and use them to instantiate
 a sparse matrix object either using a custom utility class or using some high performance library like boost.
 
+Possible Improvement.
+If order of elements in X, groundset, effectiveGroundSet etc doesn't matter, we can improve the performance further by using unordered_set instead of 
+set. unordered_set is implemented using hashmap and has an average search complexity of O(1). Although, if this is done then we also need to write
+a custom function for "Intersection" because set_intersection() only work on containers with sorted data. Also, to avoid excessive rehashing, we will
+have to reserve a certain number of buckets in advance.
+
+
 */
 
 #include<iostream>
@@ -723,22 +730,7 @@ std::set<ll> FacilityLocation::getEffectiveGroundSet()
 
 std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string s,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbosity=false)//TODO: migrate fixed things to constructor
 {
-	/*
-	std::map<std::string, int>map_ID;
-	map_ID["NaiveGreedy"] = 0;
-	map_ID["LazyGreedy"] = 1;
-	map_ID["RandomGreedy"] = 2;
 
-	//std::vector<optimizers *>v_opt;
-	//v_opt.push_back(new NaiveGreedyOptimizer);
-
-	optimizers* arr_opt[] = {new NaiveGreedyOptimizer};
-
-	int opt_ID = map_ID[s];
-
-	return *arr_opt[opt_ID].maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbosity);
-	*/
-	//std::cout<<"A\n";
 	if(s=="NaiveGreedy")
 	{
 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbosity);
@@ -767,7 +759,7 @@ void FacilityLocation::clearPreCompute()
 	}
 		
 }
-
+/*
 void FacilityLocation::setMemoization(std::set<ll> X) {
     clearPreCompute();
     Set::const_iterator it;
@@ -777,4 +769,5 @@ void FacilityLocation::setMemoization(std::set<ll> X) {
         incSet.insert(*it);
     }
 }
+*/
 

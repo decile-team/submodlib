@@ -16,7 +16,7 @@ print(K_sparse)
 
 #dryrun of C++ FL and Python FL when user provides similarity matrix
 #1) with dense matrix
-obj = FacilityLocationFunction(n=3, sijs = K_dense)
+obj = FacilityLocationFunction(n=3, sijs = K_dense, seperateMaster=False)
 X = {1}
 print(obj.evaluate(X))
 X = {1,2}
