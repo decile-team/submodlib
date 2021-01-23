@@ -14,10 +14,10 @@ void cl_DisparitySum(py::module &m)
         .def(py::init<ll, std::string, std::vector<std::vector<float>>, ll, bool, std::set<ll> >()) //dense matrix
         .def(py::init<ll, std::string, std::vector<float>, std::vector<ll>, std::vector<ll>, ll, bool, std::set<ll>>()) //sparse matrix
         .def("evaluate", &DisparitySum::evaluate)
-        .def("evaluateSequential", &DisparitySum::evaluateSequential)
+        .def("evaluateWithMemoization", &DisparitySum::evaluateWithMemoization)
         .def("marginalGain", &DisparitySum::marginalGain)
-        .def("marginalGainSequential", &DisparitySum::marginalGainSequential)
-        .def("sequentialUpdate", &DisparitySum::sequentialUpdate)
+        .def("marginalGainWithMemoization", &DisparitySum::marginalGainWithMemoization)
+        .def("updateMemoization", &DisparitySum::updateMemoization)
         .def("getEffectiveGroundSet", &DisparitySum::getEffectiveGroundSet)
         .def("clearPreCompute", &DisparitySum::clearPreCompute)
         .def("setMemoization", &DisparitySum::setMemoization)

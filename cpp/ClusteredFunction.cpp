@@ -24,12 +24,12 @@ evaluate() {
     return result;
 }
 
-evaluateSequential() {
+evaluateWithMemoization() {
     //assumes necessary memoization is in place for X 
     Input: subset to be evaluated (X)
     result = 0;
     for i = 1 to m {
-        result += fi.evaluateSequential(X)
+        result += fi.evaluateWithMemoization(X)
     }
     return result;
 }
@@ -42,19 +42,19 @@ marginalGain() {
     return fk.marginalGain(X, item)
 }
 
-marginalGainSequential() {
+marginalGainWithMemoization() {
     Input: X 
     Input: item
 
     Find which cluster ck item belongs to (ck = clusterIDs[item])
-    return fk.marginalGainSequential(X, item)
+    return fk.marginalGainWithMemoization(X, item)
 }
 
-sequentialUpdate() {
+updateMemoization() {
     Input: X
     Input: item
 
     Find which cluster ck item belongs to (ck = clusterIDs[item])
-    fk.sequentialUpdate(X, item)
+    fk.updateMemoization(X, item)
 }
 */

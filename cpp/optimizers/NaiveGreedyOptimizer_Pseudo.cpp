@@ -28,7 +28,7 @@ maximize() {
             if i in greedySet {
                 continue
             }
-            gain = f.marginalGainSequential(greedySet, i)
+            gain = f.marginalGainWithMemoization(greedySet, i)
             if gain > currValBest { 
                 currValBest = gain;
                 currIdBest = i
@@ -39,7 +39,7 @@ maximize() {
             break
         } else {
             //add this guy and proceed to next iteration
-            f.sequentialUpdate(greedySet, currIdBest) 
+            f.updateMemoization(greedySet, currIdBest) 
             greedySet.insert(currIdBest)
             greedyVector.push_back(currIdBest, currValBest)
             remainingBudget -= 1

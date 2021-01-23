@@ -36,7 +36,7 @@ std::vector<std::pair<ll, float>> NaiveGreedyOptimizer::maximize(SetFunction &f_
 			{
 				continue;
 			}
-			float gain = f_obj.marginalGainSequential(greedySet, i);
+			float gain = f_obj.marginalGainWithMemoization(greedySet, i);
 			if (gain > best_val)
 			{
 				best_i = i;
@@ -49,7 +49,7 @@ std::vector<std::pair<ll, float>> NaiveGreedyOptimizer::maximize(SetFunction &f_
 		}
 		else
 		{
-			f_obj.sequentialUpdate(greedySet, best_i); //memoize the result of current iteration of while loop
+			f_obj.updateMemoization(greedySet, best_i); //memoize the result of current iteration of while loop
 			greedySet.insert(best_i); //greedily insert the best datapoint index of current iteration of while loop
 			greedyVector.push_back(std::pair<ll, float>(best_i, best_val));
 			rem_budget-=1;

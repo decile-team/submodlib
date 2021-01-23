@@ -15,10 +15,10 @@ void cl_FacilityLocation(py::module &m)
         .def(py::init<ll, std::string, std::vector<float>, std::vector<ll>, std::vector<ll>, ll, bool, std::set<ll>>()) //sparse matrix
         .def(py::init<ll, std::string, std::vector<std::set<ll>>, std::vector<std::vector<std::vector<float>>>, std::vector<ll>, ll, bool, std::set<ll>>()) //cluster
         .def("evaluate", &FacilityLocation::evaluate)
-        .def("evaluateSequential", &FacilityLocation::evaluateSequential)
+        .def("evaluateWithMemoization", &FacilityLocation::evaluateWithMemoization)
         .def("marginalGain", &FacilityLocation::marginalGain)
-        .def("marginalGainSequential", &FacilityLocation::marginalGainSequential)
-        .def("sequentialUpdate", &FacilityLocation::sequentialUpdate)
+        .def("marginalGainWithMemoization", &FacilityLocation::marginalGainWithMemoization)
+        .def("updateMemoization", &FacilityLocation::updateMemoization)
         .def("getEffectiveGroundSet", &FacilityLocation::getEffectiveGroundSet)
         .def("clearPreCompute", &FacilityLocation::clearPreCompute)
         .def("setMemoization", &FacilityLocation::setMemoization)

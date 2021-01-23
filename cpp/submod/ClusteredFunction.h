@@ -35,10 +35,10 @@ class ClusteredFunction : public SetFunction
     public:
     ClusteredFunction(ll n_, std::string fun_name_, std::vector<std::set<ll>>clusters_, std::vector<std::vector<std::vector<float>>>v_k_cluster_, std::vector<ll>v_k_ind_ );
     float evaluate(std::set<ll> X);
-	float evaluateSequential(std::set<ll> X);
+	float evaluateWithMemoization(std::set<ll> X);
 	float marginalGain(std::set<ll> X, ll item);
-	float marginalGainSequential(std::set<ll> X, ll item);
-	void sequentialUpdate(std::set<ll> X, ll item);
+	float marginalGainWithMemoization(std::set<ll> X, ll item);
+	void updateMemoization(std::set<ll> X, ll item);
     std::set<ll> getEffectiveGroundSet();
     std::vector<std::pair<ll, float>> maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbosity);
 

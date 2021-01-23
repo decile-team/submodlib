@@ -292,14 +292,14 @@ class FacilityLocationFunction(SetFunction):
 
 		return self.cpp_obj.marginalGain(X, element)
 
-	def marginalGainSequential(self, X, element):
-		return self.cpp_obj.marginalGainSequential(X, element)
+	def marginalGainWithMemoization(self, X, element):
+		return self.cpp_obj.marginalGainWithMemoization(X, element)
 
-	def evaluateSequential(self, X):
-		return self.cpp_obj.evaluateSequential(X)
+	def evaluateWithMemoization(self, X):
+		return self.cpp_obj.evaluateWithMemoization(X)
 
-	def sequentialUpdate(self, X, element):
-		self.cpp_obj.sequentialUpdate(X, element)
+	def updateMemoization(self, X, element):
+		self.cpp_obj.updateMemoization(X, element)
 	
 	def clearPreCompute(self):
 		self.cpp_obj.clearPreCompute()

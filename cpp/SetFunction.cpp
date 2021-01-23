@@ -4,7 +4,7 @@ evaluate() {
 
 }
 
-evaluateSequential() {
+evaluateWithMemoization() {
 
 }
 
@@ -12,11 +12,11 @@ marginalGain() {
 
 }
 
-marginalGainSequential() {
+marginalGainWithMemoization() {
 
 }
 
-sequentialUpdate() {
+updateMemoization() {
 
 }
 

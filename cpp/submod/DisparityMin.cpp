@@ -135,7 +135,7 @@ float DisparityMin::evaluate(std::set<ll> X) {
     return result;
 }
 
-float DisparityMin::evaluateSequential(
+float DisparityMin::evaluateWithMemoization(
     std::set<ll>
         X)  // assumes that memoization exists for effectiveX
 {
@@ -193,11 +193,11 @@ float DisparityMin::marginalGain(std::set<ll> X, ll item) {
     return gain;
 }
 
-float DisparityMin::marginalGainSequential(std::set<ll> X, ll item) {
+float DisparityMin::marginalGainWithMemoization(std::set<ll> X, ll item) {
     return marginalGain(X, item);
 }
 
-void DisparityMin::sequentialUpdate(std::set<ll> X, ll item) {
+void DisparityMin::updateMemoization(std::set<ll> X, ll item) {
     currentSum += marginalGain(X, item);
 }
 

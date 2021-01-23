@@ -45,10 +45,10 @@ class DisparityMin : public SetFunction {
                  ll num_neighbors_, bool partial_, std::set<ll> ground_);
 
     float evaluate(std::set<ll> X);
-    float evaluateSequential(std::set<ll> X);
+    float evaluateWithMemoization(std::set<ll> X);
     float marginalGain(std::set<ll> X, ll item);
-    float marginalGainSequential(std::set<ll> X, ll item);
-    void sequentialUpdate(std::set<ll> X, ll item);
+    float marginalGainWithMemoization(std::set<ll> X, ll item);
+    void updateMemoization(std::set<ll> X, ll item);
     std::set<ll> getEffectiveGroundSet();
     std::vector<std::pair<ll, float>> maximize(std::string, float budget,
                                                bool stopIfZeroGain,

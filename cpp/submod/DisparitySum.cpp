@@ -135,7 +135,7 @@ float DisparitySum::evaluate(std::set<ll> X) {
     return result;
 }
 
-float DisparitySum::evaluateSequential(
+float DisparitySum::evaluateWithMemoization(
     std::set<ll>
         X)  // assumes that memoization exists for effectiveX
 {
@@ -193,11 +193,11 @@ float DisparitySum::marginalGain(std::set<ll> X, ll item) {
     return gain;
 }
 
-float DisparitySum::marginalGainSequential(std::set<ll> X, ll item) {
+float DisparitySum::marginalGainWithMemoization(std::set<ll> X, ll item) {
     return marginalGain(X, item);
 }
 
-void DisparitySum::sequentialUpdate(std::set<ll> X, ll item) {
+void DisparitySum::updateMemoization(std::set<ll> X, ll item) {
     currentSum += marginalGain(X, item);
 }
 

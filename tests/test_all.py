@@ -46,16 +46,16 @@ class TestAll:
         for ord_id in range(2):
             set_ = set()
             ev_prev = obj.evaluate(set_)
-            gainFast_prev = obj.marginalGainSequential(set_, l_order[ord_id][0])
+            gainFast_prev = obj.marginalGainWithMemoization(set_, l_order[ord_id][0])
             gain_prev = obj.marginalGain(set_, l_order[ord_id][0])
-            obj.sequentialUpdate(set_, l_order[ord_id][0])
+            obj.updateMemoization(set_, l_order[ord_id][0])
             set_.add(l_order[ord_id][0])
             #print(ev_prev, gainFast_prev)
             #for order in l_order:
             count=0
             for i in range(1, len(l_order[ord_id])):
                 ev_curr = obj.evaluate(set_)
-                gainFast_curr = obj.marginalGainSequential(set_, l_order[ord_id][i])    
+                gainFast_curr = obj.marginalGainWithMemoization(set_, l_order[ord_id][i])    
                 gain_curr = obj.marginalGain(set_, l_order[ord_id][i])
                 #print(ev_curr, gainFast_curr, gain_curr)
                 if math.isclose(round(ev_curr,3), round(ev_prev + gainFast_prev,3))==False:
@@ -63,7 +63,7 @@ class TestAll:
 
                 ev_prev = ev_curr
                 gainFast_prev = gainFast_curr
-                obj.sequentialUpdate(set_, l_order[ord_id][i])
+                obj.updateMemoization(set_, l_order[ord_id][i])
                 set_.add(l_order[ord_id][i])
 
             obj.clearPreCompute() #Remeber to clear the memoization just before the assert of each function
@@ -75,10 +75,10 @@ class TestAll:
         l = l_ind[:10]
         for el in l:
             #print("id", el)
-            obj.sequentialUpdate(set_, el)
+            obj.updateMemoization(set_, el)
             set_.add(el)
             ev = obj.evaluate(set_)
-            evalSeq = obj.evaluateSequential(set_)
+            evalSeq = obj.evaluateWithMemoization(set_)
         
         obj.clearPreCompute() #Remeber to clear the memoization just before the assert of each function
         assert math.isclose(round(ev,3), round(evalSeq,3))
@@ -89,17 +89,17 @@ class TestAll:
         l = l_ind[:10]
         for el in l:
             #print("id", el)
-            obj.sequentialUpdate(set_, el)
+            obj.updateMemoization(set_, el)
             set_.add(el)
             ev = obj.evaluate(set_)
-            evalSeq = obj.evaluateSequential(set_)
+            evalSeq = obj.evaluateWithMemoization(set_)
 
         item = l_ind[11]
         set_.add(item)
         naiveGain = obj.evaluate(set_) - ev
         set_.remove(item)
         simpleGain = obj.marginalGain(set_, item)
-        memoGain = obj.marginalGainSequential(set_, item)
+        memoGain = obj.marginalGainWithMemoization(set_, item)
         
         obj.clearPreCompute() #Remeber to clear the memoization just before the assert of each function
         assert math.isclose(round(naiveGain,3), round(simpleGain,3)) and math.isclose(round(memoGain,3), round(simpleGain,3))
@@ -117,7 +117,7 @@ class TestAll:
         X = set(l_order1)
         obj.setMemoization(X)
         ev = obj.evaluate(X)
-        evalSeq = obj.evaluateSequential(X)
+        evalSeq = obj.evaluateWithMemoization(X)
         
         obj.clearPreCompute() #Remeber to clear the memoization just before the assert of each function
         assert math.isclose(round(ev,3), round(evalSeq,3))

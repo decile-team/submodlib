@@ -6,7 +6,7 @@ Implementation decisions.
 
 2) Containers like X, groundset, effectiveGroundSet etc (which contain index of datapoints) have been implemented as set (instead of vector).
 This is because in C++, set container is implemented as red-black tree and thus search operations happen in log(n) time which is beneficial
-for functions like marginalGain(), sequentialUpdate() etc that require such search operations frequently.
+for functions like marginalGain(), updateMemoization() etc that require such search operations frequently.
 If we use vectors then for efficiency we would have an additional responsibility of ensuring that they are sorted. Thus,
 set is a more natural choice here
 
@@ -78,10 +78,10 @@ public:
 
 
 	float evaluate(std::set<ll> X);
-	float evaluateSequential(std::set<ll> X);
+	float evaluateWithMemoization(std::set<ll> X);
 	float marginalGain(std::set<ll> X, ll item);
-	float marginalGainSequential(std::set<ll> X, ll item);
-	void sequentialUpdate(std::set<ll> X, ll item);
+	float marginalGainWithMemoization(std::set<ll> X, ll item);
+	void updateMemoization(std::set<ll> X, ll item);
 	std::set<ll> getEffectiveGroundSet();
 	std::vector<std::pair<ll, float>> maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbosity);
 	void cluster_init(ll n_, std::vector<std::vector<float>>k_dense_, std::set<ll> ground_);

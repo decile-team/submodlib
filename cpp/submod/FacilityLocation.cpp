@@ -4,7 +4,7 @@ Implementation decisions.
 
 2) Containers like X, groundset, effectiveGroundSet etc (which contain index of datapoints) have been implemented as set (instead of vector).
 This is because in C++, set container is implemented as red-black tree and thus search operations happen in log(n) time which is beneficial
-for functions like marginalGain(), sequentialUpdate() etc that require such search operations frequently.
+for functions like marginalGain(), updateMemoization() etc that require such search operations frequently.
 If we use vectors then for efficiency we would have an additional responsibility of ensuring that they are sorted. Thus,
 set is a more natural choice here
 
@@ -359,7 +359,7 @@ float FacilityLocation::evaluate(std::set<ll> X)
 }
 
 
-float FacilityLocation::evaluateSequential(std::set<ll> X) //assumes that pre computed statistics exist for effectiveX
+float FacilityLocation::evaluateWithMemoization(std::set<ll> X) //assumes that pre computed statistics exist for effectiveX
 {
 	std::set<ll> effectiveX;
 	float result = 0;
@@ -535,7 +535,7 @@ float FacilityLocation::marginalGain(std::set<ll> X, ll item)
 }
 
 
-float FacilityLocation::marginalGainSequential(std::set<ll> X, ll item)
+float FacilityLocation::marginalGainWithMemoization(std::set<ll> X, ll item)
 {
 	std::set<ll> effectiveX;
 	float gain = 0;
@@ -638,7 +638,7 @@ float FacilityLocation::marginalGainSequential(std::set<ll> X, ll item)
 	return gain;
 }
 
-void FacilityLocation::sequentialUpdate(std::set<ll> X, ll item)
+void FacilityLocation::updateMemoization(std::set<ll> X, ll item)
 {
 
 	//std::cout<<"E\n";
@@ -772,7 +772,7 @@ void FacilityLocation::setMemoization(std::set<ll> X)
     std::set<ll>temp;
 	for (auto it = X.begin(); it != X.end(); ++it)
 	{	
-		sequentialUpdate(temp, *it);
+		updateMemoization(temp, *it);
 		temp.insert(*it);	
 	}
 }

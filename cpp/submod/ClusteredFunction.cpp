@@ -90,13 +90,13 @@ float ClusteredFunction::evaluate(std::set<ll> X)
 }
 
 
-float ClusteredFunction::evaluateSequential(std::set<ll> X)
+float ClusteredFunction::evaluateWithMemoization(std::set<ll> X)
 {
     float res=0;
     for(int i=0;i<num_cluster;++i)
     {
         std::set<ll>X_temp = translate_X(X, *this, i);
-        res+=v_fun[i]->evaluateSequential(X);
+        res+=v_fun[i]->evaluateWithMemoization(X);
     }
     return res;
 }
@@ -125,7 +125,7 @@ float ClusteredFunction::marginalGain(std::set<ll> X, ll item)
     return v_fun[i]->marginalGain(X_temp, item_temp);
 }
 
-float ClusteredFunction::marginalGainSequential(std::set<ll> X, ll item)
+float ClusteredFunction::marginalGainWithMemoization(std::set<ll> X, ll item)
 {
     ll i = clusterIDs[item];
     std::set<ll>X_temp = translate_X(X, *this, i);
@@ -145,15 +145,15 @@ float ClusteredFunction::marginalGainSequential(std::set<ll> X, ll item)
         }
         return gain;
     }
-    return v_fun[i]->marginalGainSequential(X_temp, item_temp);
+    return v_fun[i]->marginalGainWithMemoization(X_temp, item_temp);
 }
 
-void ClusteredFunction::sequentialUpdate(std::set<ll> X, ll item)
+void ClusteredFunction::updateMemoization(std::set<ll> X, ll item)
 {
     ll i = clusterIDs[item];
     std::set<ll>X_temp = translate_X(X, *this, i);
     ll item_temp = v_k_ind[item];
-    v_fun[i]->sequentialUpdate(X_temp, item_temp);
+    v_fun[i]->updateMemoization(X_temp, item_temp);
 }
 
 std::set<ll> ClusteredFunction::getEffectiveGroundSet()

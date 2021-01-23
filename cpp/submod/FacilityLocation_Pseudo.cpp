@@ -89,7 +89,7 @@ evaluate() {
     return result
 }
 
-evaluateSequential() {
+evaluateWithMemoization() {
     //assumes that appropriate pre computed statistics exist for effectiveX
     Input: X
 
@@ -165,7 +165,7 @@ marginalGain() {
     return gain
 }
 
-marginalGainSequential() {
+marginalGainWithMemoization() {
     //assumes that pre computed statistics exist for effectiveX
     Input: X
     Input: item
@@ -209,7 +209,7 @@ marginalGainSequential() {
     }
 }
 
-sequentialUpdate() {
+updateMemoization() {
     Input: X
     Input: item
 
