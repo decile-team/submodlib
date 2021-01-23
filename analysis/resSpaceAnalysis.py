@@ -14,7 +14,7 @@ def FL_dense(data): #Case1 user only provides data and specifies
 
 @profile
 def FL_case2(M): #Case2 user directly provides kernel
-    obj = FacilityLocationFunction(n=43, sijs = M, num_neigh=10)
+    obj = FacilityLocationFunction(n=43, sijs = M, num_neigh=10, seperateMaster=False)
     obj.maximize(10,'NaiveGreedy', False, False, False)
     
 

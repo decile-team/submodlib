@@ -139,6 +139,8 @@ class FacilityLocationFunction(SetFunction):
 			if type(self.data)!=type(None): # User has only provided data: build similarity matrix/cluster-info and consume it
 				
 				if type(self.data_master)!=type(None):
+					if self.seperateMaster == False:
+						print("WARNING: Incorrect value of seperateMaster provided for given data, changing seperateMaster to True")
 					self.seperateMaster=True
 					if type(self.mode)==type(None):
 						self.mode = "dense"
@@ -150,13 +152,15 @@ class FacilityLocationFunction(SetFunction):
 					if np.shape(self.data)[0]!=self.n or (self.n_master!=-1 and np.shape(self.data_master)[0]!=self.n_master):
 						raise Exception("ERROR: Inconsistentcy between n, n_master and no of examples in the given ground data matrix and master data matrix")
 				else:
+					if self.seperateMaster == True:
+						print("WARNING: Incorrect value of seperateMaster provided for given data, changing seperateMaster to False")
 					self.seperateMaster=False
 					if type(self.mode)==type(None):
 						self.mode = "sparse"
 
 					if np.shape(self.data)[0]!=self.n:
 						raise Exception("ERROR: Inconsistentcy between n and no of examples in the given data matrix")
-
+				
 				if self.num_neigh==-1 and self.seperateMaster==False:
 					self.num_neigh=np.shape(self.data)[0] #default is total no of datapoints
 
