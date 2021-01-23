@@ -78,8 +78,6 @@ FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::ve
 		masterSet=effectiveGroundSet;
 	}
 	
-	
-	
 	numEffectiveGroundset = effectiveGroundSet.size();
 	similarityWithNearestInEffectiveX.resize(n_master, 0);
 }
@@ -755,6 +753,10 @@ void FacilityLocation::cluster_init(ll n_, std::vector<std::vector<float>>k_dens
 
 void FacilityLocation::clearPreCompute()
 {
+	//TODO: essentially we want to reset similarityWithNearestInEffectiveX for dense and sparse modes and we want to reset relevantX and clusteredSimilarityWithNearestInRelevantX for clustered mode
+
+	//TODO: Refer https://stackoverflow.com/questions/55266468/whats-the-fastest-way-to-reinitialize-a-vector/55266856 to replace it with a more efficient implementation
+
 	for(int i=0;i<similarityWithNearestInEffectiveX.size();++i)
 	{
 		similarityWithNearestInEffectiveX[i]=0;
@@ -765,3 +767,14 @@ void FacilityLocation::clearPreCompute()
 	}
 		
 }
+
+void FacilityLocation::setMemoization(std::set<ll> X) {
+    clearPreCompute();
+    Set::const_iterator it;
+    Set incSet;
+    for (it = X.begin(); it != X.end(); ++it) {
+        updateMemoization(incSet, *it);
+        incSet.insert(*it);
+    }
+}
+
