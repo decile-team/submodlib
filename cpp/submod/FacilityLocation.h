@@ -86,7 +86,7 @@ public:
 	std::vector<std::pair<ll, float>> maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbosity);
 	void cluster_init(ll n_, std::vector<std::vector<float>>k_dense_, std::set<ll> ground_);
 	void clearPreCompute();
-	//void setMemoization(std::set<ll> X);
+	void setMemoization(std::set<ll> X);
 
 
 	friend float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj);

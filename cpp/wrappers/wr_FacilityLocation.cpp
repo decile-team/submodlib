@@ -21,6 +21,7 @@ void cl_FacilityLocation(py::module &m)
         .def("sequentialUpdate", &FacilityLocation::sequentialUpdate)
         .def("getEffectiveGroundSet", &FacilityLocation::getEffectiveGroundSet)
         .def("clearPreCompute", &FacilityLocation::clearPreCompute)
+        .def("setMemoization", &FacilityLocation::setMemoization)
         .def("maximize", &FacilityLocation::maximize);
         
 }

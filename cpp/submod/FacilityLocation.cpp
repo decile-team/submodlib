@@ -749,25 +749,32 @@ void FacilityLocation::clearPreCompute()
 
 	//TODO: Refer https://stackoverflow.com/questions/55266468/whats-the-fastest-way-to-reinitialize-a-vector/55266856 to replace it with a more efficient implementation
 
-	for(int i=0;i<similarityWithNearestInEffectiveX.size();++i)
+	if(mode=="dense" || mode=="sparse")
 	{
-		similarityWithNearestInEffectiveX[i]=0;
+		for(int i=0;i<n_master;++i)
+		{
+			similarityWithNearestInEffectiveX[i]=0;
+		}
 	}
-	for(int i=0;i<clusteredSimilarityWithNearestInRelevantX.size();++i)
+	if(mode == "clustered")
 	{
-		clusteredSimilarityWithNearestInRelevantX[i]=0;
+		for(int i=0;i<n;++i)
+		{
+			clusteredSimilarityWithNearestInRelevantX[i]=0;
+		}
 	}
 		
 }
-/*
-void FacilityLocation::setMemoization(std::set<ll> X) {
+
+void FacilityLocation::setMemoization(std::set<ll> X) 
+{
     clearPreCompute();
-    Set::const_iterator it;
-    Set incSet;
-    for (it = X.begin(); it != X.end(); ++it) {
-        updateMemoization(incSet, *it);
-        incSet.insert(*it);
-    }
+    std::set<ll>temp;
+	for (auto it = X.begin(); it != X.end(); ++it)
+	{	
+		sequentialUpdate(temp, *it);
+		temp.insert(*it);	
+	}
 }
-*/
+
 

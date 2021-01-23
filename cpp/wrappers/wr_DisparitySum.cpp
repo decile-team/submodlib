@@ -20,5 +20,6 @@ void cl_DisparitySum(py::module &m)
         .def("sequentialUpdate", &DisparitySum::sequentialUpdate)
         .def("getEffectiveGroundSet", &DisparitySum::getEffectiveGroundSet)
         .def("clearPreCompute", &DisparitySum::clearPreCompute)
+        .def("setMemoization", &DisparitySum::setMemoization)
         .def("maximize", &DisparitySum::maximize);
 }

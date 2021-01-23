@@ -216,5 +216,8 @@ class DisparitySumFunction(SetFunction):
 	def clearPreCompute(self):
 		self.cpp_obj.clearPreCompute()
 	
+	def setMemoization(self, X):
+		self.cpp_obj.setMemoization(X)
+	
 	def getEffectiveGroundSet(self):
 		return self.cpp_obj.getEffectiveGroundSet()

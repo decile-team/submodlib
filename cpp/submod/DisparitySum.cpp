@@ -225,3 +225,8 @@ void DisparitySum::clearPreCompute()
 {
     currentSum=0;	
 }
+
+void DisparitySum::setMemoization(std::set<ll> X)
+{
+    currentSum=evaluate(X);
+}
