@@ -16,5 +16,4 @@ void cl_helper(py::module &m)
     m.def("euclidean_similarity", &euclidean_similarity);
     m.def("create_kernel", &create_kernel);
     m.def("create_kernel_NS", &create_kernel_NS);
-
 }

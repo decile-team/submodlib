@@ -1,0 +1,120 @@
+import pytest
+import numpy as np
+from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import cosine_distances
+from sklearn.neighbors import NearestNeighbors
+from scipy import sparse
+import scipy
+from submodlib import FacilityLocationFunction, DisparitySumFunction
+from submodlib.helper import create_kernel
+import math
+import random
+import copy
+from sklearn.datasets import make_blobs
+random.seed(1)
+
+num_clusters = 10
+cluster_std_dev = 4
+points, cluster_ids = make_blobs(n_samples=100, centers=num_clusters, n_features=10, cluster_std=cluster_std_dev, center_box=(0,100))
+data = list(map(tuple, points))
+dataArray = np.array(data)
+
+l_ind = [el for el in range(0,100)]
+random.shuffle(l_ind)
+l_order1 = l_ind[0:10].copy()
+l_order2 = l_order1.copy()
+random.shuffle(l_order2)
+l_order = [l_order1, l_order2]
+
+_, K_dense = create_kernel(dataArray, 'dense','euclidean')
+
+l_fun=[
+    FacilityLocationFunction(n=100, data=dataArray, mode="dense", metric="euclidean") #obj0
+    #DisparitySumFunction(n=100, data=dataArray, mode="dense", metric="euclidean"),#obj1
+    ]
+
+class TestAll:
+
+    @pytest.mark.parametrize("obj", l_fun)
+    def test_order(self, obj): #Testing that order of insertions doesn't affect memoization
+        flag = [True, True]
+
+        for ord_id in range(2):
+            set_ = set()
+            ev_prev = obj.evaluate(set_)
+            gainFast_prev = obj.marginalGainWithMemoization(set_, l_order[ord_id][0])
+            gain_prev = obj.marginalGain(set_, l_order[ord_id][0])
+            obj.updateMemoization(set_, l_order[ord_id][0])
+            set_.add(l_order[ord_id][0])
+            #print(ev_prev, gainFast_prev)
+            #for order in l_order:
+            count=0
+            for i in range(1, len(l_order[ord_id])):
+                ev_curr = obj.evaluate(set_)
+                gainFast_curr = obj.marginalGainWithMemoization(set_, l_order[ord_id][i])    
+                gain_curr = obj.marginalGain(set_, l_order[ord_id][i])
+                #print(ev_curr, gainFast_curr, gain_curr)
+                if math.isclose(round(ev_curr,3), round(ev_prev + gainFast_prev,3))==False:
+                    flag[ord_id]=False        
+
+                ev_prev = ev_curr
+                gainFast_prev = gainFast_curr
+                obj.updateMemoization(set_, l_order[ord_id][i])
+                set_.add(l_order[ord_id][i])
+
+            obj.clearMemoization() #Remeber to clear the memoization just before the assert of each function
+        assert flag[0]==flag[1] and flag[0]==True
+        
+    @pytest.mark.parametrize("obj", l_fun)
+    def test_eval(self, obj): #Validating that normal eval and memoized eval produce same results
+        set_ = set()
+        l = l_ind[:10]
+        for el in l:
+            #print("id", el)
+            obj.updateMemoization(set_, el)
+            set_.add(el)
+            ev = obj.evaluate(set_)
+            evalSeq = obj.evaluateWithMemoization(set_)
+        
+        obj.clearMemoization() #Remeber to clear the memoization just before the assert of each function
+        assert math.isclose(round(ev,3), round(evalSeq,3))
+    
+    @pytest.mark.parametrize("obj", l_fun)
+    def test_gain(self, obj): #Validating that naive gain, normal gain and memoized gain produce same results
+        set_ = set()
+        l = l_ind[:10]
+        for el in l:
+            #print("id", el)
+            obj.updateMemoization(set_, el)
+            set_.add(el)
+            ev = obj.evaluate(set_)
+            evalSeq = obj.evaluateWithMemoization(set_)
+
+        item = l_ind[11]
+        set_.add(item)
+        naiveGain = obj.evaluate(set_) - ev
+        set_.remove(item)
+        simpleGain = obj.marginalGain(set_, item)
+        memoGain = obj.marginalGainWithMemoization(set_, item)
+        
+        obj.clearMemoization() #Remeber to clear the memoization just before the assert of each function
+        assert math.isclose(round(naiveGain,3), round(simpleGain,3)) and math.isclose(round(memoGain,3), round(simpleGain,3))
+    
+    @pytest.mark.parametrize("obj", l_fun)
+    def test_ground_eval(self, obj): #Validating that eval on ground set is non-negative, non-zero, non-nan and non-infinity
+        set_ = obj.getEffectiveGroundSet()
+        ev = obj.evaluate(set_)
+
+        assert ev>0 and not math.isnan(ev) and not math.isinf(ev)
+
+    
+    @pytest.mark.parametrize("obj", l_fun)
+    def test_set_memoization(self, obj):
+        X = set(l_order1)
+        obj.setMemoization(X)
+        ev = obj.evaluate(X)
+        evalSeq = obj.evaluateWithMemoization(X)
+        
+        obj.clearMemoization() #Remeber to clear the memoization just before the assert of each function
+        assert math.isclose(round(ev,3), round(evalSeq,3))

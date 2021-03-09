@@ -11,6 +11,6 @@ PYBIND11_MODULE(submodlib_cpp, m)
     cl_DisparitySum(m);
     cl_helper(m);
     cl_sparse_utils(m);
-    cl_ClusteredFunction(m);
+    cl_Clustered(m);
     //cl_NaiveGreedyOptimizer(m);
 }

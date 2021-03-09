@@ -1,5 +1,3 @@
-#Currently it contains test for only evaluate() and marginalGain() of dense because C++ implementaion is currently
-#for dense mode only.
 import pytest
 import numpy as np
 from sklearn.metrics.pairwise import euclidean_distances
@@ -16,7 +14,6 @@ import random
 from sklearn.datasets import make_blobs
 random.seed(1)
 
-
 @pytest.fixture
 def f_1():# A simple easy to calculate test case
     M = np.array([
@@ -24,14 +21,14 @@ def f_1():# A simple easy to calculate test case
         [5,4,3],
         [4,7,5]
         ]) 
-    obj = FacilityLocationFunction(n=3, sijs=M, seperateMaster=False)
+    obj = FacilityLocationFunction(n=3, mode="dense", sijs=M, separate_master=False)
     return obj
 
-@pytest.fixture
-def f_2(): #Boundary case of just one element
-    M = np.array([-0.78569]) 
-    obj = FacilityLocationFunction(n=1, sijs=M, seperateMaster=False)
-    return obj
+# @pytest.fixture
+# def f_2(): #Boundary case of just one element
+#     M = np.array([-0.78569]) 
+#     obj = FacilityLocationFunction(n=1, mode="dense", sijs=M, separate_master=False)
+#     return obj
 
 @pytest.fixture
 def f_3(): #more realistic test case 
@@ -42,10 +39,8 @@ def f_3(): #more realistic test case
         [-0.1, 0.1, 0.1405, 0.0023, 0.3], 
         [-0.123456, 0.0789, 0.00456, 0.001, -0.9]
         ]) 
-    obj = FacilityLocationFunction(n=5, sijs=M, seperateMaster=False)
+    obj = FacilityLocationFunction(n=5, mode="dense", sijs=M, separate_master=False)
     return obj
-
-
 
 '''This is the similarity matrix corrosponding to data matrix created in f_5() below
 [[ 1.        ,  0.18480505,  0.31649794,  0.01689587,  0.34060725],
@@ -94,16 +89,16 @@ def f_7():
     return obj
 
 @pytest.fixture
-def f_test_content(): #Using the data in Basic_Usage Notebook for testing (tests 8,9,10)       
+def f_test_content(): #generating test data
     num_clusters = 10
     cluster_std_dev = 4
     points, cluster_ids = make_blobs(n_samples=500, centers=num_clusters, n_features=30, cluster_std=cluster_std_dev, center_box=(0,100))
     data = list(map(tuple, points))
     dataArray = np.array(data)
-    #Set1
+    #Set1 - all points from same cluster
     cluster1Indices = [index for index, val in enumerate(cluster_ids) if val == 1]
     subset1 = random.sample(cluster1Indices, 6)
-    #Set2
+    #Set2 - points from different clusters
     subset2 = []
     for i in range(6):
         #find the index of first point that belongs to cluster i
@@ -119,7 +114,7 @@ def f_8(f_test_content): #For C++ Dense VS Python Dense
     set2 = set(subset2[:-1])
     obj1 = FacilityLocationFunction(n=500, data=dataArray, mode="dense", metric="euclidean")
     _, K_dense = create_kernel(dataArray, 'dense','euclidean')
-    obj2 = FacilityLocationFunction(n=500, sijs = K_dense, seperateMaster=False)
+    obj2 = FacilityLocationFunction(n=500, mode="dense", sijs = K_dense, separate_master=False)
     return (obj1, obj2)
 
 @pytest.fixture
@@ -127,9 +122,9 @@ def f_9(f_test_content): #For C++ Sparse VS Python Sparse
     dataArray, subset1, subset2, _ = f_test_content
     set1 = set(subset1[:-1])
     set2 = set(subset2[:-1])
-    obj1 = FacilityLocationFunction(n=500, data=dataArray, mode="sparse", metric="euclidean", num_neigh=10)
+    obj1 = FacilityLocationFunction(n=500, data=dataArray, mode="sparse", metric="euclidean", num_neighbors=10)
     _, K_sparse = create_kernel(dataArray, "sparse",'euclidean', num_neigh=10)
-    obj2 = FacilityLocationFunction(n=500, sijs = K_sparse, num_neigh=10)
+    obj2 = FacilityLocationFunction(n=500, mode="sparse", sijs = K_sparse, num_neighbors=10)
     return (obj1, obj2)
 
 
@@ -141,7 +136,6 @@ def f_10(f_test_content): #For FL clustered mode VS ClusteredFunction (When clus
     obj1 = FacilityLocationFunction(n=500, data=dataArray, mode="clustered", metric="euclidean", num_cluster=10)
     obj2 = ClusteredFunction(n=500, f_name='FacilityLocation', metric='euclidean', data=dataArray, num_cluster=10)
     return (obj1, obj2)
-
 
 
 @pytest.fixture
@@ -168,8 +162,8 @@ def f_14(f_test_content): #For FL dense VS FL sparse (C++ kernel)
     dataArray, subset1, subset2, cluster_ids = f_test_content
     set1 = set(subset1[:-1])
     set2 = set(subset2[:-1])
-    obj1 = FacilityLocationFunction(n=500, data=dataArray, mode="dense", metric="euclidean", num_neigh=10)
-    obj2 = FacilityLocationFunction(n=500, data=dataArray, mode="sparse", metric="euclidean", num_neigh=10)
+    obj1 = FacilityLocationFunction(n=500, data=dataArray, mode="dense", metric="euclidean", num_neighbors=10)
+    obj2 = FacilityLocationFunction(n=500, data=dataArray, mode="sparse", metric="euclidean", num_neighbors=10)
     return (obj1, obj2)
 
 
@@ -180,19 +174,19 @@ def f_15(f_test_content): #For FL dense VS FL sparse (Python kernel)
     set1 = set(subset1[:-1])
     set2 = set(subset2[:-1])
     _, K_dense = create_kernel(dataArray, 'dense','euclidean', num_neigh=10)
-    obj1 = FacilityLocationFunction(n=500, sijs = K_dense, num_neigh=10, seperateMaster=False)
+    obj1 = FacilityLocationFunction(n=500, mode="dense", sijs = K_dense, num_neighbors=10, separate_master=False)
     
     _, K_sparse = create_kernel(dataArray, "sparse",'euclidean', num_neigh=10)
-    obj2 = FacilityLocationFunction(n=500, sijs = K_sparse, num_neigh=10)
+    obj2 = FacilityLocationFunction(n=500, mode="sparse", sijs = K_sparse, num_neighbors=10)
     return (obj1, obj2)
     
 @pytest.fixture
 def f_16(): #For Rectangular Kernel
     data = np.array([[5, 6],  [1, 3], [2,20], [5,45], [16, -8]])
     data_master = np.array([[0, 1],  [10, 2], [12,20]])
-    obj1 = FacilityLocationFunction(n=5, n_master = 3, data=data, data_master = data_master, metric='euclidean')
+    obj1 = FacilityLocationFunction(n=5, mode="dense", n_master = 3, data=data, data_master = data_master, metric='euclidean')
     K_dense = create_kernel(X = data, X_master = data_master, mode = 'dense', metric = 'euclidean')
-    obj2 = FacilityLocationFunction(n=5, sijs = K_dense, seperateMaster=True)
+    obj2 = FacilityLocationFunction(n=5, mode="dense", sijs = K_dense, separate_master=True)
     return (obj1, obj2)
 
 class TestFL:
@@ -496,20 +490,20 @@ class TestFL:
     def test_4_1(self): #Non-square dense similarity matrix 
         M = np.array([[1,2,3], [4,5,6]])
         try:
-            FacilityLocationFunction(n=2, sijs=M, seperateMaster=False)
+            FacilityLocationFunction(n=2, mode="dense", sijs=M, separate_master=False)
         except Exception as e:
             assert str(e)=="ERROR: Dense similarity matrix should be a square matrix if ground and master datasets are same"
 
     def test_4_2(self): #Inconsistency between n and no of examples in M
         M = np.array([[1,2,3], [4,5,6]])
         try:
-            FacilityLocationFunction(n=1, sijs=M, seperateMaster=False)
+            FacilityLocationFunction(n=1, mode="dense", sijs=M, separate_master=False)
         except Exception as e:
             assert str(e)=="ERROR: Inconsistentcy between n and no of examples in the given similarity matrix"
 
     def test_4_3(self): # X not a subset of ground set for evaluate()
         M = np.array([[1,2], [3,4]])
-        obj = FacilityLocationFunction(n=2, sijs=M, seperateMaster=False)
+        obj = FacilityLocationFunction(n=2, mode="dense", sijs=M, separate_master=False)
         X={0,2}
         try:
             obj.evaluate(X)
@@ -518,7 +512,7 @@ class TestFL:
 
     def test_4_4(self): # X not a subset of ground set for marginalGain()
         M = np.array([[1,2], [3,4]])
-        obj = FacilityLocationFunction(n=2, sijs=M, seperateMaster=False)
+        obj = FacilityLocationFunction(n=2, sijs=M, separate_master=False)
         X={0,2}
         try:
             obj.marginalGain(X, 1)
@@ -540,7 +534,7 @@ class TestFL:
         data = np.array([[1,2], [3,4]])
         num_neigh, M = create_kernel(data, 'sparse','euclidean', num_neigh=1)
         try:
-            FacilityLocationFunction(n=0, sijs=M, num_neigh=num_neigh)
+            FacilityLocationFunction(n=0, sijs=M, num_neighbors=num_neigh)
         except Exception as e:
             assert str(e)=="ERROR: Number of elements in ground set can't be 0"
     

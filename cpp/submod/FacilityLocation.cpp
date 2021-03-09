@@ -16,8 +16,6 @@ If order of elements in X, groundset, effectiveGroundSet etc doesn't matter, we 
 set. unordered_set is implemented using hashmap and has an average search complexity of O(1). Although, if this is done then we also need to write
 a custom function for "Intersection" because set_intersection() only work on containers with sorted data. Also, to avoid excessive rehashing, we will
 have to reserve a certain number of buckets in advance.
-
-
 */
 
 #include<iostream>
@@ -32,217 +30,142 @@ have to reserve a certain number of buckets in advance.
 
 typedef long long int ll;
 
-//Note to self: Migrate all parameter related sanity/error checks from C++ FL to Python FL
-
 FacilityLocation::FacilityLocation(){}
 
-//For dense mode
-FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::vector<float>>k_dense_, ll num_neighbors_, bool partial_, std::set<ll> ground_, bool seperateMaster_)
-{
-	if (mode_ != "dense") 
-	{
-		std::cerr << "Error: Incorrect mode specified for the provided dense similarity matrix\n";
-		return;
-	}
-
-	if (k_dense_.size() == 0)
-	{
-		std::cerr << "Error: Empty similarity matrix\n";
-		return;
-	}
-
+//Constructor for dense mode
+FacilityLocation::FacilityLocation(ll n_, std::vector<std::vector<float>>denseKernel_, bool partial_, std::set<ll> ground_, bool separateMaster_) {
+	// std::cout << "FacilityLocation Dense Constructor\n";
 	n = n_;
-	mode = mode_;
-	k_dense = k_dense_;
-	num_neighbors = num_neighbors_;
+	mode = "dense";
+	denseKernel = denseKernel_;
 	partial = partial_;
-	seperateMaster = seperateMaster_;
-	//Populating effectiveGroundSet
-	if (partial == true)
-	{
+	separateMaster = separateMaster_;
+	if (partial == true) {
+		//ground set will now be the subset provided
 		effectiveGroundSet = ground_;
 	}
-	else
-	{
-		for (ll i = 0; i < n; ++i)
-		{
+	else {
+		//create groundSet with items 0 to n-1
+		for (ll i = 0; i < n; ++i){
 			effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
 		}
 	}
+	numEffectiveGroundset = effectiveGroundSet.size();
 	
-	//Populating masterSet
-	if(mode=="dense" && seperateMaster==true)
-	{
-		n_master = k_dense.size();	
-		for (ll i = 0; i < n_master; ++i)
-		{
+	if(separateMaster==true) {
+		//populate a different master set
+		n_master = denseKernel.size();	
+		for (ll i = 0; i < n_master; ++i) {
 			masterSet.insert(i); //each insert takes O(log(n)) time
 		}
 	}
-	else
-	{
-		n_master=n;
+	else {
+		//master set will now be same as the ground set
+		n_master=numEffectiveGroundset;
 		masterSet=effectiveGroundSet;
 	}
-	
-	numEffectiveGroundset = effectiveGroundSet.size();
 	similarityWithNearestInEffectiveX.resize(n_master, 0);
+	if(partial == true) {
+		ll ind = 0;
+		for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it) {
+			originalToPartialIndexMap[*it] = ind;
+			ind += 1;
+		}
+	}
 }
 
 //For sparse mode
-FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<float>arr_val, std::vector<ll>arr_count, std::vector<ll>arr_col, ll num_neighbors_, bool partial_, std::set<ll> ground_)
-{
-
-	//std::cout<<n_<<" "<<mode_<<" "<<num_neighbors_<<" "<<partial_<<"\n";
-	if (mode_ != "sparse") 
-	{
-		std::cerr << "Error: Incorrect mode specified for the provided sparse similarity matrix\n";
-		return;
+FacilityLocation::FacilityLocation(ll n_, std::vector<float>arr_val, std::vector<ll>arr_count, std::vector<ll>arr_col) {
+	// std::cout << "FacilityLocation Sparse Constructor\n";
+	if (arr_val.size() == 0 || arr_count.size() == 0 || arr_col.size() == 0) {
+		throw "Error: Empty/Corrupt sparse similarity kernel";
 	}
-
-	if (arr_val.size() == 0 || arr_count.size() == 0 || arr_col.size() == 0)
-	{
-		std::cerr << "Error: Empty/Corrupt similarity matrix\n";
-		return;
-	}
-
 	n = n_;
-	mode = mode_;
-	k_sparse = SparseSim(arr_val, arr_count, arr_col);
-	num_neighbors = num_neighbors_;
-	partial = partial_;
-	seperateMaster = false;
-	//Populating effectiveGroundSet
-	if (partial == true)
-	{
-		effectiveGroundSet = ground_;
+	mode = "sparse";
+	sparseKernel = SparseSim(arr_val, arr_count, arr_col);
+	partial = false;
+	separateMaster = false;
+	//create groundSet with items 0 to nv-1
+	for (ll i = 0; i < n; ++i) {
+		effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
 	}
-	else
-	{
-		for (ll i = 0; i < n; ++i)
-		{
-			effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
-		}
-	}
+	numEffectiveGroundset = effectiveGroundSet.size();
 	
-	//Populating masterSet
-	n_master=n;
+	n_master=numEffectiveGroundset;
 	masterSet=effectiveGroundSet;
 	
-	numEffectiveGroundset = effectiveGroundSet.size();
 	similarityWithNearestInEffectiveX.resize(n_master, 0);
-	//std::cerr<<"To be implemented\n";
 }
 
 //For cluster mode
-FacilityLocation::FacilityLocation(ll n_, std::string mode_, std::vector<std::set<ll>>clusters_,std::vector<std::vector<std::vector<float>>>v_k_cluster_, std::vector<ll>v_k_ind_, ll num_neighbors_, bool partial_, std::set<ll> ground_ )
-{
-	//std::cout<<"A\n";
-	/*
-	for(int i=0;i<clusters_.size();++i)
-	{	
-		std::set<ll>ci = clusters_[i];
-		for (auto it = ci.begin(); it != ci.end(); ++it)
-		{
-			std::cout<<*it<<" ";
-		}
-		std::cout<<"\n";
-	}*/
-
-	if (mode_ != "clustered")
-	{
-		std::cerr << "Error: Incorrect mode specified for the provided cluster\n";
-		return;
-	}
-
-	if (clusters_.size() == 0)
-	{
-		std::cerr << "Error: Cluster vector is empty\n";
-		return;
-	}
-
+FacilityLocation::FacilityLocation(ll n_, std::vector<std::set<ll>>clusters_,std::vector<std::vector<std::vector<float>>>clusterKernels_, std::vector<ll>clusterIndexMap_) {
+	// std::cout << "FacilityLocation Clustered Constructor\n";
 	n = n_;
-	num_cluster = clusters_.size();
-	mode = mode_;
+	mode = "clustered";
+	num_clusters = clusters_.size();
 	clusters = clusters_;
-	v_k_cluster = v_k_cluster_;
-	v_k_ind = v_k_ind_;
-	num_neighbors = num_neighbors_;
-	partial = partial_;
-	seperateMaster = false;
-	//Populating ground set
-	if (partial == true)
-	{
-		effectiveGroundSet = ground_;
-	}
-	else
-	{
-		for (ll i = 0; i < n; ++i)
-		{
-			effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
-		}
-	}
+	clusterKernels = clusterKernels_;
+	clusterIndexMap = clusterIndexMap_;
+	partial = false;
+	separateMaster = false;
 
-	//Populating masterSet
-	n_master=n;
+	//create groundSet with items 0 to nv-1
+	for (ll i = 0; i < n; ++i) {
+		effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
+	}
+	numEffectiveGroundset = effectiveGroundSet.size();
+
+	n_master=numEffectiveGroundset;
 	masterSet=effectiveGroundSet;
 
-	numEffectiveGroundset = effectiveGroundSet.size();
 	clusterIDs.resize(n);
-
-	for(int i=0;i<num_cluster;++i)//O(n) (One time operation)
-	{
+	for(int i=0;i<num_clusters;++i) {  //O(n) (One time operation)
 		std::set<ll>ci=clusters[i];
-		for (auto it = ci.begin(); it != ci.end(); ++it)
-		{
+		for (auto it = ci.begin(); it != ci.end(); ++it) {
 			ll ind = *it;
 			clusterIDs[ind]=i;
 		}
 	}
 
-	relevantX.resize(num_cluster);
+	relevantX.resize(num_clusters);
 	clusteredSimilarityWithNearestInRelevantX.resize(n, 0);
 	
-	/*for(ll i=0;i<num_cluster;++i)//////////
-	{
-		std::set<ll>temp;
-		relevantX.push_back(temp);
-	}*/
+	// for(ll i=0;i<num_clusters;++i) {
+	// 	std::set<ll>temp;
+	// 	relevantX.push_back(temp);
+	// }
 }
 
 //helper friend function
-float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj)
-{
+float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj) {
+	if(dataset_ind.size()==0) {
+		return 0;
+	}
 	ll i = datapoint_ind, j; //i comes from masterSet and j comes from X (which is a subset of groundSet)
 	auto it = dataset_ind.begin();
-	float m = obj.k_dense[i][*it];
+	float m = obj.denseKernel[i][*it];
 
-	for (; it != dataset_ind.end(); ++it)//search max similarity wrt datapoints of given dataset
-	{
+	for (; it != dataset_ind.end(); ++it) {//search max similarity wrt datapoints of given dataset
 		ll j = *it;
-		if (obj.k_dense[i][j] > m)
-		{
-			m = obj.k_dense[i][j];
+		if (obj.denseKernel[i][j] > m) {
+			m = obj.denseKernel[i][j];
 		}
 	}
 
 	return m;
 }
-float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj)
-{
-	//std::cout<<"C\n";
+float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj) {
+	if(dataset_ind.size()==0) {
+		return 0;
+	}
 	ll i = datapoint_ind, j; //i comes from masterSet and j comes from X (which is a subset of groundSet)
 	auto it = dataset_ind.begin();
-	float m = obj.k_sparse.get_val(i,*it);
-	//std::cout<<m<<"\n";
+	float m = obj.sparseKernel.get_val(i,*it);
 	
-	for (; it != dataset_ind.end(); ++it)//search max similarity wrt datapoints of given dataset
-	{
-		//std::cout<<"D\n";
+	for (; it != dataset_ind.end(); ++it) {//search max similarity wrt datapoints of given dataset
 		ll j = *it;
-		float temp_val = obj.k_sparse.get_val(i,j);
-		if (temp_val > m)
-		{
+		float temp_val = obj.sparseKernel.get_val(i,j);
+		if (temp_val > m) {
 			m = temp_val;
 		}
 	}
@@ -250,524 +173,318 @@ float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLoc
 	return m;
 }
 
-float get_max_sim_cluster(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj, ll cluster_id)
-{
-
+float get_max_sim_cluster(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj, ll cluster_id) {
+    if(dataset_ind.size()==0) {
+		return 0;
+	}
 	ll i = datapoint_ind, j, i_, j_; 
 	auto it = dataset_ind.begin();
-	i_ = obj.v_k_ind[i];
-	j_ = obj.v_k_ind[*it]; 
-	float m = obj.v_k_cluster[cluster_id][i_][j_];
+	i_ = obj.clusterIndexMap[i];
+	j_ = obj.clusterIndexMap[*it]; 
+	float m = obj.clusterKernels[cluster_id][i_][j_];
 	//Possibly transform i,j to local kernel index
 
-	for (; it != dataset_ind.end(); ++it)
-	{
+	for (; it != dataset_ind.end(); ++it) {
 		ll j = *it;
 		//Obtain local kernel indicies for given cluster
-		i_ = obj.v_k_ind[i];
-		j_ = obj.v_k_ind[j];
-		if (obj.v_k_cluster[cluster_id][i_][j_] > m)
-		{
-			m = obj.v_k_cluster[cluster_id][i_][j_];
+		i_ = obj.clusterIndexMap[i];
+		j_ = obj.clusterIndexMap[j];
+		if (obj.clusterKernels[cluster_id][i_][j_] > m) {
+			m = obj.clusterKernels[cluster_id][i_][j_];
 		}
 	}
-
 	return m;
 }
 
-
-//TODO: In all the methods below, get rid of code redundancy by merging dense and sparse mode blocks together
-float FacilityLocation::evaluate(std::set<ll> X)
-{
+float FacilityLocation::evaluate(std::set<ll> X) {
+	// std::cout << "FacilityLocation evaluate\n";
 	std::set<ll> effectiveX;
 	float result=0;
 
-	if (partial == true)
-	{
+	if (partial == true) {
 		//effectiveX = intersect(X, effectiveGroundSet)
 		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
-
-	}
-	else
-	{
+	} else {
 		effectiveX = X;
 	}
 
-	if(effectiveX.size()==0)//verify if returning 0 here is correct
-	{
+	if(effectiveX.size()==0) {
 		return 0;
 	}
-	
 
-
-	if (mode == "dense")
-	{
-		//Implementing f(X)=Sum_i_V ( max_j_X ( s_ij ) )
-		for (auto it = masterSet.begin(); it != masterSet.end(); ++it) //O(n^2) where n=num of elements in effective GS 
-		{
+	if (mode == "dense") {
+		//for each element in master set
+		for (auto it = masterSet.begin(); it != masterSet.end(); ++it) { //O(n^2) where n=num of elements in effective GS 
 			ll ind = *it;
-			//std::cout<<ind<<" "<<get_max_sim_dense(ind, effectiveX, *this)<<"\n";
+			//find max similarity of i with all items in effectiveX
 			result += get_max_sim_dense(ind, effectiveX, *this);
 		}
-	}
-	else
-	{
-		if (mode == "sparse")
-		{
-			//std::cout<<"A\n";
-			for (auto it = masterSet.begin(); it != masterSet.end(); ++it) //O(n^2) where n=num of elements in effective GS 
-			{
+	} else if (mode == "sparse") {
+        for (auto it = masterSet.begin(); it != masterSet.end(); ++it) { //O(n^2) where n=num of elements in effective GS 
 				ll ind = *it;
 				result += get_max_sim_sparse(ind, effectiveX, *this);
+		}
+	} else {
+		//for each cluster
+		for(ll i=0;i<num_clusters;++i) {
+			std::set<ll>releventSubset;
+			std::set<ll>ci = clusters[i];
+			std::set_intersection(X.begin(), X.end(), ci.begin(), ci.end(), std::inserter(releventSubset, releventSubset.begin()));
+
+			if(releventSubset.size()==0) { //if no intersection, skip to next cluster
+				continue;
+			}
+			
+			for (auto it = ci.begin(); it != ci.end(); ++it) {
+				ll ind = *it;
+				result += get_max_sim_cluster(ind, releventSubset, *this, i);
 			}
 		}
-		else
-		{
-			if (mode == "clustered")
-			{
-				//std::cout<<"A\n";
-				for(ll i=0;i<num_cluster;++i)
-				{
-					//std::cout<<"B\n";
-					std::set<ll>releventSubset;
-					std::set<ll>ci = clusters[i];
-					std::set_intersection(X.begin(), X.end(), ci.begin(), ci.end(), std::inserter(releventSubset, releventSubset.begin()));
-
-					if(releventSubset.size()==0)//if no intersection, skip to next cluster
-					{
-						continue;
-					}
-					
-					for (auto it = ci.begin(); it != ci.end(); ++it)
-					{
-						//std::cout<<"C\n";
-						ll ind = *it;
-						result += get_max_sim_cluster(ind, releventSubset, *this, i);
-					}
-					
-				}
-			}
-			else
-			{
-				std::cerr << "ERROR: INVALID mode\n";
-			}
-		}
-
 	}
-
 	return result;
 }
 
 
-float FacilityLocation::evaluateWithMemoization(std::set<ll> X) //assumes that pre computed statistics exist for effectiveX
-{
+float FacilityLocation::evaluateWithMemoization(std::set<ll> X) { 
+	// std::cout << "FacilityLocation evaluateWithMemoization\n";
+    //assumes that appropriate pre computed memoized statistics exist for effectiveX
+
 	std::set<ll> effectiveX;
 	float result = 0;
 
-	if (partial == true)
-	{
+	if (partial == true) {
 		//effectiveX = intersect(X, effectiveGroundSet)
 		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
-
-	}
-	else
-	{
+	} else {
 		effectiveX = X;
 	}
 
-	if(effectiveX.size()==0)//verify if returning 0 here is correct
-	{
+	if(effectiveX.size()==0) {
 		return 0;
 	}
 
-	if (mode == "dense")
-	{
-		for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
-		{
+	if (mode == "dense" || mode == "sparse") {
+		for (auto it = masterSet.begin(); it != masterSet.end(); ++it) {
 			ll ind = *it;
-			result += similarityWithNearestInEffectiveX[ind];
+			result += similarityWithNearestInEffectiveX[(partial)?originalToPartialIndexMap[ind]:ind];
 		}
-	}
-	else
-	{
-		if (mode == "sparse")
-		{
-			for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
-			{
+	} else {
+		for(ll i=0;i<num_clusters;++i) {
+			if(relevantX[i].size()==0) {
+				continue;
+			}
+			std::set<ll>ci = clusters[i];
+			for (auto it = ci.begin(); it != ci.end(); ++it) {
 				ll ind = *it;
-				result += similarityWithNearestInEffectiveX[ind];
-			}
-
-		}
-		else
-		{
-			if (mode == "clustered")
-			{
-				for(ll i=0;i<num_cluster;++i)
-				{
-					std::set<ll>ci = clusters[i];
-					if(relevantX[i].size()==0)
-					{
-						continue;
-					}
-					
-					for (auto it = ci.begin(); it != ci.end(); ++it)
-					{
-						ll ind = *it;
-						result += clusteredSimilarityWithNearestInRelevantX[ind];
-					}
-
-				}
-			}
-			else
-			{
-				std::cerr << "ERROR: INVALID mode\n";
+				result += clusteredSimilarityWithNearestInRelevantX[ind];
 			}
 		}
-
 	}
-
 	return result;
 }
 
 
-float FacilityLocation::marginalGain(std::set<ll> X, ll item)
-{
+float FacilityLocation::marginalGain(std::set<ll> X, ll item) {
+	// std::cout << "FacilityLocation marginalGain\n";
 	std::set<ll> effectiveX;
 	float gain = 0;
 
-	if (partial == true)
-	{
+	if (partial == true) {
 		//effectiveX = intersect(X, effectiveGroundSet)
 		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
-	}
-	else
-	{
+	} else {
 		effectiveX = X;
 	}
 
-	if (effectiveGroundSet.find(item) == effectiveGroundSet.end()) //O(log(n))
-	{
+	if (effectiveX.find(item) != effectiveX.end()) {
 		return 0;
 	}
 
-	if (effectiveX.find(item) != effectiveX.end())
-	{
-		return 0;
-	}
-
-	if (mode == "dense")
-	{
-		for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
-		{
+	if (mode == "dense") {
+		for (auto it = masterSet.begin(); it != masterSet.end(); ++it) {
 			ll ind = *it;
 			float m = get_max_sim_dense(ind, effectiveX, *this);
-			if (k_dense[ind][item] > m)
-			{
-				gain += (k_dense[ind][item] - m);
+			if (denseKernel[ind][item] > m) {
+				gain += (denseKernel[ind][item] - m);
 			}
 		}
-	}
-	else
-	{
-		if (mode == "sparse")
-		{
-			//std::cout<<"A\n";
-			for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
-			{
-				//std::cout<<"B\n";
+	} else if (mode == "sparse") {
+			for (auto it = masterSet.begin(); it != masterSet.end(); ++it) {
 				ll ind = *it;
 				float m = get_max_sim_sparse(ind, effectiveX, *this);
-				float temp_val = k_sparse.get_val(ind,item);
-				if (temp_val > m)
-				{
+				float temp_val = sparseKernel.get_val(ind,item);
+				if (temp_val > m) {
 					gain += (temp_val - m);
 				}
 			}
-
-		}
-		else
-		{
-			if (mode == "clustered")
-			{
-				ll i = clusterIDs[item];
-				std::set<ll>releventSubset;
-				std::set<ll>ci = clusters[i];
-				std::set_intersection(X.begin(), X.end(), ci.begin(), ci.end(), std::inserter(releventSubset, releventSubset.begin()));
-
-				if(releventSubset.size()==0)
-				{
-					for (auto it = ci.begin(); it != ci.end(); ++it)
-					{
-						ll ind = *it;
-						ll ind_=v_k_ind[ind];
-						ll item_ = v_k_ind[item];
-						gain+=v_k_cluster[i][ind_][item_];
-					}
-				}
-				else
-				{
-					for (auto it = ci.begin(); it != ci.end(); ++it)
-					{
-						ll ind = *it;
-						ll ind_=v_k_ind[ind];
-						ll item_ = v_k_ind[item];
-						float m = get_max_sim_cluster(ind, releventSubset, *this, i);
-						if (v_k_cluster[i][ind_][item_] > m)
-						{
-							gain += (v_k_cluster[i][ind_][item_] - m);
-						}
-					}
-								
-				}
-				
-
+	} else {
+        ll i = clusterIDs[item];
+		std::set<ll>releventSubset;
+		std::set<ll>ci = clusters[i];
+		std::set_intersection(X.begin(), X.end(), ci.begin(), ci.end(), std::inserter(releventSubset, releventSubset.begin()));
+		if(releventSubset.size()==0) {
+			for (auto it = ci.begin(); it != ci.end(); ++it) {
+				ll ind = *it;
+				ll ind_=clusterIndexMap[ind];
+				ll item_ = clusterIndexMap[item];
+				gain+=clusterKernels[i][ind_][item_];
 			}
-			else
-			{
-				std::cerr << "ERROR: INVALID mode\n";
+		} else {
+			for (auto it = ci.begin(); it != ci.end(); ++it) {
+				ll ind = *it;
+				ll ind_=clusterIndexMap[ind];
+				ll item_ = clusterIndexMap[item];
+				float m = get_max_sim_cluster(ind, releventSubset, *this, i);
+				if (clusterKernels[i][ind_][item_] > m) {
+					gain += (clusterKernels[i][ind_][item_] - m);
+				}
 			}
 		}
-
 	}
-
 	return gain;
 }
 
 
-float FacilityLocation::marginalGainWithMemoization(std::set<ll> X, ll item)
-{
+float FacilityLocation::marginalGainWithMemoization(std::set<ll> X, ll item) {
+	// std::cout << "FacilityLocation marginalGainWithMemoization\n";
 	std::set<ll> effectiveX;
 	float gain = 0;
-	//std::cout<<"G\n";
-	if (partial == true)
-	{
-		//effectiveX = intersect(X, effectiveGroundSet)
+	if (partial == true) {
 		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
-	}
-	else
-	{
+	} else {
 		effectiveX = X;
 	}
-
-	if (effectiveGroundSet.find(item) == effectiveGroundSet.end())
-	{
-		//std::cout<<"J1\n";
+	if (effectiveX.find(item) != effectiveX.end()) {
 		return 0;
 	}
-
-	if (effectiveX.find(item) != effectiveX.end())
-	{
-		//std::cout<<"J2\n";
-		return 0;
-	}
-
-	if (mode == "dense")
-	{
-		//std::cout<<"H\n";
-		for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
-		{
-			//std::cout<<"I\n";
+	if (mode == "dense") {
+		for (auto it = masterSet.begin(); it != masterSet.end(); ++it) {
 			ll ind = *it;
-			if (k_dense[ind][item] > similarityWithNearestInEffectiveX[ind])
-			{
-				gain += (k_dense[ind][item] - similarityWithNearestInEffectiveX[ind]);
+			if (denseKernel[ind][item] > similarityWithNearestInEffectiveX[(partial)?originalToPartialIndexMap[ind]:ind]) {
+				gain += (denseKernel[ind][item] - similarityWithNearestInEffectiveX[(partial)?originalToPartialIndexMap[ind]:ind]);
 			}
-
 		}
-	}
-	else
-	{
-		if (mode == "sparse")
-		{
-			for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
-			{
+	} else if (mode == "sparse") {
+		for (auto it = masterSet.begin(); it != masterSet.end(); ++it) {
+			ll ind = *it;
+			float temp_val = sparseKernel.get_val(ind,item);
+			if (temp_val > similarityWithNearestInEffectiveX[ind]) {
+				gain += (temp_val - similarityWithNearestInEffectiveX[ind]);
+			}
+		}
+	} else {
+        ll i = clusterIDs[item];
+		std::set<ll>releventSubset = relevantX[i];
+		std::set<ll>ci = clusters[i];
+		
+		if(releventSubset.size()==0) {
+			for (auto it = ci.begin(); it != ci.end(); ++it) {
 				ll ind = *it;
-				float temp_val = k_sparse.get_val(ind,item);
-				if (temp_val > similarityWithNearestInEffectiveX[ind])
-				{
-					gain += (temp_val - similarityWithNearestInEffectiveX[ind]);
+				ll ind_=clusterIndexMap[ind];
+				ll item_ = clusterIndexMap[item];
+				gain+=clusterKernels[i][ind_][item_];
+			}
+		} else {
+			for (auto it = ci.begin(); it != ci.end(); ++it) {
+				ll ind = *it;
+				ll ind_=clusterIndexMap[ind];
+				ll item_ = clusterIndexMap[item];
+				float temp_val = clusterKernels[i][ind_][item_];
+				if (temp_val > clusteredSimilarityWithNearestInRelevantX[ind]) {
+					gain += (temp_val - clusteredSimilarityWithNearestInRelevantX[ind]);
 				}
-
 			}
 		}
-		else
-		{
-			if (mode == "clustered")
-			{
-				ll i = clusterIDs[item];
-				std::set<ll>releventSubset = relevantX[i];
-				std::set<ll>ci = clusters[i];
-				
-				if(releventSubset.size()==0)
-				{
-					for (auto it = ci.begin(); it != ci.end(); ++it)
-					{
-						ll ind = *it;
-						ll ind_=v_k_ind[ind];
-						ll item_ = v_k_ind[item];
-						gain+=v_k_cluster[i][ind_][item_];
-					}
-				}
-				else
-				{
-					for (auto it = ci.begin(); it != ci.end(); ++it)
-					{
-						ll ind = *it;
-						ll ind_=v_k_ind[ind];
-						ll item_ = v_k_ind[item];
-						float temp_val = v_k_cluster[i][ind_][item_];
-						
-						if (temp_val > clusteredSimilarityWithNearestInRelevantX[ind])
-						{
-							gain += (temp_val - clusteredSimilarityWithNearestInRelevantX[ind]);
-						}
-					}
-					
-				}
-				
-			}
-			else
-			{
-				std::cerr << "ERROR: INVALID mode\n";
-			}
-		}
-
 	}
-
 	return gain;
 }
 
-void FacilityLocation::updateMemoization(std::set<ll> X, ll item)
-{
-
-	//std::cout<<"E\n";
+void FacilityLocation::updateMemoization(std::set<ll> X, ll item) {
+	// std::cout << "FacilityLocation updateMemoization\n";
 	std::set<ll> effectiveX;
 
-	if (partial == true)
-	{
+	if (partial == true) {
 		//effectiveX = intersect(X, effectiveGroundSet)
 		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
-	}
-	else
-	{
+	} else {
 		effectiveX = X;
 	}
-
-	if (effectiveGroundSet.find(item) == effectiveGroundSet.end())
-	{
+	if (effectiveX.find(item) != effectiveX.end()) {
 		return;
 	}
-	if (X.find(item) != X.end())
-	{
-		return;
-	}
-
-	if (mode == "dense")
-	{
-
-		for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
-		{
+	if (mode == "dense") {
+		for (auto it = masterSet.begin(); it != masterSet.end(); ++it) {
 			ll ind = *it;
-			//std::cout<<ind<<" "<<item<<"\n";
-			if (k_dense[ind][item] > similarityWithNearestInEffectiveX[ind])
-			{
-				similarityWithNearestInEffectiveX[ind] = k_dense[ind][item];
-			}
-
-		}
-	}
-	else
-	{
-		if (mode == "sparse")
-		{
-			for (auto it = masterSet.begin(); it != masterSet.end(); ++it)
-			{
-				ll ind = *it;
-				float temp_val = k_sparse.get_val(ind,item);
-				if (temp_val > similarityWithNearestInEffectiveX[ind])
-				{
-					similarityWithNearestInEffectiveX[ind] = temp_val;
-				}
-
+			if (denseKernel[ind][item] > similarityWithNearestInEffectiveX[(partial)?originalToPartialIndexMap[ind]:ind]) {
+				similarityWithNearestInEffectiveX[(partial)?originalToPartialIndexMap[ind]:ind] = denseKernel[ind][item];
 			}
 		}
-		else
-		{
-			if (mode == "clustered")
-			{
-				ll i = clusterIDs[item];
-				std::set<ll>ci = clusters[i];
-				for (auto it = ci.begin(); it != ci.end(); ++it)
-				{
-					ll ind = *it;
-					ll ind_=v_k_ind[ind];
-					ll item_ = v_k_ind[item];
-					float temp_val = v_k_cluster[i][ind_][item_];	
-					if (temp_val > clusteredSimilarityWithNearestInRelevantX[ind])
-					{
-						clusteredSimilarityWithNearestInRelevantX[ind]= temp_val;
-					}		 
-		
-				}
-				relevantX[i].insert(item);
-
-			}
-			else
-			{
-				std::cerr << "ERROR: INVALID mode\n";
+	} else if (mode == "sparse") {
+		for (auto it = masterSet.begin(); it != masterSet.end(); ++it) {
+			ll ind = *it;
+			float temp_val = sparseKernel.get_val(ind,item);
+			if (temp_val > similarityWithNearestInEffectiveX[ind]) {
+				similarityWithNearestInEffectiveX[ind] = temp_val;
 			}
 		}
-
+	} else {
+        ll i = clusterIDs[item];
+		std::set<ll>ci = clusters[i];
+		for (auto it = ci.begin(); it != ci.end(); ++it) {
+			ll ind = *it;
+			ll ind_=clusterIndexMap[ind];
+			ll item_ = clusterIndexMap[item];
+			float temp_val = clusterKernels[i][ind_][item_];	
+			if (temp_val > clusteredSimilarityWithNearestInRelevantX[ind]) {
+				clusteredSimilarityWithNearestInRelevantX[ind]= temp_val;
+			}		 
+		}
+		relevantX[i].insert(item);
 	}
 }
 
-std::set<ll> FacilityLocation::getEffectiveGroundSet()
-{
+std::set<ll> FacilityLocation::getEffectiveGroundSet() {
+	// std::cout << "FacilityLocation getEffectiveGroundSet\n";
 	return effectiveGroundSet;
 }
 
 
-std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string s,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbosity=false)//TODO: migrate fixed things to constructor
-{
-
-	if(s=="NaiveGreedy")
-	{
+std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string optimizer,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbosity=false) {
+	// std::cout << "FacilityLocation maximize\n";
+	if(optimizer == "NaiveGreedy") {
 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbosity);
 	} 
 }
 
 
-void FacilityLocation::cluster_init(ll n_, std::vector<std::vector<float>>k_dense_, std::set<ll> ground_)
-{
-	*this = FacilityLocation(n_, "dense", k_dense_, -1, true, ground_, false);
+void FacilityLocation::cluster_init(ll n_, std::vector<std::vector<float>>denseKernel_, std::set<ll> ground_, bool partial) {
+	// std::cout << "FacilityLocation clusterInit\n";
+	*this = FacilityLocation(n_, denseKernel_, partial, ground_, false);
 }
 
-void FacilityLocation::clearMemoization()
-{
-	//TODO: essentially we want to reset similarityWithNearestInEffectiveX for dense and sparse modes and we want to reset relevantX and clusteredSimilarityWithNearestInRelevantX for clustered mode
+void FacilityLocation::clearMemoization() {
+	// std::cout << "FacilityLocation clearMemoization\n";
+	//We could do https://stackoverflow.com/questions/55266468/whats-the-fastest-way-to-reinitialize-a-vector/55266856 to replace it with a more efficient implementation. However, clear() and assign() involve re-alloc and hence are slower. fill() also involves a loop. memset could be faster, but being at lower level, could be unsafe to use
 
-	//TODO: Refer https://stackoverflow.com/questions/55266468/whats-the-fastest-way-to-reinitialize-a-vector/55266856 to replace it with a more efficient implementation
-
-	if(mode=="dense" || mode=="sparse")
-	{
-		for(int i=0;i<n_master;++i)
-		{
+    //reset similarityWithNearestInEffectiveX for dense and sparse modes
+	if(mode=="dense" || mode=="sparse") {
+		for(int i=0;i<n_master;++i) {
 			similarityWithNearestInEffectiveX[i]=0;
 		}
-	}
-	if(mode == "clustered")
-	{
-		for(int i=0;i<n;++i)
-		{
+	} else {
+	    //reset relevantX and clusteredSimilarityWithNearestInRelevantX for clustered mode
+		for(int i=0;i<num_clusters;++i) {
+			relevantX[i].clear();
+		}
+		for(int i=0;i<n;++i) {
 			clusteredSimilarityWithNearestInRelevantX[i]=0;
 		}
 	}
-		
 }
 
 void FacilityLocation::setMemoization(std::set<ll> X) 
 {
+	// std::cout << "FacilityLocation setMemoization\n";
     clearMemoization();
     std::set<ll>temp;
 	for (auto it = X.begin(); it != X.end(); ++it)

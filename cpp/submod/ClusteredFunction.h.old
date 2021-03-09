@@ -22,18 +22,18 @@ class ClusteredFunction : public SetFunction
     ll n;
     std::set<ll> effectiveGroundSet;
 
-    ll num_cluster;
-    std::string fun_name;
+    ll num_clusters;
+    std::string function_name;
     std::vector<std::set<ll>>clusters; //contains original data indicies
-	std::vector<std::set<ll>>clusters_translated; //contains cluster indicies consistent with indicies in kernel corrosponding to cluster 
-    std::vector<std::vector<std::vector<float>>>v_k_cluster;//vector which contains dense similarity matrix for each cluster
-	std::vector<ll>v_k_ind;
+	std::vector<std::set<ll>>clusters_translated; //contains cluster indicies consistent with indicies in kernel corrosponding to cluster //TODO: this is redundant because the translated indices are going to be just 0, 1, 2,... for each cluster
+    std::vector<std::vector<std::vector<float>>>clusterKernels;//vector which contains dense similarity matrix for each cluster
+	std::vector<ll>clusterIndexMap;
     
-    std::vector<SetFunction* >v_fun;
+    std::vector<SetFunction* >mixture;
     std::vector<ll>clusterIDs;
 
     public:
-    ClusteredFunction(ll n_, std::string fun_name_, std::vector<std::set<ll>>clusters_, std::vector<std::vector<std::vector<float>>>v_k_cluster_, std::vector<ll>v_k_ind_ );
+    ClusteredFunction(ll n_, std::string function_name_, std::vector<std::set<ll>>clusters_, std::vector<std::vector<std::vector<float>>>clusterKernels_, std::vector<ll>clusterIndexMap_ );
     float evaluate(std::set<ll> X);
 	float evaluateWithMemoization(std::set<ll> X);
 	float marginalGain(std::set<ll> X, ll item);

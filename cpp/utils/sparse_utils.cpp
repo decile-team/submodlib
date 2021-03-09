@@ -16,8 +16,6 @@ SparseSim::SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vec
 //Reason: This loop takes O(num_ind*num_neigh*log(num_neigh)) and thus might be acting as a bottleneck.
 //I have realized that, we can still have the efficient log(num_neigh) access without this preprocessing loop. 
 
-
-
 //Change in get_val(): Column indicies (for a particular row) in arr_col vector will be present in sorted order. Therefore, we can simply use binary binary search to
 //check if corrosponding to a given row, given column has a non-zero value or not.
 //Here we can use std::binary_search() and std::lower_bound() to do this as shown next. 

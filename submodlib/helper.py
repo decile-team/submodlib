@@ -68,7 +68,7 @@ def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1, X_master=None):
 
 
 
-def create_cluster(X, metric, cluster_lab=None, num_cluster=None): #Here cluster_lab is a list which specifies custom cluster mapping of a datapoint to a cluster
+def create_cluster_kernels(X, metric, cluster_lab=None, num_cluster=None, onlyClusters=False): #Here cluster_lab is a list which specifies custom cluster mapping of a datapoint to a cluster
     
     lab=[]
     if cluster_lab==None:
@@ -92,6 +92,9 @@ def create_cluster(X, metric, cluster_lab=None, num_cluster=None): #Here cluster
         l_cluster[el].add(i)
         l_ind[i]=l_count[el]
         l_count[el]=l_count[el]+1
+
+    if onlyClusters:
+        return l_cluster, None, None
         
     l_kernel =[]
     for el in l_cluster: 

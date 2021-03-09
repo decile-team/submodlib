@@ -6,11 +6,11 @@ from scipy import sparse
 from .setFunction import SetFunction
 import submodlib_cpp as subcp
 from submodlib_cpp import FacilityLocation 
-from submodlib.helper import create_kernel, create_cluster
+from submodlib.helper import create_kernel, create_cluster_kernels
 
 class FacilityLocationFunction(SetFunction):
 	"""Implementation of the Facility-Location submodular function.
-	
+
 	Facility-Location function :cite:`mirchandani1990discrete` attempts to model representation, as in it tries to find a representative subset of items, akin to centroids and medoids in clustering. The Facility-Location function is closely related to k-medoid clustering. While diversity *only* looks at the elements in the chosen subset, representativeness also worries about their similarity with the remaining elements in the superset. Denote :math:`s_{ij}` as the similarity between images/datapoints :math:`i` and :math:`j`. We can then define 
 
 	.. math::
@@ -23,6 +23,11 @@ class FacilityLocationFunction(SetFunction):
 	.. math::
 			f(X) = \\sum_{i \\in U} \\max_{j \\in X} s_{ij} 
 
+	An alternative clustered implementation of Facility Location assumes a clustering of all ground set items and then the function value is computed over the clusters as 
+
+	.. math::
+			f(X) = \\sum_{l \\in {1....k}} \\sum_{i \\in C_l} \\max_{j \\in X \\cap C_l} s_{ij} 
+
 	Facility-Location is monotone submodular.
 	
 	.. note:: 
@@ -32,45 +37,47 @@ class FacilityLocationFunction(SetFunction):
 	----------
 
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set, must be > 0
+
+	mode: str
+		It specifies whether the Facility Location should operate in dense mode (using dense similarity kernel) or sparse mode (using sparse similarity kernel) or clustered mode (evaluating over clusters)
 	
-	n_master : int
-		Number of elements in the ground set
+	separate_master: bool, optional
+		Specifies whether a set different from ground set should be used as master set (whose representation is desired)
+	
+	n_master : int, optional
+		Number of elements in the master set if separate_master=True
 	
 	sijs : numpy ndarray or scipy sparse matrix, optional
-		Similarity matrix to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed based on the following additional parameters
+		Similarity kernel (dense or sparse) to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed internally in C++ based on the following additional parameters
 
 	data : numpy ndarray, optional
-		Data matrix which will be used for computing the similarity matrix
+		Ground set data matrix (used to compute the dense/sparse similarity kernel when a similarity kernel is not provided)
 
 	data_master : numpy ndarray, optional
-		Data matrix which will be used for computing rectangular similarity matrix in case ground and master are different
+		Master set data matrix (used to compute the dense similarity kernel) if separate_master=True and when a similarity kernel is not provided
 
-	cluster_lab : list, optional
-		Its a list that contains cluster label corrosponding to ith datapoint
+	num_clusters : int, optional
+		Number of clusters in the ground set. Used only if mode = "clustered". Must be provided if cluster_labels is provided. If cluster_labels is not provided, clusters will be created using sklearn's BIRCH method. In this case if num_clusters is not provided, BIRCH will produce an optimum number of clusters
 
-	mode: str, optional
-		It specifies weather similarity matrix will be dense or sparse. By default, its sparse
+	cluster_labels : list, optional
+		List that contains cluster label for each item in the groundset. If mode=clustered and cluster_labels is not provided, clustering is done internally using sklearn's BIRCH.
 
 	metric : str, optional
-		Similarity metric to be used for computing the similarity matrix. By default, its cosine
+		Similarity metric to be used for computing the similarity kernel. Can be "cosine" for cosine similarity and "euclidean" for similarity based on euclidean distance. Default is "cosine"
 	
-	num_neigh : int, optional
-		While constructing similarity matrix, number of nearest neighbors whose similarity values will be kept resulting in a sparse similarity matrix for computation speed up (at the cost of accuracy)
-
-	num_cluster : int, optional
-		number of clusters to be created (if only data matrix is provided) or number of clusters being used (if precreated cluster labels are also provided along with data matrix).
-		Note that num_cluster must be provided if cluster_lab has been provided 
+	num_neighbors : int, optional
+		When mode is sparse and a sparse similarity kernel is not provided, num_neighbors specifies number of neighbors to be considered while constructing a sparse similarity kernel
 
 	partial: bool, optional
-		if True, a subset of ground set will be used. By default, its False. 
+		if True, FL will operate on a restricted subset of ground set. By default, 'partial' is False. This is used only from within :class:`submodlib.ClusteredFunction <ClusteredFunction>`
 
 	ground_sub: set, optional
-		Specifies subset of ground set that will be used when partial is True. 
+		Specifies the restricted subset of ground set that will be used when partial is True. 
 
 	"""
 
-	def __init__(self, n, n_master=-1, sijs=None, data=None, data_master=None, cluster_lab=None, mode=None, metric="cosine", num_neigh=-1, num_cluster=None, partial=False, ground_sub=None, seperateMaster=None):
+	def __init__(self, n, mode, separate_master=None, n_master=None, sijs=None, data=None, data_master=None, num_clusters=None, cluster_labels=None, metric="cosine", num_neighbors=None, partial=None, ground_sub=None):
 		self.n = n
 		self.n_master = n_master
 		self.mode = mode
@@ -78,99 +85,104 @@ class FacilityLocationFunction(SetFunction):
 		self.sijs = sijs
 		self.data = data
 		self.data_master=data_master
-		self.num_neigh = num_neigh
+		self.num_neighbors = num_neighbors
 		self.partial = partial
 		self.ground_sub = ground_sub
-		self.seperateMaster=seperateMaster
+		self.separate_master=separate_master
 		self.clusters=None
 		self.cluster_sijs=None
 		self.cluster_map=None
-		self.cluster_lab=cluster_lab
-		self.num_cluster=num_cluster
+		self.cluster_labels=cluster_labels
+		self.num_clusters=num_clusters
 		self.cpp_obj = None
 		self.cpp_sijs = None
 		self.cpp_ground_sub = ground_sub
 		self.cpp_content = None
+		self.effective_ground = None
 
-		if self.n==0:
-			raise Exception("ERROR: Number of elements in ground set can't be 0")
+		if self.n <= 0:
+			raise Exception("ERROR: Number of elements in ground set must be positive")
 
-		if self.partial==True and self.ground_sub==None:
-			raise Exception("ERROR: Ground subset not specified")
+		if self.partial==True:
+			if type(self.ground_sub) == type(None) or len(self.ground_sub) == 0:
+				raise Exception("ERROR: Restricted subset of ground set not specified or empty for partial mode")
+			if self.mode == "clustered" or mode == "sparse":
+				raise Exception("clustered or sparse mode not supported if partial = True")
+			if not all(ele >= 0 and ele <= self.n-1 for ele in self.ground_sub):
+				raise Exception("Restricted subset of ground set contains invalid values")
+			if self.separate_master == True:
+				raise Exception("Partial not supported if separate_master = True")
 		
-		if mode!=None and mode not in ['dense', 'sparse', 'clustered']:
-			raise Exception("ERROR: Incorrect mode")
+		if self.mode not in ['dense', 'sparse', 'clustered']:
+			raise Exception("ERROR: Incorrect mode. Must be one of 'dense', 'sparse' or 'clustered'")
 		
-		if metric not in ['euclidean', 'cosine']:
-			raise Exception("ERROR: Unsupported metric")
+		if self.metric not in ['euclidean', 'cosine']:
+			raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
 
-		if type(self.sijs)!=type(None): # User has provided sim matrix directly: simply consume it
+		if self.separate_master == True:
+			if self.n_master  is None or self.n_master <=0:
+				raise Exception("ERROR: separate master intended but number of elements in master not specified or not positive")	
+			if self.mode != "dense":
+				raise Exception("Only dense mode supported if separate_master = True")
+			
+		if self.mode == "clustered":
+			if type(self.cluster_labels) != type(None) and (self.num_clusters  is None or self.num_clusters <= 0):
+				raise Exception("ERROR: Positive number of clusters must be provided in clustered mode when cluster_labels is provided")
+			# if self.cluster_labels  is None or len(cluster_labels) != self.n:
+			# 	raise Exception("ERROR: Cluster ID/label for each element in the ground set is needed")
+			if type(self.cluster_labels) == type(None) and self.num_clusters is not None and self.num_clusters <= 0:
+				raise Exception("Invalid number of clusters provided") 
+			if type(self.cluster_labels) != type(None) and len(self.cluster_labels) != self.n:
+				raise Exception("ERROR: cluster_labels's size is NOT same as ground set size")
+			if type(self.cluster_labels) != type(None) and not all(ele >= 0 and ele <= self.num_clusters-1 for ele in self.cluster_labels):
+				raise Exception("Cluster IDs/labels contain invalid values")
 
-			if type(self.sijs) == scipy.sparse.csr.csr_matrix and num_neigh==-1:
-				raise Exception("ERROR: num_neigh for given sparse matrix not provided")
-			if type(self.sijs) == np.ndarray and type(self.seperateMaster)==type(None):
-				raise Exception("ERROR: seperateMaster bool must be specified with custom dense kernal")
-
-			if self.mode!=None: # Ensure that there is no inconsistency in similarity matrix and provided mode
-				if type(self.sijs) == np.ndarray and self.mode!="dense":
-					print("WARNING: Incorrect mode provided for given similarity matrix, changing it to dense")
-					self.mode="dense"
-				if type(self.sijs) == scipy.sparse.csr.csr_matrix and self.mode!="sparse":
-					print("WARNING: Incorrect mode provided for given similarity matrix, changing it to sparse")
-					self.mode="sparse"
-			else: # Infer mode from similarity matrix
-				if type(self.sijs) == np.ndarray:
-					self.mode="dense"
-				if type(self.sijs) == scipy.sparse.csr.csr_matrix:
-					self.mode="sparse"	
-
-			if self.seperateMaster == True:
-				if self.mode=="sparse" or self.mode=="cluster":
-						raise Exception("ERROR: mode can't be sparse or cluster if ground and master datasets are different")
-				if partial==True:
-						raise Exception("ERROR: partial can't be True if ground and master datasets are different")	
-				if np.shape(self.sijs)[1]!=self.n or (self.n_master!=-1 and np.shape(self.sijs)[0]!=self.n_master):
-					raise Exception("ERROR: Inconsistentcy between n_master, n and no of rows, columns of given similarity matrix")
+		if type(self.sijs) != type(None): # User has provided similarity kernel
+			if type(self.sijs) == scipy.sparse.csr.csr_matrix:
+				if num_neighbors is None or num_neighbors <= 0:
+					raise Exception("ERROR: Positive num_neighbors must be provided for given sparse kernel")
+				if mode != "sparse":
+					raise Exception("ERROR: Sparse kernel provided, but mode is not sparse")
+			elif type(self.sijs) == np.ndarray:
+				if self.separate_master is None:
+					raise Exception("ERROR: separate_master bool must be specified with custom dense kernel")
+				if mode != "dense":
+					raise Exception("ERROR: Dense kernel provided, but mode is not dense")
 			else:
-				if np.shape(self.sijs)[0]!=self.n:
-					raise Exception("ERROR: Inconsistentcy between n and no of examples in the given similarity matrix")
-
-		else:
-			if type(self.data)!=type(None): # User has only provided data: build similarity matrix/cluster-info and consume it
-				
-				if type(self.data_master)!=type(None):
-					if self.seperateMaster == False:
-						print("WARNING: Incorrect value of seperateMaster provided for given data, changing seperateMaster to True")
-					self.seperateMaster=True
-					if type(self.mode)==type(None):
-						self.mode = "dense"
-
-					if self.mode=="sparse" or self.mode=="cluster":
-						raise Exception("ERROR: mode can't be sparse or cluster if ground and master datasets are different")
-					if partial==True:
-						raise Exception("ERROR: partial can't be True if ground and master datasets are different")
-					if np.shape(self.data)[0]!=self.n or (self.n_master!=-1 and np.shape(self.data_master)[0]!=self.n_master):
+				raise Exception("Invalid kernel provided")
+			#TODO: is the below dimensionality check valid for both dense and sparse kernels?
+			if self.separate_master == True:
+				if np.shape(self.sijs)[1]!=self.n or np.shape(self.sijs)[0]!=self.n_master:
+					raise Exception("ERROR: Inconsistency between n_master, n and no of rows, columns of given kernel")
+			else:
+				if np.shape(self.sijs)[0]!=self.n or np.shape(self.sijs)[1]!=self.n:
+					raise Exception("ERROR: Inconsistentcy between n and dimensionality of given similarity kernel")
+			if type(self.data) != type(None) or type(self.data_master) != type(None):
+				print("WARNING: similarity kernel found. Provided data matrix will be ignored.")
+		else: #similarity kernel has not been provided
+			if type(self.data) != type(None): 
+				if self.separate_master == True:
+					if type(self.data_master) == type(None):
+						raise Exception("Master data matrix not given")
+					if np.shape(self.data)[0]!=self.n or np.shape(self.data_master)[0]!=self.n_master:
 						raise Exception("ERROR: Inconsistentcy between n, n_master and no of examples in the given ground data matrix and master data matrix")
 				else:
-					if self.seperateMaster == True:
-						print("WARNING: Incorrect value of seperateMaster provided for given data, changing seperateMaster to False")
-					self.seperateMaster=False
-					if type(self.mode)==type(None):
-						self.mode = "sparse"
-
+					if type(self.data_master) != type(None):
+						print("WARNING: Master data matrix not required but given, will be ignored.")
 					if np.shape(self.data)[0]!=self.n:
 						raise Exception("ERROR: Inconsistentcy between n and no of examples in the given data matrix")
 				
-				if self.num_neigh==-1 and self.seperateMaster==False:
-					self.num_neigh=np.shape(self.data)[0] #default is total no of datapoints
-
 				if self.mode=="clustered":
-					self.clusters, self.cluster_sijs, self.cluster_map = create_cluster(self.data.tolist(), self.metric, self.cluster_lab, self.num_cluster)
+					self.clusters, self.cluster_sijs, self.cluster_map = create_cluster_kernels(self.data.tolist(), self.metric, self.cluster_labels, self.num_clusters) #creates clusters if not provided
 				else:
-					if self.seperateMaster==True: #mode in this case will always be dense
+					if self.separate_master==True: #mode in this case will always be dense
 						self.sijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_master.tolist(), self.metric))
 					else:
-						self.cpp_content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neigh))
+						if self.mode == "dense":
+							if self.num_neighbors  is not None:
+								raise Exception("num_neighbors wrongly provided for dense mode")
+							self.num_neighbors = np.shape(self.data)[0] #Using all data as num_neighbors in case of dense mode
+						self.cpp_content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neighbors))
 						val = self.cpp_content[0]
 						row = list(map(lambda arg: int(arg), self.cpp_content[1]))
 						col = list(map(lambda arg: int(arg), self.cpp_content[2]))
@@ -179,14 +191,21 @@ class FacilityLocationFunction(SetFunction):
 							self.sijs[row,col] = val
 						if self.mode=="sparse":
 							self.sijs = sparse.csr_matrix((val, (row, col)), [n,n])
-
 			else:
-				raise Exception("ERROR: Neither data nor similarity matrix provided")
+				raise Exception("ERROR: Neither ground set data matrix nor similarity kernel provided")
+		
+		if self.partial==None:
+			self.partial = False
+		
+		if separate_master==None:
+			self.separate_master = False
+
+		
 		
 		if self.partial==False: 
 			self.cpp_ground_sub = {-1} #Provide a dummy set for pybind11 binding to be successful
 		
-		#Breaking similarity matrix to simpler native data sturctures for implicit pybind11 binding
+		#Breaking similarity matrix to simpler native data structures for implicit pybind11 binding
 		if self.mode=="dense":
 			self.cpp_sijs = self.sijs.tolist() #break numpy ndarray to native list of list datastructure
 			
@@ -195,17 +214,15 @@ class FacilityLocationFunction(SetFunction):
 				l=[]
 				l.append(self.cpp_sijs)
 				self.cpp_sijs=l
-			if np.shape(self.cpp_sijs)[0]!=np.shape(self.cpp_sijs)[1] and self.seperateMaster==False: #TODO: relocate this check to some earlier part of code
-				raise Exception("ERROR: Dense similarity matrix should be a square matrix if ground and master datasets are same")
 
-			self.cpp_obj = FacilityLocation(self.n, self.mode, self.cpp_sijs, self.num_neigh, self.partial, self.cpp_ground_sub, self.seperateMaster)
+			self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs, self.partial, self.cpp_ground_sub, self.separate_master)
 		
 		if self.mode=="sparse": #break scipy sparse matrix to native component lists (for csr implementation)
 			self.cpp_sijs = {}
 			self.cpp_sijs['arr_val'] = self.sijs.data.tolist() #contains non-zero values in matrix (row major traversal)
 			self.cpp_sijs['arr_count'] = self.sijs.indptr.tolist() #cumulitive count of non-zero elements upto but not including current row
 			self.cpp_sijs['arr_col'] = self.sijs.indices.tolist() #contains col index corrosponding to non-zero values in arr_val
-			self.cpp_obj = FacilityLocation(self.n, self.mode, self.cpp_sijs['arr_val'], self.cpp_sijs['arr_count'], self.cpp_sijs['arr_col'], self.num_neigh, self.partial, self.cpp_ground_sub)
+			self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs['arr_val'], self.cpp_sijs['arr_count'], self.cpp_sijs['arr_col'])
 		
 		if self.mode=="clustered":
 			l_temp = []
@@ -218,42 +235,51 @@ class FacilityLocationFunction(SetFunction):
 				l_temp.append(temp)
 			self.cluster_sijs = l_temp
 
-			self.cpp_obj = FacilityLocation(self.n, self.mode, self.clusters, self.cluster_sijs, self.cluster_map, self.num_neigh, self.partial, self.cpp_ground_sub)
+			self.cpp_obj = FacilityLocation(self.n, self.clusters, self.cluster_sijs, self.cluster_map)
 
-		self.cpp_ground_sub=self.cpp_obj.getEffectiveGroundSet()
-		self.ground_sub=self.cpp_ground_sub
+		#self.cpp_ground_sub=self.cpp_obj.getEffectiveGroundSet()
+		#self.ground_sub=self.cpp_ground_sub
+		self.effective_ground = self.cpp_obj.getEffectiveGroundSet()
 
 	def evaluate(self, X):
-		"""Computes the score of a set
+		"""Computes the Facility Location score of a set
 
 		Parameters
 		----------
 		X : set
-			The set whose score needs to be computed
+			The set whose Facility Location score needs to be computed
 		
 		Returns
 		-------
 		float
-			The function evaluation on the given set
+			The Facility Location function evaluation on the given set
 
 		"""
 		if type(X)!=set:
 			raise Exception("ERROR: X should be a set")
 
-		if X.issubset(self.cpp_ground_sub)==False:
-			raise Exception("ERROR: X is not a subset of ground set")
-		
+		if X.issubset(self.effective_ground)==False:
+			raise Exception("ERROR: X should be a subset of effective ground set")
+
+		if len(X) == 0:
+			return 0
 		return self.cpp_obj.evaluate(X)
 
 	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbosity=False):
-		"""Find the optimal subset with maximum score
+		"""Find the optimal subset with maximum Facility Location score for a given budget
 
 		Parameters
 		----------
 		budget : int
 			Desired size of the optimal set
-		optimizer : optimizers.Optimizer
-			The optimizer that should be used to compute the optimal set
+		optimizer : string
+			The optimizer that should be used to compute the optimal set. Can be 'NaiveGreedy', 'LazyGreedy', 'LazierThanLazyGreedy'
+		stopIfZeroGain : bool
+			Set to True if budget should be filled with items adding zero gain. If False, size of optimal set can be potentially less than the budget
+		stopIfNegativeGain : bool
+			Set to True if maximization should terminate as soon as the best gain in an iteration is negative. This can potentially lead to optimal set of size less than the budget
+		verbosity : bool
+			Set to True to trace the execution of the maximization algorithm
 
 		Returns
 		-------
@@ -262,17 +288,19 @@ class FacilityLocationFunction(SetFunction):
 
 		"""
 
+		if budget >= len(self.effective_ground):
+			raise Exception("Budget must be less than effective ground set size")
 		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, verbosity)
 	
 	def marginalGain(self, X, element):
-		"""Find the marginal gain of adding an item to a set
+		"""Find the marginal gain in Facility Location score when a single item (element) is added to a set (X)
 
 		Parameters
 		----------
 		X : set
-			Set on which the marginal gain of adding an element has to be calculated
+			Set on which the marginal gain of adding an element has to be calculated. It must be a subset of the effective ground set.
 		element : int
-			Element for which the marginal gain is to be calculated
+			Element for which the marginal gain is to be calculated. It must be from the effective ground set.
 
 		Returns
 		-------
@@ -287,25 +315,128 @@ class FacilityLocationFunction(SetFunction):
 		if type(element)!=int:
 			raise Exception("ERROR: element should be an int")
 
-		if X.issubset(self.cpp_ground_sub)==False:
-			raise Exception("ERROR: X is not a subset of ground set")
+		if X.issubset(self.effective_ground)==False:
+			raise Exception("ERROR: X is not a subset of effective ground set")
+
+		if element not in self.effective_ground:
+			raise Exception("Error: element must be in the effective ground set")
+
+		if element in X:
+			return 0
 
 		return self.cpp_obj.marginalGain(X, element)
 
 	def marginalGainWithMemoization(self, X, element):
+		"""Efficiently find the marginal gain in Facility Location score when a single item (element) is added to a set (X) assuming that memoized statistics for it are already computed
+
+		Parameters
+		----------
+		X : set
+			Set on which the marginal gain of adding an element has to be calculated. It must be a subset of the effective ground set and its memoized statistics should have already been computed
+		element : int
+			Element for which the marginal gain is to be calculated. It must be from the effective ground set.
+
+		Returns
+		-------
+		float
+			Marginal gain of adding element to X
+
+		"""
+		if type(X)!=set:
+			raise Exception("ERROR: X should be a set")
+
+		if type(element)!=int:
+			raise Exception("ERROR: element should be an int")
+
+		if X.issubset(self.effective_ground)==False:
+			raise Exception("ERROR: X is not a subset of effective ground set")
+
+		if element not in self.effective_ground:
+			raise Exception("Error: element must be in the effective ground set")
+
+		if element in X:
+			return 0
+
 		return self.cpp_obj.marginalGainWithMemoization(X, element)
 
 	def evaluateWithMemoization(self, X):
+		"""Efficiently compute the Facility Location score of a set assuming that memoized statistics for it are already computed
+
+		Parameters
+		----------
+		X : set
+			The set whose Facility Location score needs to be computed
+		
+		Returns
+		-------
+		float
+			The Facility Location function evaluation on the given set
+
+		"""
+		if type(X)!=set:
+			raise Exception("ERROR: X should be a set")
+
+		if X.issubset(self.effective_ground)==False:
+			raise Exception("ERROR: X should be a subset of effective ground set")
+
+		if len(X) == 0:
+			return 0
+
 		return self.cpp_obj.evaluateWithMemoization(X)
 
 	def updateMemoization(self, X, element):
+		"""Update the memoized statistics of X due to adding element to X. Assumes that memoized statistics are already computed for X
+
+		Parameters
+		----------
+		X : set
+			Set whose memoized statistics must already be computed and to which the element needs to be added for the sake of updating the memoized statistics
+		element : int
+			Element that is being added to X leading to update of memoized statistics. It must be from effective ground set.
+
+		"""
+		if type(X)!=set:
+			raise Exception("ERROR: X should be a set")
+
+		if type(element)!=int:
+			raise Exception("ERROR: element should be an int")
+
+		if X.issubset(self.effective_ground)==False:
+			raise Exception("ERROR: X is not a subset of effective ground set")
+
+		if element not in self.effective_ground:
+			raise Exception("Error: element must be in the effective ground set")
+
+		if element in X:
+			return
+
 		self.cpp_obj.updateMemoization(X, element)
 	
 	def clearMemoization(self):
+		"""Clear the computed memoized statistics, if any
+
+		"""
 		self.cpp_obj.clearMemoization()
 	
 	def setMemoization(self, X):
+		"""Compute and store the memoized statistics for subset X 
+
+		Parameters
+		----------
+		X : set
+			The set for which memoized statistics need to be computed and set
+		
+		"""
+		if type(X)!=set:
+			raise Exception("ERROR: X should be a set")
+
+		if X.issubset(self.effective_ground)==False:
+			raise Exception("ERROR: X should be a subset of effective ground set")
+
 		self.cpp_obj.setMemoization(X)
 	
 	def getEffectiveGroundSet(self):
+		"""Get the effective ground set of this Facility Location object. This is equal to the ground set when instantiated with partial=False and is equal to the ground_sub when instantiated with partial=True
+
+		"""
 		return self.cpp_obj.getEffectiveGroundSet()

@@ -1,4 +1,4 @@
-//Note that this wrapper has been written so that unit testing of sparse_utils can 
+//This wrapper has been written so that unit testing of sparse_utils can 
 //be done using pytest. Apart from that, there is no need to expose sparse_utils
 //to Python
 

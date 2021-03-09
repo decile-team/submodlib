@@ -6,7 +6,7 @@ from scipy import sparse
 from .setFunction import SetFunction
 import submodlib_cpp as subcp
 from submodlib_cpp import DisparitySum 
-from submodlib.helper import create_kernel, create_cluster
+from submodlib.helper import create_kernel, create_cluster_kernels
 
 class DisparitySumFunction(SetFunction):
 	"""Implementation of the Disparity-Sum function.

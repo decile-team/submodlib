@@ -7,8 +7,6 @@
 
 #include"helper.h"
 
-//typedef long long int ll;
-
 float dot_prod(std::vector<float>v1, std::vector<float>v2)
 {
 	float dp = 0;
@@ -74,7 +72,6 @@ void update_heap(std::vector<std::vector<datapoint_pair>>&v_h, ll num_neigh, ll 
 {
 	if (v_h[r].size() < num_neigh)//populate heap till it has num_neigh elements
 	{
-		//std::cout<<"within: "<< r<<" "<<c<<" "<<" "<<s<<"\n";
 		v_h[r].push_back(datapoint_pair(r, c, s));
 		std::push_heap(v_h[r].begin(), v_h[r].end()); //Insert takes O(log(num_neigh))
 	}
@@ -85,10 +82,8 @@ void update_heap(std::vector<std::vector<datapoint_pair>>&v_h, ll num_neigh, ll 
 		//So on further traversal of similarities, we insert a similarity in the heap only if its heavier/greater than root of heap.
 		//If that's the case, we delete the similarity at root of heap and insert the heavier/greater similarity in heap. Otherwise we skip the similarity.
 	{
-		//std::cout<<v_h[r].front().val<<" "<<s<<"\n";
 		if (v_h[r].front().val < s)
 		{
-			//std::cout<<"without: "<<v_h[r].front().val<<" "<<r<<" "<<c<<" "<<" "<<s<<"\n";
 			std::pop_heap(v_h[r].begin(), v_h[r].end());//smaller values are squeezed out of the heap 
 			v_h[r][v_h[r].size()-1] = datapoint_pair(r, c, s);
 			std::push_heap(v_h[r].begin(), v_h[r].end());//larger encountered values are inserted in the heap
@@ -151,8 +146,6 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, 
 	//return sim;
 	return content;
 }
-
-
 
 //Returns a Dense of n_master x n_ground
 std::vector<std::vector<float>> create_kernel_NS(std::vector<std::vector<float>>X_ground,std::vector<std::vector<float>>X_master, std::string metric)
