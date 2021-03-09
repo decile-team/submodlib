@@ -1,3 +1,5 @@
+#ifndef SPARSEUTILS_H
+#define SPARSEUTILS_H
 #include<map>
 typedef long long int ll;
 
@@ -21,3 +23,4 @@ public:
 	std::vector<float> get_row(ll r);
 	std::vector<float> get_col(ll c);
 };
+#endif

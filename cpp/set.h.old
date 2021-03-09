@@ -1,0 +1,20 @@
+#ifndef SET_H
+#define SET_H
+#include <unordered_set>
+typedef long long int ll;
+class set {
+   protected:
+    std::unordered_set<ll> container;
+   public:
+    set();
+    void insert(ll);
+    std::unordered_set<ll>::iterator begin();
+    std::unordered_set<ll>::iterator end();
+    ll size();
+    bool contains(ll);
+    set intersect(set);
+    void clear();
+    ll count(ll);
+    set& operator=(std::unordered_set<ll>& other);
+};
+#endif

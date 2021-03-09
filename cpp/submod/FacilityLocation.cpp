@@ -26,14 +26,13 @@ have to reserve a certain number of buckets in advance.
 #include<set>
 #include<iterator>
 #include<map>
+#include "../utils/helper.h"
 #include"FacilityLocation.h"
-
-typedef long long int ll;
 
 FacilityLocation::FacilityLocation(){}
 
 //Constructor for dense mode
-FacilityLocation::FacilityLocation(ll n_, std::vector<std::vector<float>>denseKernel_, bool partial_, std::set<ll> ground_, bool separateMaster_) {
+FacilityLocation::FacilityLocation(ll n_, std::vector<std::vector<float>>denseKernel_, bool partial_, std::unordered_set<ll> ground_, bool separateMaster_) {
 	// std::cout << "FacilityLocation Dense Constructor\n";
 	n = n_;
 	mode = "dense";
@@ -98,7 +97,7 @@ FacilityLocation::FacilityLocation(ll n_, std::vector<float>arr_val, std::vector
 }
 
 //For cluster mode
-FacilityLocation::FacilityLocation(ll n_, std::vector<std::set<ll>>clusters_,std::vector<std::vector<std::vector<float>>>clusterKernels_, std::vector<ll>clusterIndexMap_) {
+FacilityLocation::FacilityLocation(ll n_, std::vector<std::unordered_set<ll>>clusters_,std::vector<std::vector<std::vector<float>>>clusterKernels_, std::vector<ll>clusterIndexMap_) {
 	// std::cout << "FacilityLocation Clustered Constructor\n";
 	n = n_;
 	mode = "clustered";
@@ -120,7 +119,7 @@ FacilityLocation::FacilityLocation(ll n_, std::vector<std::set<ll>>clusters_,std
 
 	clusterIDs.resize(n);
 	for(int i=0;i<num_clusters;++i) {  //O(n) (One time operation)
-		std::set<ll>ci=clusters[i];
+		std::unordered_set<ll> ci=clusters[i];
 		for (auto it = ci.begin(); it != ci.end(); ++it) {
 			ll ind = *it;
 			clusterIDs[ind]=i;
@@ -131,13 +130,13 @@ FacilityLocation::FacilityLocation(ll n_, std::vector<std::set<ll>>clusters_,std
 	clusteredSimilarityWithNearestInRelevantX.resize(n, 0);
 	
 	// for(ll i=0;i<num_clusters;++i) {
-	// 	std::set<ll>temp;
+	// 	settemp;
 	// 	relevantX.push_back(temp);
 	// }
 }
 
 //helper friend function
-float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj) {
+float get_max_sim_dense(ll datapoint_ind, std::unordered_set<ll> dataset_ind, FacilityLocation obj) {
 	if(dataset_ind.size()==0) {
 		return 0;
 	}
@@ -154,7 +153,7 @@ float get_max_sim_dense(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLoca
 
 	return m;
 }
-float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj) {
+float get_max_sim_sparse(ll datapoint_ind, std::unordered_set<ll> dataset_ind, FacilityLocation obj) {
 	if(dataset_ind.size()==0) {
 		return 0;
 	}
@@ -173,7 +172,7 @@ float get_max_sim_sparse(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLoc
 	return m;
 }
 
-float get_max_sim_cluster(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLocation obj, ll cluster_id) {
+float get_max_sim_cluster(ll datapoint_ind, std::unordered_set<ll> dataset_ind, FacilityLocation obj, ll cluster_id) {
     if(dataset_ind.size()==0) {
 		return 0;
 	}
@@ -196,14 +195,15 @@ float get_max_sim_cluster(ll datapoint_ind, std::set<ll> dataset_ind, FacilityLo
 	return m;
 }
 
-float FacilityLocation::evaluate(std::set<ll> X) {
+float FacilityLocation::evaluate(std::unordered_set<ll> X) {
 	// std::cout << "FacilityLocation evaluate\n";
-	std::set<ll> effectiveX;
+	std::unordered_set<ll> effectiveX;
 	float result=0;
 
 	if (partial == true) {
 		//effectiveX = intersect(X, effectiveGroundSet)
-		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+		// std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+		effectiveX = set_intersection(X, effectiveGroundSet);
 	} else {
 		effectiveX = X;
 	}
@@ -227,9 +227,10 @@ float FacilityLocation::evaluate(std::set<ll> X) {
 	} else {
 		//for each cluster
 		for(ll i=0;i<num_clusters;++i) {
-			std::set<ll>releventSubset;
-			std::set<ll>ci = clusters[i];
-			std::set_intersection(X.begin(), X.end(), ci.begin(), ci.end(), std::inserter(releventSubset, releventSubset.begin()));
+			std::unordered_set<ll> releventSubset;
+			std::unordered_set<ll> ci = clusters[i];
+			// std::set_intersection(X.begin(), X.end(), ci.begin(), ci.end(), std::inserter(releventSubset, releventSubset.begin()));
+			releventSubset = set_intersection(X, ci);
 
 			if(releventSubset.size()==0) { //if no intersection, skip to next cluster
 				continue;
@@ -245,16 +246,17 @@ float FacilityLocation::evaluate(std::set<ll> X) {
 }
 
 
-float FacilityLocation::evaluateWithMemoization(std::set<ll> X) { 
+float FacilityLocation::evaluateWithMemoization(std::unordered_set<ll> X) { 
 	// std::cout << "FacilityLocation evaluateWithMemoization\n";
     //assumes that appropriate pre computed memoized statistics exist for effectiveX
 
-	std::set<ll> effectiveX;
+	std::unordered_set<ll> effectiveX;
 	float result = 0;
 
 	if (partial == true) {
 		//effectiveX = intersect(X, effectiveGroundSet)
-		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+		// std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+		effectiveX = set_intersection(X, effectiveGroundSet);
 	} else {
 		effectiveX = X;
 	}
@@ -273,7 +275,7 @@ float FacilityLocation::evaluateWithMemoization(std::set<ll> X) {
 			if(relevantX[i].size()==0) {
 				continue;
 			}
-			std::set<ll>ci = clusters[i];
+			std::unordered_set<ll> ci = clusters[i];
 			for (auto it = ci.begin(); it != ci.end(); ++it) {
 				ll ind = *it;
 				result += clusteredSimilarityWithNearestInRelevantX[ind];
@@ -284,19 +286,20 @@ float FacilityLocation::evaluateWithMemoization(std::set<ll> X) {
 }
 
 
-float FacilityLocation::marginalGain(std::set<ll> X, ll item) {
+float FacilityLocation::marginalGain(std::unordered_set<ll> X, ll item) {
 	// std::cout << "FacilityLocation marginalGain\n";
-	std::set<ll> effectiveX;
+	std::unordered_set<ll> effectiveX;
 	float gain = 0;
 
 	if (partial == true) {
 		//effectiveX = intersect(X, effectiveGroundSet)
-		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+		// std::(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+		effectiveX = set_intersection(X, effectiveGroundSet);
 	} else {
 		effectiveX = X;
 	}
 
-	if (effectiveX.find(item) != effectiveX.end()) {
+	if (effectiveX.find(item)!=effectiveX.end()) {
 		return 0;
 	}
 
@@ -319,9 +322,10 @@ float FacilityLocation::marginalGain(std::set<ll> X, ll item) {
 			}
 	} else {
         ll i = clusterIDs[item];
-		std::set<ll>releventSubset;
-		std::set<ll>ci = clusters[i];
-		std::set_intersection(X.begin(), X.end(), ci.begin(), ci.end(), std::inserter(releventSubset, releventSubset.begin()));
+		std::unordered_set<ll> releventSubset;
+		std::unordered_set<ll> ci = clusters[i];
+		// std::set_intersection(X.begin(), X.end(), ci.begin(), ci.end(), std::inserter(releventSubset, releventSubset.begin()));
+		releventSubset = set_intersection(X, ci);
 		if(releventSubset.size()==0) {
 			for (auto it = ci.begin(); it != ci.end(); ++it) {
 				ll ind = *it;
@@ -345,16 +349,17 @@ float FacilityLocation::marginalGain(std::set<ll> X, ll item) {
 }
 
 
-float FacilityLocation::marginalGainWithMemoization(std::set<ll> X, ll item) {
+float FacilityLocation::marginalGainWithMemoization(std::unordered_set<ll> X, ll item) {
 	// std::cout << "FacilityLocation marginalGainWithMemoization\n";
-	std::set<ll> effectiveX;
+	std::unordered_set<ll> effectiveX;
 	float gain = 0;
 	if (partial == true) {
-		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+		// std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+	    effectiveX = set_intersection(X, effectiveGroundSet);
 	} else {
 		effectiveX = X;
 	}
-	if (effectiveX.find(item) != effectiveX.end()) {
+	if (effectiveX.find(item)!=effectiveX.end()) {
 		return 0;
 	}
 	if (mode == "dense") {
@@ -374,8 +379,8 @@ float FacilityLocation::marginalGainWithMemoization(std::set<ll> X, ll item) {
 		}
 	} else {
         ll i = clusterIDs[item];
-		std::set<ll>releventSubset = relevantX[i];
-		std::set<ll>ci = clusters[i];
+		std::unordered_set<ll> releventSubset = relevantX[i];
+		std::unordered_set<ll> ci = clusters[i];
 		
 		if(releventSubset.size()==0) {
 			for (auto it = ci.begin(); it != ci.end(); ++it) {
@@ -399,17 +404,18 @@ float FacilityLocation::marginalGainWithMemoization(std::set<ll> X, ll item) {
 	return gain;
 }
 
-void FacilityLocation::updateMemoization(std::set<ll> X, ll item) {
+void FacilityLocation::updateMemoization(std::unordered_set<ll> X, ll item) {
 	// std::cout << "FacilityLocation updateMemoization\n";
-	std::set<ll> effectiveX;
+	std::unordered_set<ll> effectiveX;
 
 	if (partial == true) {
 		//effectiveX = intersect(X, effectiveGroundSet)
-		std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+		// std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
+		effectiveX = set_intersection(X, effectiveGroundSet);
 	} else {
 		effectiveX = X;
 	}
-	if (effectiveX.find(item) != effectiveX.end()) {
+	if (effectiveX.find(item)!=effectiveX.end()) {
 		return;
 	}
 	if (mode == "dense") {
@@ -429,7 +435,7 @@ void FacilityLocation::updateMemoization(std::set<ll> X, ll item) {
 		}
 	} else {
         ll i = clusterIDs[item];
-		std::set<ll>ci = clusters[i];
+		std::unordered_set<ll> ci = clusters[i];
 		for (auto it = ci.begin(); it != ci.end(); ++it) {
 			ll ind = *it;
 			ll ind_=clusterIndexMap[ind];
@@ -443,7 +449,7 @@ void FacilityLocation::updateMemoization(std::set<ll> X, ll item) {
 	}
 }
 
-std::set<ll> FacilityLocation::getEffectiveGroundSet() {
+std::unordered_set<ll> FacilityLocation::getEffectiveGroundSet() {
 	// std::cout << "FacilityLocation getEffectiveGroundSet\n";
 	return effectiveGroundSet;
 }
@@ -457,7 +463,7 @@ std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string optimiz
 }
 
 
-void FacilityLocation::cluster_init(ll n_, std::vector<std::vector<float>>denseKernel_, std::set<ll> ground_, bool partial) {
+void FacilityLocation::cluster_init(ll n_, std::vector<std::vector<float>>denseKernel_, std::unordered_set<ll> ground_, bool partial) {
 	// std::cout << "FacilityLocation clusterInit\n";
 	*this = FacilityLocation(n_, denseKernel_, partial, ground_, false);
 }
@@ -482,11 +488,11 @@ void FacilityLocation::clearMemoization() {
 	}
 }
 
-void FacilityLocation::setMemoization(std::set<ll> X) 
+void FacilityLocation::setMemoization(std::unordered_set<ll> X) 
 {
 	// std::cout << "FacilityLocation setMemoization\n";
     clearMemoization();
-    std::set<ll>temp;
+    std::unordered_set<ll> temp;
 	for (auto it = X.begin(); it != X.end(); ++it)
 	{	
 		updateMemoization(temp, *it);

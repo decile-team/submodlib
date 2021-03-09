@@ -1,0 +1,12 @@
+#include <pybind11/pybind11.h>
+#include<pybind11/stl.h>
+#include"../set.h"
+#include "wrapper.h"
+
+namespace py = pybind11;
+
+void cl_set(py::module &m)
+{
+    py::class_<set>(m,"set")
+        .def(py::init<>());
+}

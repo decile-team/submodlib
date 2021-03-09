@@ -6,10 +6,9 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "../utils/helper.h"
 
 #include "DisparitySum.h"
-
-typedef long long int ll;
 
 // Note to self: Migrate all parameter related sanity/error checks from C++ FL
 // to Python FL
@@ -20,7 +19,7 @@ DisparitySum::DisparitySum() {}
 DisparitySum::DisparitySum(ll n_, std::string mode_,
                            std::vector<std::vector<float>> k_dense_,
                            ll num_neighbors_, bool partial_,
-                           std::set<ll> ground_) {
+                           std::unordered_set<ll> ground_) {
     if (mode_ != "dense") {
         std::cerr << "Error: Incorrect mode specified for the provided dense "
                      "similarity matrix\n";
@@ -54,7 +53,7 @@ DisparitySum::DisparitySum(ll n_, std::string mode_,
 DisparitySum::DisparitySum(ll n_, std::string mode_, std::vector<float> arr_val,
                            std::vector<ll> arr_count, std::vector<ll> arr_col,
                            ll num_neighbors_, bool partial_,
-                           std::set<ll> ground_) {
+                           std::unordered_set<ll> ground_) {
     // std::cout<<n_<<" "<<mode_<<" "<<num_neighbors_<<" "<<partial_<<"\n";
     if (mode_ != "sparse") {
         std::cerr << "Error: Incorrect mode specified for the provided sparse "
@@ -86,7 +85,7 @@ DisparitySum::DisparitySum(ll n_, std::string mode_, std::vector<float> arr_val,
 }
 
 // helper friend function
-float get_sum_dense(std::set<ll> dataset_ind, DisparitySum obj) {
+float get_sum_dense(std::unordered_set<ll> dataset_ind, DisparitySum obj) {
     float sum = 0;
     for (auto it = dataset_ind.begin(); it != dataset_ind.end(); ++it) {
         for (auto it2 = dataset_ind.begin(); it2 != dataset_ind.end(); ++it2) {
@@ -96,7 +95,7 @@ float get_sum_dense(std::set<ll> dataset_ind, DisparitySum obj) {
     return sum / 2;
 }
 
-float get_sum_sparse(std::set<ll> dataset_ind, DisparitySum obj) {
+float get_sum_sparse(std::unordered_set<ll> dataset_ind, DisparitySum obj) {
     float sum = 0;
     for (auto it = dataset_ind.begin(); it != dataset_ind.end(); ++it) {
         for (auto it2 = dataset_ind.begin(); it2 != dataset_ind.end(); ++it2) {
@@ -108,15 +107,16 @@ float get_sum_sparse(std::set<ll> dataset_ind, DisparitySum obj) {
 
 // TODO: In all the methods below, get rid of code redundancy by merging dense
 // and sparse mode blocks together
-float DisparitySum::evaluate(std::set<ll> X) {
-    std::set<ll> effectiveX;
+float DisparitySum::evaluate(std::unordered_set<ll> X) {
+    std::unordered_set<ll> effectiveX;
     float result = 0;
 
     if (partial == true) {
         // effectiveX = intersect(X, effectiveGroundSet)
-        std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(),
-                              effectiveGroundSet.end(),
-                              std::inserter(effectiveX, effectiveX.begin()));
+        // std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(),
+        //                       effectiveGroundSet.end(),
+        //                       std::inserter(effectiveX, effectiveX.begin()));
+        effectiveX = set_intersection(X, effectiveGroundSet);
     } else {
         effectiveX = X;
     }
@@ -136,17 +136,18 @@ float DisparitySum::evaluate(std::set<ll> X) {
 }
 
 float DisparitySum::evaluateWithMemoization(
-    std::set<ll>
+    std::unordered_set<ll>
         X)  // assumes that memoization exists for effectiveX
 {
-    std::set<ll> effectiveX;
+    std::unordered_set<ll> effectiveX;
     float result = 0;
 
     if (partial == true) {
         // effectiveX = intersect(X, effectiveGroundSet)
-        std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(),
-                              effectiveGroundSet.end(),
-                              std::inserter(effectiveX, effectiveX.begin()));
+        // std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(),
+        //                       effectiveGroundSet.end(),
+        //                       std::inserter(effectiveX, effectiveX.begin()));
+        effectiveX = set_intersection(X, effectiveGroundSet);
     } else {
         effectiveX = X;
     }
@@ -157,15 +158,16 @@ float DisparitySum::evaluateWithMemoization(
     return currentSum;
 }
 
-float DisparitySum::marginalGain(std::set<ll> X, ll item) {
-    std::set<ll> effectiveX;
+float DisparitySum::marginalGain(std::unordered_set<ll> X, ll item) {
+    std::unordered_set<ll> effectiveX;
     float gain = 0;
 
     if (partial == true) {
         // effectiveX = intersect(X, effectiveGroundSet)
-        std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(),
-                              effectiveGroundSet.end(),
-                              std::inserter(effectiveX, effectiveX.begin()));
+        // std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(),
+        //                       effectiveGroundSet.end(),
+        //                       std::inserter(effectiveX, effectiveX.begin()));
+        effectiveX = set_intersection(X, effectiveGroundSet);
     } else {
         effectiveX = X;
     }
@@ -174,7 +176,7 @@ float DisparitySum::marginalGain(std::set<ll> X, ll item) {
         return 0;
     }
 
-    if (effectiveX.find(item) != effectiveX.end()) {
+    if (effectiveX.find(item)!=effectiveX.end()) {
         return 0;
     }
 
@@ -193,15 +195,15 @@ float DisparitySum::marginalGain(std::set<ll> X, ll item) {
     return gain;
 }
 
-float DisparitySum::marginalGainWithMemoization(std::set<ll> X, ll item) {
+float DisparitySum::marginalGainWithMemoization(std::unordered_set<ll> X, ll item) {
     return marginalGain(X, item);
 }
 
-void DisparitySum::updateMemoization(std::set<ll> X, ll item) {
+void DisparitySum::updateMemoization(std::unordered_set<ll> X, ll item) {
     currentSum += marginalGain(X, item);
 }
 
-std::set<ll> DisparitySum::getEffectiveGroundSet() {
+std::unordered_set<ll> DisparitySum::getEffectiveGroundSet() {
     return effectiveGroundSet;
 }
 
@@ -217,7 +219,7 @@ std::vector<std::pair<ll, float>> DisparitySum::maximize(
 }
 
 void DisparitySum::cluster_init(ll n_, std::vector<std::vector<float>> k_dense_,
-                                std::set<ll> ground_) {
+                                std::unordered_set<ll> ground_) {
     *this = DisparitySum(n_, "dense", k_dense_, -1, true, ground_);
 }
 
@@ -226,7 +228,7 @@ void DisparitySum::clearMemoization()
     currentSum=0;	
 }
 
-void DisparitySum::setMemoization(std::set<ll> X)
+void DisparitySum::setMemoization(std::unordered_set<ll> X)
 {
     currentSum=evaluate(X);
 }

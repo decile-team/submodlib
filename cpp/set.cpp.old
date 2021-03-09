@@ -1,0 +1,52 @@
+#include <iostream>
+#include "set.h"
+
+set::set(){
+	container = std::unordered_set<ll>();
+}
+
+void set::insert(ll i){
+	container.insert(i);
+}
+
+std::unordered_set<ll>::iterator set::begin() {
+	return container.begin();
+}
+
+std::unordered_set<ll>::iterator set::end() {
+	return container.end();
+}
+
+ll set::size() {
+	return container.size();
+}
+
+bool set::contains(ll elem) {
+	if (container.find(elem) != container.end()) {
+		return true;
+	} else {
+		return false;
+	}
+}
+set set::intersect(set b) {
+	set c;
+	for (auto element : container) {
+		if (b.count(element) > 0) {
+			c.insert(element);
+		}
+	}
+	return c;
+}
+void set::clear() {
+	container.clear();
+}
+
+ll set::count(ll elem) {
+	return container.count(elem);
+}
+
+set& set::operator=(std::unordered_set<ll>& other){ // deep copy
+	for (auto elem: other){
+		container.insert(elem);
+	}
+}

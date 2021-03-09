@@ -169,3 +169,12 @@ std::vector<std::vector<float>> create_kernel_NS(std::vector<std::vector<float>>
 	
 }
 
+std::unordered_set<ll> set_intersection(std::unordered_set<ll> a, std::unordered_set<ll> b) {
+	std::unordered_set<ll> c;
+	for (auto element : a) {
+		if (b.count(element) > 0) {
+			c.insert(element);
+		}
+	}
+	return c;
+}

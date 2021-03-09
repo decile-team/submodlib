@@ -2,16 +2,15 @@
 #include<pybind11/stl.h>
 #include"../submod/DisparitySum.h"
 #include "wrapper.h"
+#include<unordered_set>
 
 namespace py = pybind11;
-
-typedef long long int ll;
 
 void cl_DisparitySum(py::module &m)
 {
     py::class_<DisparitySum>(m,"DisparitySum")
-        .def(py::init<ll, std::string, std::vector<std::vector<float>>, ll, bool, std::set<ll> >()) //dense matrix
-        .def(py::init<ll, std::string, std::vector<float>, std::vector<ll>, std::vector<ll>, ll, bool, std::set<ll>>()) //sparse matrix
+        .def(py::init<ll, std::string, std::vector<std::vector<float>>, ll, bool, std::unordered_set<ll> >()) //dense matrix
+        .def(py::init<ll, std::string, std::vector<float>, std::vector<ll>, std::vector<ll>, ll, bool, std::unordered_set<ll>>()) //sparse matrix
         .def("evaluate", &DisparitySum::evaluate)
         .def("evaluateWithMemoization", &DisparitySum::evaluateWithMemoization)
         .def("marginalGain", &DisparitySum::marginalGain)

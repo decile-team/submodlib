@@ -16,7 +16,7 @@ exec(open('submodlib/version.py').read())
 ext_modules = [
     Pybind11Extension("submodlib_cpp",
         #["cpp/submod/wrapper.cpp","cpp/submod/FacilityLocation.cpp", "cpp/submod/wr_FacilityLocation.cpp", "cpp/submod/helper.cpp", "cpp/submod/wr_helper.cpp","cpp/submod/sparse_utils.cpp", "cpp/submod/wr_sparse_utils.cpp","cpp/optimizers/NaiveGreedyOptimizer.cpp", "cpp/submod/SetFunction.cpp","cpp/submod/ClusteredFunction.cpp", "cpp/submod/wr_ClusteredFunction.cpp"],
-        ["cpp/wrappers/wrapper.cpp","cpp/submod/FacilityLocation.cpp", "cpp/wrappers/wr_FacilityLocation.cpp", "cpp/submod/DisparitySum.cpp", "cpp/wrappers/wr_DisparitySum.cpp", "cpp/utils/helper.cpp", "cpp/wrappers/wr_helper.cpp","cpp/utils/sparse_utils.cpp", "cpp/wrappers/wr_sparse_utils.cpp","cpp/optimizers/NaiveGreedyOptimizer.cpp", "cpp/SetFunction.cpp","cpp/Clustered.cpp", "cpp/wrappers/wr_Clustered.cpp"],
+        ["cpp/wrappers/wrapper.cpp", "cpp/submod/FacilityLocation.cpp", "cpp/wrappers/wr_FacilityLocation.cpp", "cpp/submod/DisparitySum.cpp", "cpp/wrappers/wr_DisparitySum.cpp", "cpp/utils/helper.cpp", "cpp/wrappers/wr_helper.cpp","cpp/utils/sparse_utils.cpp", "cpp/wrappers/wr_sparse_utils.cpp","cpp/optimizers/NaiveGreedyOptimizer.cpp", "cpp/SetFunction.cpp","cpp/Clustered.cpp", "cpp/wrappers/wr_Clustered.cpp"],
         # Example: passing in the version to the compiled code
         #sorted(glob("cpp/submod/*.cpp")),
         define_macros = [('VERSION_INFO', __version__)],

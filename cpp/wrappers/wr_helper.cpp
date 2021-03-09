@@ -5,8 +5,6 @@
 
 namespace py = pybind11;
 
-typedef long long int ll;
-
 void cl_helper(py::module &m)
 {
     m.def("dot_prod", &dot_prod);

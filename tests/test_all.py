@@ -8,14 +8,17 @@ from submodlib import ClusteredFunction
 from submodlib.helper import create_kernel
 
 functions = ["FacilityLocation"]
+num_internal_clusters = 10 #3
+num_sparse_neighbors = 10 #4
+num_random = 4 #2
 
 @pytest.fixture
 def data():
-    num_clusters = 10
-    cluster_std_dev = 4
-    num_samples = 500
-    num_set = 6
-    budget = 10
+    num_clusters = 10 #3
+    cluster_std_dev = 4 #1
+    num_samples = 500 #8
+    num_set = 6 #3
+    budget = 10 #4
 
     points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=2, cluster_std=cluster_std_dev, center_box=(0,100), return_centers=True, random_state=4)
     data = list(map(tuple, points))
@@ -45,11 +48,11 @@ def data():
 
 @pytest.fixture
 def data_with_clusters():
-    num_clusters = 10
-    cluster_std_dev = 4
-    num_samples = 500
-    num_set = 6
-    budget = 10
+    num_clusters = 10 #3
+    cluster_std_dev = 4 #1
+    num_samples = 500 #8
+    num_set = 6 #3
+    budget = 10 #4
 
     points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=2, cluster_std=cluster_std_dev, center_box=(0,100), return_centers=True, random_state=4)
     data = list(map(tuple, points))
@@ -100,7 +103,7 @@ def object_dense_py_kernel(request, data):
 def object_sparse_cpp_kernel(request, data):
     num_samples, dataArray, _, _ = data
     if request.param == "FacilityLocation":
-        obj = FacilityLocationFunction(n=num_samples, mode="sparse", data=dataArray, metric="euclidean", num_neighbors=10)
+        obj = FacilityLocationFunction(n=num_samples, mode="sparse", data=dataArray, metric="euclidean", num_neighbors=num_sparse_neighbors)
     else:
         return None
     return obj
@@ -108,9 +111,9 @@ def object_sparse_cpp_kernel(request, data):
 @pytest.fixture
 def object_sparse_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=10)
+    _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors)
     if request.param == "FacilityLocation":
-        obj = FacilityLocationFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=10)
+        obj = FacilityLocationFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors)
     else:
         return None
     return obj
@@ -119,7 +122,7 @@ def object_sparse_py_kernel(request, data):
 def object_clustered_mode_birch(request, data):
     num_samples, dataArray, _, _ = data
     if request.param == "FacilityLocation":
-        obj = FacilityLocationFunction(n=num_samples, mode="clustered", data=dataArray, metric="euclidean", num_clusters=10)
+        obj = FacilityLocationFunction(n=num_samples, mode="clustered", data=dataArray, metric="euclidean", num_clusters=num_internal_clusters)
     else:
         return None
     return obj
@@ -128,7 +131,7 @@ def object_clustered_mode_birch(request, data):
 def object_clustered_mode_user(request, data_with_clusters):
     num_samples, dataArray, _, _, cluster_ids = data_with_clusters
     if request.param == "FacilityLocation":
-        obj = FacilityLocationFunction(n=num_samples, mode="clustered", cluster_labels=cluster_ids.tolist(), data=dataArray, metric="euclidean", num_clusters=10)
+        obj = FacilityLocationFunction(n=num_samples, mode="clustered", cluster_labels=cluster_ids.tolist(), data=dataArray, metric="euclidean", num_clusters=num_internal_clusters)
     else:
         return None
     return obj
@@ -137,7 +140,7 @@ def object_clustered_mode_user(request, data_with_clusters):
 def object_clustered_birch_multi(request, data):
     num_samples, dataArray, _, _ = data
     if request.param == "FacilityLocation":
-        obj = ClusteredFunction(n=num_samples, mode="multi", f_name='FacilityLocation', metric='euclidean', data=dataArray, num_clusters=10)
+        obj = ClusteredFunction(n=num_samples, mode="multi", f_name='FacilityLocation', metric='euclidean', data=dataArray, num_clusters=num_internal_clusters)
     else:
         return None
     return obj
@@ -146,7 +149,7 @@ def object_clustered_birch_multi(request, data):
 def object_clustered_user_multi(request, data_with_clusters):
     num_samples, dataArray, _, _, cluster_ids = data_with_clusters
     if request.param == "FacilityLocation":
-        obj = ClusteredFunction(n=num_samples, mode="multi", f_name='FacilityLocation', metric='euclidean', data=dataArray, num_clusters=10, cluster_lab=cluster_ids.tolist())
+        obj = ClusteredFunction(n=num_samples, mode="multi", f_name='FacilityLocation', metric='euclidean', data=dataArray, num_clusters=num_internal_clusters, cluster_lab=cluster_ids.tolist())
     else:
         return None
     return obj
@@ -155,7 +158,7 @@ def object_clustered_user_multi(request, data_with_clusters):
 def object_clustered_birch_single(request, data):
     num_samples, dataArray, _, _ = data
     if request.param == "FacilityLocation":
-        obj = ClusteredFunction(n=num_samples, mode="single", f_name='FacilityLocation', metric='euclidean', data=dataArray, num_clusters=10)
+        obj = ClusteredFunction(n=num_samples, mode="single", f_name='FacilityLocation', metric='euclidean', data=dataArray, num_clusters=num_internal_clusters)
     else:
         return None
     return obj
@@ -164,7 +167,7 @@ def object_clustered_birch_single(request, data):
 def object_clustered_user_single(request, data_with_clusters):
     num_samples, dataArray, _, _, cluster_ids = data_with_clusters
     if request.param == "FacilityLocation":
-        obj = ClusteredFunction(n=num_samples, mode="single", f_name='FacilityLocation', metric='euclidean', data=dataArray, num_clusters=10, cluster_lab=cluster_ids.tolist())
+        obj = ClusteredFunction(n=num_samples, mode="single", f_name='FacilityLocation', metric='euclidean', data=dataArray, num_clusters=num_internal_clusters, cluster_lab=cluster_ids.tolist())
     else:
         return None
     return obj
@@ -200,7 +203,7 @@ class TestAll:
     @pytest.mark.parametrize("object_dense_cpp_kernel", functions, indirect=['object_dense_cpp_kernel'])
     def test_dense_cpp_gain(self, data, object_dense_cpp_kernel):
         _, _, set1, _ = data
-        elems = random.sample(set1, 4)
+        elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
         elem = elems[-1]
         object_dense_cpp_kernel.setMemoization(subset)
@@ -242,7 +245,7 @@ class TestAll:
     @pytest.mark.parametrize("object_dense_py_kernel", functions, indirect=['object_dense_py_kernel'])
     def test_dense_py_gain(self, data, object_dense_py_kernel):
         _, _, set1, _ = data
-        elems = random.sample(set1, 4)
+        elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
         elem = elems[-1]
         object_dense_py_kernel.setMemoization(subset)
@@ -285,7 +288,7 @@ class TestAll:
     @pytest.mark.parametrize("object_sparse_cpp_kernel", functions, indirect=['object_sparse_cpp_kernel'])
     def test_sparse_cpp_gain(self, data, object_sparse_cpp_kernel):
         _, _, set1, _ = data
-        elems = random.sample(set1, 4)
+        elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
         elem = elems[-1]
         object_sparse_cpp_kernel.setMemoization(subset)
@@ -327,7 +330,7 @@ class TestAll:
     @pytest.mark.parametrize("object_sparse_py_kernel", functions, indirect=['object_sparse_py_kernel'])
     def test_sparse_py_gain(self, data, object_sparse_py_kernel):
         _, _, set1, _ = data
-        elems = random.sample(set1, 4)
+        elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
         elem = elems[-1]
         object_sparse_py_kernel.setMemoization(subset)
@@ -369,7 +372,7 @@ class TestAll:
     @pytest.mark.parametrize("object_clustered_mode_birch", functions, indirect=['object_clustered_mode_birch'])
     def test_sparse_py_gain(self, data, object_clustered_mode_birch):
         _, _, set1, _ = data
-        elems = random.sample(set1, 4)
+        elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
         elem = elems[-1]
         object_clustered_mode_birch.setMemoization(subset)
@@ -411,7 +414,7 @@ class TestAll:
     @pytest.mark.parametrize("object_clustered_mode_user", functions, indirect=['object_clustered_mode_user'])
     def test_sparse_py_gain(self, data, object_clustered_mode_user):
         _, _, set1, _ = data
-        elems = random.sample(set1, 4)
+        elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
         elem = elems[-1]
         object_clustered_mode_user.setMemoization(subset)
@@ -453,7 +456,7 @@ class TestAll:
     @pytest.mark.parametrize("object_clustered_birch_multi", functions, indirect=['object_clustered_birch_multi'])
     def test_sparse_py_gain(self, data, object_clustered_birch_multi):
         _, _, set1, _ = data
-        elems = random.sample(set1, 4)
+        elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
         elem = elems[-1]
         object_clustered_birch_multi.setMemoization(subset)
@@ -495,7 +498,7 @@ class TestAll:
     @pytest.mark.parametrize("object_clustered_user_multi", functions, indirect=['object_clustered_user_multi'])
     def test_sparse_py_gain(self, data, object_clustered_user_multi):
         _, _, set1, _ = data
-        elems = random.sample(set1, 4)
+        elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
         elem = elems[-1]
         object_clustered_user_multi.setMemoization(subset)
@@ -537,7 +540,7 @@ class TestAll:
     @pytest.mark.parametrize("object_clustered_birch_single", functions, indirect=['object_clustered_birch_single'])
     def test_sparse_py_gain(self, data, object_clustered_birch_single):
         _, _, set1, _ = data
-        elems = random.sample(set1, 4)
+        elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
         elem = elems[-1]
         object_clustered_birch_single.setMemoization(subset)
@@ -579,7 +582,7 @@ class TestAll:
     @pytest.mark.parametrize("object_clustered_user_single", functions, indirect=['object_clustered_user_single'])
     def test_sparse_py_gain(self, data, object_clustered_user_single):
         _, _, set1, _ = data
-        elems = random.sample(set1, 4)
+        elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
         elem = elems[-1]
         object_clustered_user_single.setMemoization(subset)

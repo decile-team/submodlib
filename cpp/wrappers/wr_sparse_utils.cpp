@@ -9,8 +9,6 @@
 
 namespace py = pybind11;
 
-typedef long long int ll;
-
 void cl_sparse_utils(py::module &m)
 {
 py::class_<SparseSim>(m,"SparseSim")

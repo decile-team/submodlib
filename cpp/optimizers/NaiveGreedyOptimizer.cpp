@@ -21,9 +21,9 @@ std::vector<std::pair<ll, float>> NaiveGreedyOptimizer::maximize(SetFunction &f_
 	//TODO: take care of handling equal guys later
 	//TODO: take care of different sizes of each items - becomes a candidate only if best and within budget, cost sensitive selection
 	std::vector<std::pair<ll, float>>greedyVector;
-	std::set<ll>greedySet;
+	std::unordered_set<ll> greedySet;
 	float rem_budget = budget;
-	std::set<ll> groundSet = f_obj.getEffectiveGroundSet();
+	std::unordered_set<ll> groundSet = f_obj.getEffectiveGroundSet();
 
 	if (verbosity) {
 		std::cout << "Ground set:" << std::endl;
