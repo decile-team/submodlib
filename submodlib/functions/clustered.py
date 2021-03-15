@@ -93,6 +93,7 @@ class ClusteredFunction(SetFunction):
 		else:
 			self.clusters, self.cluster_sijs, self.cluster_map = create_cluster_kernels(self.data.tolist(), self.metric, self.cluster_lab, self.num_clusters)
 			l_temp = []
+			#TODO: this for loop can be optimized
 			for el in self.cluster_sijs:
 				temp=el.tolist()
 				if type(temp[0])==int or type(temp[0])==float: #Its critical that we pass a list of list to pybind11

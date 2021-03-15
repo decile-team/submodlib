@@ -7,6 +7,7 @@ from .setFunction import SetFunction
 import submodlib_cpp as subcp
 from submodlib_cpp import FacilityLocation 
 from submodlib.helper import create_kernel, create_cluster_kernels
+#from memory_profiler import profile
 
 class FacilityLocationFunction(SetFunction):
 	"""Implementation of the Facility-Location submodular function.
@@ -76,7 +77,7 @@ class FacilityLocationFunction(SetFunction):
 		Specifies the restricted subset of ground set that will be used when partial is True. 
 
 	"""
-
+	#@profile
 	def __init__(self, n, mode, separate_master=None, n_master=None, sijs=None, data=None, data_master=None, num_clusters=None, cluster_labels=None, metric="cosine", num_neighbors=None, partial=None, ground_sub=None):
 		self.n = n
 		self.n_master = n_master
@@ -184,8 +185,13 @@ class FacilityLocationFunction(SetFunction):
 							self.num_neighbors = np.shape(self.data)[0] #Using all data as num_neighbors in case of dense mode
 						self.cpp_content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neighbors))
 						val = self.cpp_content[0]
-						row = list(map(lambda arg: int(arg), self.cpp_content[1]))
-						col = list(map(lambda arg: int(arg), self.cpp_content[2]))
+						#TODO: these two lambdas take quite a bit of time, worth optimizing
+						#row = list(map(lambda arg: int(arg), self.cpp_content[1]))
+						#col = list(map(lambda arg: int(arg), self.cpp_content[2]))
+						# row = [int(x) for x in self.cpp_content[1]]
+						# col = [int(x) for x in self.cpp_content[2]]
+						row = list(self.cpp_content[1].astype(int))
+						col = list(self.cpp_content[2].astype(int))
 						if self.mode=="dense":
 							self.sijs = np.zeros((n,n))
 							self.sijs[row,col] = val
@@ -226,6 +232,7 @@ class FacilityLocationFunction(SetFunction):
 		
 		if self.mode=="clustered":
 			l_temp = []
+			#TODO: this for loop can be optimized
 			for el in self.cluster_sijs:
 				temp=el.tolist()
 				if type(temp[0])==int or type(temp[0])==float: 

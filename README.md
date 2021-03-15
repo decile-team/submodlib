@@ -8,7 +8,7 @@ submodlib is an efficient and scalable library for submodular optimization which
 * `$ conda install -c conda-forge pybind11`
 * `$ pip install numpy matplotlib scipy sklearn`
 * `$ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple submodlib==0.0.8`
-* `$ pip install pip install ipython==7.19 notebook` (to be able to run the tutorial notebooks)
+* `$ pip install ipython==7.19 notebook` (to be able to run the tutorial notebooks)
 
 **Usage**
 

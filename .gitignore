@@ -5,4 +5,5 @@ build/
 .eggs/
 *.egg-info/
 .python-version
-
+*.prof
+*.log
