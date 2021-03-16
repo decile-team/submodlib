@@ -7,7 +7,7 @@
 
 #include"helper.h"
 
-float dot_prod(std::vector<float>v1, std::vector<float>v2)
+float dot_prod(std::vector<float> &v1, std::vector<float> &v2)
 {
 	float dp = 0;
 	for (ll i = 0; i < v1.size(); ++i)//O(n) where n is number of features
@@ -18,7 +18,7 @@ float dot_prod(std::vector<float>v1, std::vector<float>v2)
 }
 
 
-float mag(std::vector<float>v)
+float mag(std::vector<float> &v)
 {
 	float sum = 0;
 	sum = dot_prod(v, v);
@@ -26,7 +26,7 @@ float mag(std::vector<float>v)
 }
 
 
-float cosine_similarity(std::vector<float>v1, std::vector<float>v2)
+float cosine_similarity(std::vector<float> &v1, std::vector<float> &v2)
 {
 	float dp, mag_v1 = mag(v1), mag_v2 = mag(v2), res;
 	if(mag_v1==0 || mag_v2==0)//This is being done to keep results with sklearn (Otherwise, C++ would return NaN)
@@ -39,7 +39,7 @@ float cosine_similarity(std::vector<float>v1, std::vector<float>v2)
 }
 
 
-float euclidean_distance(std::vector<float>v1, std::vector<float>v2)
+float euclidean_distance(std::vector<float> &v1, std::vector<float> &v2)
 {
 	float sum = 0;
 	for (ll i = 0; i < v1.size(); ++i)//Here we are not calling dot_prod() funct because for that we need to create a temp vector which can lead to increased space complexity
@@ -51,7 +51,7 @@ float euclidean_distance(std::vector<float>v1, std::vector<float>v2)
 
 }
 
-float euclidean_similarity(std::vector<float>v1, std::vector<float>v2)
+float euclidean_similarity(std::vector<float> &v1, std::vector<float> &v2)
 {
 	float ED = euclidean_distance(v1, v2);
 	float gamma = 1.0 / v1.size();
@@ -68,7 +68,7 @@ bool operator < (datapoint_pair lval, datapoint_pair rval)
 	return lval.val > rval.val;//because we want to create min heap
 }
 
-void update_heap(std::vector<std::vector<datapoint_pair>>&v_h, ll num_neigh, ll r, ll c, float s)
+void update_heap(std::vector<std::vector<datapoint_pair>> &v_h, ll num_neigh, ll r, ll c, float s)
 {
 	if (v_h[r].size() < num_neigh)//populate heap till it has num_neigh elements
 	{
@@ -92,7 +92,7 @@ void update_heap(std::vector<std::vector<datapoint_pair>>&v_h, ll num_neigh, ll 
 }
 
 
-std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, std::string metric, ll num_neigh)
+std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>> &X, std::string metric, ll num_neigh)
 //returns a similarity matrix where only num_neigh nearest neighbors are kept non-zero, rest are made zero
 //It returns a vector of vector to pybind11 irrespective of the mode. Then pybind11 can forward it as list of list to Python FL
 //which can use it to obtain matrix in desired mode.
@@ -148,7 +148,7 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>>X, 
 }
 
 //Returns a Dense of n_master x n_ground
-std::vector<std::vector<float>> create_kernel_NS(std::vector<std::vector<float>>X_ground,std::vector<std::vector<float>>X_master, std::string metric)
+std::vector<std::vector<float>> create_kernel_NS(std::vector<std::vector<float>> &X_ground,std::vector<std::vector<float>> &X_master, std::string metric)
 {
 	ll n_ground = X_ground.size();
 	ll n_master = X_master.size();
@@ -169,8 +169,9 @@ std::vector<std::vector<float>> create_kernel_NS(std::vector<std::vector<float>>
 	
 }
 
-std::unordered_set<ll> set_intersection(std::unordered_set<ll> a, std::unordered_set<ll> b) {
+std::unordered_set<ll> set_intersection(std::unordered_set<ll> const &a, std::unordered_set<ll> const &b) {
 	std::unordered_set<ll> c;
+	//looping over the elements of the first set, hence better when first set is smaller
 	for (auto element : a) {
 		if (b.count(element) > 0) {
 			c.insert(element);

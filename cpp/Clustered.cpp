@@ -8,33 +8,33 @@
 #include<map>
 #include"Clustered.h"
 
-Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unordered_set<ll>>clusters_, std::vector<std::vector<std::vector<float>>>clusterKernels_, std::vector<ll>clusterIndexMap_ ) {
+Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unordered_set<ll>> const&clusters_, std::vector<std::vector<std::vector<float>>> const &clusterKernels_, std::vector<ll> const &clusterIndexMap_ ): n(n_), mode(multi), num_clusters(clusters_.size()), function_name(function_name_), clusters(clusters_), clusterKernels(clusterKernels_), clusterIndexMap(clusterIndexMap_) {
     // std::cout << "Clustered multi constructor\n";
-    n = n_;
-    mode = "many_cluster_kernels";
-    num_clusters = clusters_.size();
-    function_name = function_name_;
-    clusters = clusters_;
-    clusterKernels = clusterKernels_;
-    clusterIndexMap = clusterIndexMap_;
+    //n = n_;
+    //mode = "many_cluster_kernels";
+    //num_clusters = clusters_.size();
+    //function_name = function_name_;
+    //clusters = clusters_;
+    //clusterKernels = clusterKernels_;
+    //clusterIndexMap = clusterIndexMap_;
     clusterIDs.resize(n);
     clusters_translated.resize(num_clusters);
-
+    effectiveGroundSet.reserve(n);
     for (ll i = 0; i < n; ++i) {
         effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
     }
 
-    for(int i=0;i<num_clusters;++i) { //O(n) (One time operation)
+    for(int i=0;i<num_clusters;++i) { 
+        //populate clusterIDs and clusters_translated for this cluster
 		std::unordered_set<ll> ci=clusters[i];
-		for (auto it = ci.begin(); it != ci.end(); ++it) {
-			ll ind = *it;
+		//for (auto it = ci.begin(); it != ci.end(); ++it) {
+        for (auto ind: ci) {
+			//ll ind = *it;
 			clusterIDs[ind]=i;
             clusters_translated[i].insert(clusterIndexMap[ind]);//populating translated indicies
 		}
-	}
-
-    for(int i=0;i<num_clusters;++i) {
-        std::unordered_set<ll> ci = clusters_translated[i];//initilize function object with translated cluster system as that will be consistent with indicies in corresponding kernel
+        //instantiate the component for this cluster and add to the mixture
+        std::unordered_set<ll> cti = clusters_translated[i];//initilize function object with translated cluster system as that will be consistent with indicies in corresponding kernel
         std::vector<std::vector<float>>kernel = clusterKernels[i];
         SetFunction *f_obj;
         if(function_name=="FacilityLocation") {
@@ -42,29 +42,30 @@ Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unorder
         } else if(function_name == "DisparitySum") {
             f_obj = new DisparitySum;
         }
-        f_obj->cluster_init(ci.size(), kernel, ci, false); 
+        f_obj->cluster_init(cti.size(), kernel, cti, false); 
         mixture.push_back(f_obj);
-    }
+	}
 }
 
-Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unordered_set<ll>>clusters_, std::vector<std::vector<float>>denseKernel_) {
+Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unordered_set<ll>> const &clusters_, std::vector<std::vector<float>> const &denseKernel_): n(n_), mode(single), num_clusters(clusters_.size()), denseKernel(denseKernel_), function_name(function_name_), clusters(clusters_) {
     // std::cout << "Clustered single constructor\n";
-    n = n_;
-    mode = "single_dense_kernel";
-    num_clusters = clusters_.size();
-    denseKernel = denseKernel_;
-    function_name = function_name_;
-    clusters = clusters_;
+    //n = n_;
+    //mode = "single_dense_kernel";
+    //num_clusters = clusters_.size();
+    //denseKernel = denseKernel_;
+    //function_name = function_name_;
+    //clusters = clusters_;
     clusterIDs.resize(n);
-
+    effectiveGroundSet.reserve(n);
     for (ll i = 0; i < n; ++i) {
-        effectiveGroundSet.insert(i); //each insert takes O(log(n)) time
+        effectiveGroundSet.insert(i); //each insert takes O(1) time
     }
 
     for(int i=0;i<num_clusters;++i) {
         std::unordered_set<ll> ci = clusters[i];
-        for (auto it = ci.begin(); it != ci.end(); ++it) {
-			ll ind = *it;
+        //for (auto it = ci.begin(); it != ci.end(); ++it) {
+        for (auto ind: ci) {
+			//ll ind = *it;
 			clusterIDs[ind]=i;
 		}
         SetFunction *f_obj;
@@ -78,10 +79,11 @@ Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unorder
     }
 }
 
-std::unordered_set<ll> translate_X(std::unordered_set<ll> X, Clustered obj, ll cluster_id) { //Before using X, its important to translate it to suitable form
+std::unordered_set<ll> translate_X(std::unordered_set<ll> const &X, Clustered const &obj, ll cluster_id) { //Before using X, its important to translate it to suitable form
     std::unordered_set<ll> X_res;
-    for (auto it = X.begin(); it != X.end(); ++it) {
-        ll ind = *it;
+    //for (auto it = X.begin(); it != X.end(); ++it) {
+    for (auto ind: X) {
+        //ll ind = *it;
         if(obj.clusterIDs[ind]==cluster_id) { //if given data index is in current cluster then translate it to suitable index and put it in X_res
             X_res.insert(obj.clusterIndexMap[ind]);
         }
@@ -89,10 +91,10 @@ std::unordered_set<ll> translate_X(std::unordered_set<ll> X, Clustered obj, ll c
     return X_res;
 }
 
-float Clustered::evaluate(std::unordered_set<ll> X) {
+float Clustered::evaluate(std::unordered_set<ll> const &X) {
     // std::cout << "Clustered evaluate\n";
     float res=0;
-    if (mode == "single_dense_kernel") {
+    if (mode == single) {
         for(int i=0;i<num_clusters;++i) {
             res += mixture[i]->evaluate(X);
         }
@@ -105,10 +107,10 @@ float Clustered::evaluate(std::unordered_set<ll> X) {
     return res;
 }
 
-float Clustered::evaluateWithMemoization(std::unordered_set<ll> X) {
+float Clustered::evaluateWithMemoization(std::unordered_set<ll> const &X) {
     // std::cout << "Clustered evaluateWithMemoization\n";
     float res=0;
-    if(mode == "single_dense_kernel") {
+    if(mode == single) {
         for(int i=0;i<num_clusters;++i) {
             res+=mixture[i]->evaluateWithMemoization(X);
         }
@@ -121,10 +123,10 @@ float Clustered::evaluateWithMemoization(std::unordered_set<ll> X) {
     return res;
 }
 
-float Clustered::marginalGain(std::unordered_set<ll> X, ll item) {
+float Clustered::marginalGain(std::unordered_set<ll> const &X, ll item) {
     // std::cout << "Clustered marginalGain\n";
     ll i = clusterIDs[item];
-    if (mode == "single_dense_kernel") {
+    if (mode == single) {
         return mixture[i]->marginalGain(X, item);
     } else {
         std::unordered_set<ll> X_temp = translate_X(X, *this, i);
@@ -146,10 +148,10 @@ float Clustered::marginalGain(std::unordered_set<ll> X, ll item) {
     }
 }
 
-float Clustered::marginalGainWithMemoization(std::unordered_set<ll> X, ll item) {
+float Clustered::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
     // std::cout << "Clustered marginalGainWithMemoization\n";
     ll i = clusterIDs[item];
-    if (mode == "single_dense_kernel") {
+    if (mode == single) {
         return mixture[i]->marginalGainWithMemoization(X, item);
     } else {
         std::unordered_set<ll> X_temp = translate_X(X, *this, i);
@@ -172,11 +174,11 @@ float Clustered::marginalGainWithMemoization(std::unordered_set<ll> X, ll item) 
     }
 }
 
-void Clustered::updateMemoization(std::unordered_set<ll> X, ll item)
+void Clustered::updateMemoization(std::unordered_set<ll> const &X, ll item)
 {
     // std::cout << "Clustered updateMemoization\n";
     ll i = clusterIDs[item];
-    if (mode == "single_dense_kernel") {
+    if (mode == single) {
         mixture[i]->updateMemoization(X, item);
     } else {
         std::unordered_set<ll> X_temp = translate_X(X, *this, i);
@@ -191,12 +193,12 @@ std::unordered_set<ll> Clustered::getEffectiveGroundSet()
     return effectiveGroundSet;
 }
 
-std::vector<std::pair<ll, float>> Clustered::maximize(std::string optimizer,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbosity=false)
+std::vector<std::pair<ll, float>> Clustered::maximize(std::string optimizer,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbose=false)
 {
     // std::cout << "Clustered maximize\n";
 	if(optimizer=="NaiveGreedy")
 	{
-		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbosity);
+		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
 	} else {
         std::cerr << "Optimizer not yet implemented" << std::endl;
     }
@@ -209,10 +211,10 @@ void Clustered::clearMemoization() {
     }
 }  
 
-void Clustered::setMemoization(std::unordered_set<ll> X) {
+void Clustered::setMemoization(std::unordered_set<ll> const &X) {
     // std::cout << "Clustered setMemoization\n";
 
-    if(mode == "single_dense_kernel") {
+    if(mode == single) {
         for(int i=0;i<num_clusters;++i) {
             mixture[i]->setMemoization(X);
         }

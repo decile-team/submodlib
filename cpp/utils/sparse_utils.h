@@ -12,12 +12,12 @@ class SparseSim
 	ll num_neigh;//num of nearest neighbors being considered
 	bool alwaysNonZero;//This flag tells if similarity values will be always (exactly) non Zero 
 					   //or if zero values are also possible (say in case of orthogonal datapoints)
-	std::vector<std::set<ll>>v_col_ID;
-	std::vector<std::map<ll, float>>v_val_map;
+	std::vector<std::set<ll>> v_col_ID;
+	std::vector<std::map<ll, float>> v_val_map;
 
 public:
-	SparseSim(std::vector<float> a_val, std::vector<ll> a_count, std::vector<ll> a_col);//Use this signature if (exact) 0 similarity is possible
-	SparseSim(std::vector<float> a_val, std::vector<ll> a_col, ll nn, ll num);//Use this signature if (exact) zero similarity is impossible
+	SparseSim(std::vector<float> const &a_val, std::vector<ll> const &a_count, std::vector<ll> const &a_col);//Use this signature if (exact) 0 similarity is possible
+	SparseSim(std::vector<float> const &a_val, std::vector<ll> const &a_col, ll nn, ll num);//Use this signature if (exact) zero similarity is impossible
 	SparseSim();
 	float get_val(ll r, ll c);
 	std::vector<float> get_row(ll r);

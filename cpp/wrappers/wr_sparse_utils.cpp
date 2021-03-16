@@ -12,8 +12,8 @@ namespace py = pybind11;
 void cl_sparse_utils(py::module &m)
 {
 py::class_<SparseSim>(m,"SparseSim")
-    .def(py::init<std::vector<float>, std::vector<ll>, std::vector<ll>>())
-    .def(py::init<std::vector<float>, std::vector<ll>, ll, ll>())
+    .def(py::init<std::vector<float>&, std::vector<ll>&, std::vector<ll>&>())
+    .def(py::init<std::vector<float>&, std::vector<ll>&, ll, ll>())
     .def("get_val", &SparseSim::get_val)
     .def("get_row", &SparseSim::get_row)
     .def("get_col", &SparseSim::get_col);
