@@ -8,11 +8,11 @@ from submodlib.functions.facilityLocation import FacilityLocationFunction
 from submodlib import ClusteredFunction
 
 #prepare data to be used in the analysis
-num_clusters = 100
+num_clusters = 20
 cluster_std_dev = 4
-num_samples = 30000
-num_set = 80
-num_neighbors = 100
+num_samples = 2000
+num_set = 15
+num_neighbors = 50
 
 points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=2, cluster_std=cluster_std_dev, center_box=(0,100), return_centers=True, random_state=4)
 data = list(map(tuple, points))

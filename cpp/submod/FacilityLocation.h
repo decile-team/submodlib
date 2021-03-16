@@ -2,6 +2,7 @@
 #define FACILITYLOCATION_H
 
 #include"../optimizers/NaiveGreedyOptimizer.h"
+#include"../optimizers/LazyGreedyOptimizer.h"
 #include"../SetFunction.h"
 #include"../utils/sparse_utils.h"
 #include <unordered_set>

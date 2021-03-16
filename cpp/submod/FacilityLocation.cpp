@@ -513,7 +513,11 @@ std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string optimiz
 	// std::cout << "FacilityLocation maximize\n";
 	if(optimizer == "NaiveGreedy") {
 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
-	} 
+	} else if(optimizer == "LazyGreedy") {
+        return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
+	} else {
+		std::cerr << "Optimizer not yet implemented" << std::endl;
+	}
 }
 
 
