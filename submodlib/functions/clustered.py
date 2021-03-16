@@ -129,7 +129,7 @@ class ClusteredFunction(SetFunction):
 
 		return self.cpp_obj.evaluate(X)
 
-	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbosity=False):
+	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon=0.1, verbosity=False):
 		"""Find the optimal subset with maximum Clustered Function score for a given budget
 
 		Parameters
@@ -154,7 +154,7 @@ class ClusteredFunction(SetFunction):
 
 		if budget >= self.n:
 			raise Exception("Budget must be less than groundset size")
-		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, verbosity)
+		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbosity)
 	
 	def marginalGain(self, X, element):
 		"""Find the marginal gain in Clustered Function score when a single item (element) is added to a set (X)

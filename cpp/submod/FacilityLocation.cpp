@@ -509,12 +509,14 @@ std::unordered_set<ll> FacilityLocation::getEffectiveGroundSet() {
 }
 
 
-std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string optimizer,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbose=false) {
+std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string optimizer,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
 	// std::cout << "FacilityLocation maximize\n";
 	if(optimizer == "NaiveGreedy") {
 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
 	} else if(optimizer == "LazyGreedy") {
         return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
+	} else if(optimizer == "StochasticGreedy") {
+        return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
 	} else {
 		std::cerr << "Optimizer not yet implemented" << std::endl;
 	}

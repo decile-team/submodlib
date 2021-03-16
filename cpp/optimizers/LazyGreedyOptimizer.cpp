@@ -21,6 +21,8 @@ bool LazyGreedyOptimizer::equals(double val1, double val2, double eps) {
 std::vector<std::pair<ll, float>> LazyGreedyOptimizer::maximize(
     SetFunction &f_obj, ll budget, bool stopIfZeroGain = false,
     bool stopIfNegativeGain = false, bool verbose = false) {
+    //TODO: take care of handling equal guys later
+	//TODO: take care of different sizes of each items - becomes a candidate only if best and within budget, cost sensitive selection
     std::vector<std::pair<ll, float>> greedyVector;
     greedyVector.reserve(budget);
     std::unordered_set<ll> greedySet;

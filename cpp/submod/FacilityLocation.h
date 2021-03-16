@@ -3,6 +3,7 @@
 
 #include"../optimizers/NaiveGreedyOptimizer.h"
 #include"../optimizers/LazyGreedyOptimizer.h"
+#include"../optimizers/StochasticGreedyOptimizer.h"
 #include"../SetFunction.h"
 #include"../utils/sparse_utils.h"
 #include <unordered_set>
@@ -61,7 +62,7 @@ public:
 	float marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item);
 	void updateMemoization(std::unordered_set<ll> const &X, ll item);
 	std::unordered_set<ll> getEffectiveGroundSet();
-	std::vector<std::pair<ll, float>> maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbose);
+	std::vector<std::pair<ll, float>> maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose);
 	void cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial);
 	void clearMemoization();
 	void setMemoization(std::unordered_set<ll> const &X);

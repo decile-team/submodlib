@@ -35,7 +35,7 @@ class Clustered : public SetFunction
 	float marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item);
 	void updateMemoization(std::unordered_set<ll> const &X, ll item);
     std::unordered_set<ll> getEffectiveGroundSet();
-    std::vector<std::pair<ll, float>> maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbose);
+    std::vector<std::pair<ll, float>> maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose);
     void clearMemoization();
 	void setMemoization(std::unordered_set<ll> const &X);
 
