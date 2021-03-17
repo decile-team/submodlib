@@ -57,7 +57,7 @@ def test():
     print(f"Subset 1's Fast FL value = {obj5.evaluateWithMemoization(set1)}")
     print(f"Fast gain of adding another point ({subset1[-1]}) of same cluster to {set1} = {obj5.marginalGainWithMemoization(set1, subset1[-1])}")
     # start = time.process_time()
-    greedyList = obj5.maximize(budget,'NaiveGreedy', False, False, False)
+    greedyList = obj5.maximize(budget=budget,optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
     print(f"Greedy vector: {greedyList}")
     # print(f"Time taken by maximization = {time.process_time() - start}")
     # greedyXs = [xs[x[0]] for x in greedyList]
@@ -77,7 +77,7 @@ def test():
     print(f"Subset 1's Fast FL value = {obj7.evaluateWithMemoization(set1)}")
     print(f"Fast gain of adding another point ({subset1[-1]}) of same cluster to {set1} = {obj7.marginalGainWithMemoization(set1, subset1[-1])}")
     # start = time.process_time()
-    greedyList = obj7.maximize(budget,'NaiveGreedy', False, False, False)
+    greedyList = obj7.maximize(budget=budget,optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
     print(f"Greedy vector: {greedyList}")
     # print(f"Time taken by maximization = {time.process_time() - start}")
     # greedyXs = [xs[x[0]] for x in greedyList]
@@ -95,7 +95,7 @@ def test():
     # print(f"Gain of adding another point ({subset1[-1]}) of same cluster to {set1} = {obj9.marginalGain(set1, subset1[-1])}")
     # print(f"Gain of adding another point ({subset2[-1]}) of different cluster to {set1} = {obj9.marginalGain(set1, subset2[-1])}")
     # start = time.process_time()
-    # greedyList = obj9.maximize(budget,'NaiveGreedy', False, False, False)
+    # greedyList = obj9.maximize(budget=budget,optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
     # print(f"Time taken by maximization = {time.process_time() - start}")
     # print("Output of maximization", greedyList)
     # greedyXs = [xs[x[0]] for x in greedyList]

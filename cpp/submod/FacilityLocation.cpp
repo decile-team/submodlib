@@ -517,6 +517,8 @@ std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string optimiz
         return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
 	} else if(optimizer == "StochasticGreedy") {
         return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
+	} else if(optimizer == "LazierThanLazyGreedy") {
+        return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
 	} else {
 		std::cerr << "Optimizer not yet implemented" << std::endl;
 	}

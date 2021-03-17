@@ -6,10 +6,10 @@ import numpy as np
 
 def test():
 
-    num_clusters = 100 #3
-    cluster_std_dev = 4 #1
-    num_samples = 5000 #9
-    budget = 10 #4
+    num_clusters = 3 #100 #3
+    cluster_std_dev = 1 #4 #1
+    num_samples = 9 #5000 #9
+    budget = 4 #10 #4
 
     points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=2, cluster_std=cluster_std_dev, center_box=(0,100), return_centers=True, random_state=4)
     data = list(map(tuple, points))
@@ -27,6 +27,7 @@ def test():
     #greedyList = obj.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbosity=True)
     #greedyList = obj.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbosity=True)
     greedyList = obj.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbosity=True)
+    #greedyList = obj.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbosity=True)
     print(f"Time taken by maximization = {time.process_time() - start}")
     print(f"Greedy vector: {greedyList}")
     greedyXs = [xs[x[0]] for x in greedyList]

@@ -4,6 +4,7 @@
 #include"../optimizers/NaiveGreedyOptimizer.h"
 #include"../optimizers/LazyGreedyOptimizer.h"
 #include"../optimizers/StochasticGreedyOptimizer.h"
+#include"../optimizers/LazierThanLazyGreedyOptimizer.h"
 #include"../SetFunction.h"
 #include"../utils/sparse_utils.h"
 #include <unordered_set>

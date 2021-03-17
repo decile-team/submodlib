@@ -203,6 +203,8 @@ std::vector<std::pair<ll, float>> Clustered::maximize(std::string optimizer,floa
         return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
     } else if (optimizer=="StochasticGreedy") { 
         return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
+    } else if (optimizer=="LazierThanLazyGreedy") { 
+        return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
     } else {
         std::cerr << "Optimizer not yet implemented" << std::endl;
     }

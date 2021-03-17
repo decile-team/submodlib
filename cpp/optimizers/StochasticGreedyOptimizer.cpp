@@ -5,7 +5,7 @@
 #include<algorithm>
 #include<cmath>
 #include<utility>
-#include <random>
+#include<random>
 #include"StochasticGreedyOptimizer.h"
 
 StochasticGreedyOptimizer::StochasticGreedyOptimizer(){}
@@ -60,7 +60,7 @@ std::vector<std::pair<ll, float>> StochasticGreedyOptimizer::maximize(SetFunctio
 						randomSet.insert(elem);
 				}
 		}
-		//std::cout << "Now running greedy on the random set\n";
+		if(verbose) std::cout << "Now running naive greedy on the random set\n";
 		best_id = -1;
 		best_val = -1 * std::numeric_limits<float>::max();
 		//for (auto it = groundSet.begin(); it != groundSet.end(); ++it) {

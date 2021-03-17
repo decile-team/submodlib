@@ -96,7 +96,7 @@ t, _ = timeit.timeit('cpp_sparse_kernel()', 'from __main__ import cpp_sparse_ker
 l_record.append(("cpp_sparse_kernel", round(t/num_executions,num_places)))
 
 def maximize(obj):
-    obj.maximize(num_set,'NaiveGreedy', False, False, False)
+    obj.maximize(budget=num_set,optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 
 def evaluate(obj, subset):
     obj.evaluate(subset)

@@ -1,5 +1,3 @@
-#include"optimizers/NaiveGreedyOptimizer.h"
-#include"optimizers/LazyGreedyOptimizer.h"
 #include"SetFunction.h"
 #include "submod/FacilityLocation.h"
 #include "submod/DisparitySum.h"
