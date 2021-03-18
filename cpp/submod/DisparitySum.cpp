@@ -210,11 +210,11 @@ std::unordered_set<ll> DisparitySum::getEffectiveGroundSet() {
 std::vector<std::pair<ll, float>> DisparitySum::maximize(
     std::string s, float budget, bool stopIfZeroGain = false,
     bool stopIfNegativeGain = false,
-    bool verbosity = false)  // TODO: migrate fixed things to constructor
+    bool verbose = false)  // TODO: migrate fixed things to constructor
 {
     if (s == "NaiveGreedy") {
         return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain,
-                                               stopIfNegativeGain, verbosity);
+                                               stopIfNegativeGain, verbose);
     }
 }
 

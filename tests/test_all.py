@@ -18,7 +18,6 @@ def data():
     cluster_std_dev = 4 #1
     num_samples = 500 #8
     num_set = 6 #3
-    budget = 10 #4
 
     points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=2, cluster_std=cluster_std_dev, center_box=(0,100), return_centers=True, random_state=4)
     data = list(map(tuple, points))
@@ -52,7 +51,6 @@ def data_with_clusters():
     cluster_std_dev = 4 #1
     num_samples = 500 #8
     num_set = 6 #3
-    budget = 10 #4
 
     points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=2, cluster_std=cluster_std_dev, center_box=(0,100), return_centers=True, random_state=4)
     data = list(map(tuple, points))
@@ -810,8 +808,17 @@ class TestAll:
         gainFast3 = objects_clustered_birch[2].marginalGainWithMemoization(subset, elem)
         assert math.isclose(gainFast1, gainFast2, rel_tol=1e-05) and math.isclose(gainFast2, gainFast3, rel_tol=1e-05), "Mismatch between marginalGainWithMemoization() of clustered mode, clustered function single and clustered function multi"
 
-
-
-
-
-
+    ######## Tests for optimizers ################
+    @pytest.mark.parametrize("object_dense_cpp_kernel", ["FacilityLocation"], indirect=['object_dense_cpp_kernel'])
+    def test_naive_lazy(self, object_dense_cpp_kernel):
+        greedyListNaive = object_dense_cpp_kernel.maximize(budget=10, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_dense_cpp_kernel.maximize(budget=10, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        assert greedyListNaive == greedyListLazy, "Mismatch between naiveGreedy and lazyGreedy"
+    
+    @pytest.mark.parametrize("object_dense_cpp_kernel", ["FacilityLocation"], indirect=['object_dense_cpp_kernel'])
+    def test_stochastic_lazierThanLazy(self, object_dense_cpp_kernel):
+        greedyListStochastic = object_dense_cpp_kernel.maximize(budget=10, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        print(greedyListStochastic)
+        greedyListLazierThanLazy = object_dense_cpp_kernel.maximize(budget=10, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        print(greedyListLazierThanLazy)
+        assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"

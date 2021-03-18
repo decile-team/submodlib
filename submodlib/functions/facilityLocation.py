@@ -272,7 +272,7 @@ class FacilityLocationFunction(SetFunction):
 			return 0
 		return self.cpp_obj.evaluate(X)
 
-	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon = 0.1, verbosity=False):
+	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon = 0.1, verbose=False):
 		"""Find the optimal subset with maximum Facility Location score for a given budget
 
 		Parameters
@@ -285,7 +285,7 @@ class FacilityLocationFunction(SetFunction):
 			Set to True if budget should be filled with items adding zero gain. If False, size of optimal set can be potentially less than the budget
 		stopIfNegativeGain : bool
 			Set to True if maximization should terminate as soon as the best gain in an iteration is negative. This can potentially lead to optimal set of size less than the budget
-		verbosity : bool
+		verbose : bool
 			Set to True to trace the execution of the maximization algorithm
 
 		Returns
@@ -297,7 +297,7 @@ class FacilityLocationFunction(SetFunction):
 
 		if budget >= len(self.effective_ground):
 			raise Exception("Budget must be less than effective ground set size")
-		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbosity)
+		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose)
 	
 	def marginalGain(self, X, element):
 		"""Find the marginal gain in Facility Location score when a single item (element) is added to a set (X)

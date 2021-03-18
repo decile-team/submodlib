@@ -39,7 +39,7 @@ class DisparityMin : public SetFunction {
     std::vector<std::pair<ll, float>> maximize(std::string, float budget,
                                                bool stopIfZeroGain,
                                                bool stopIfNegativeGain,
-                                               bool verbosity);
+                                               bool verbose);
     void cluster_init(ll n_, std::vector<std::vector<float>> k_dense_,
                       std::unordered_set<ll> ground_);
     void clearMemoization();

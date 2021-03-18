@@ -133,7 +133,7 @@ std::set<ll> ClusteredFunction::getEffectiveGroundSet()
     return effectiveGroundSet;
 }
 
-std::vector<std::pair<ll, float>> ClusteredFunction::maximize(std::string s,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbosity=false)
+std::vector<std::pair<ll, float>> ClusteredFunction::maximize(std::string s,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbose=false)
 {
     //std::cout<<"A\n";
 	if(s=="NaiveGreedy")

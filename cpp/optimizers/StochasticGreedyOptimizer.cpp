@@ -47,8 +47,10 @@ std::vector<std::pair<ll, float>> StochasticGreedyOptimizer::maximize(SetFunctio
 		std::cout << "\n";
 	}
 	f_obj.clearMemoization();
+	srand(1);
 	ll best_id;
 	float best_val;
+	int i = 0;
 	while (rem_budget > 0) {
 		std::unordered_set<ll> randomSet;
 		while(randomSet.size() < randomSetSize) {
@@ -60,7 +62,15 @@ std::vector<std::pair<ll, float>> StochasticGreedyOptimizer::maximize(SetFunctio
 						randomSet.insert(elem);
 				}
 		}
-		if(verbose) std::cout << "Now running naive greedy on the random set\n";
+		if (verbose) {
+            std::cout << "Iteration " << i << "\n";
+            std::cout << "Random set = [";
+            for (auto elem : randomSet) {
+                std::cout << elem << " ";
+            }
+            std::cout << "\n";
+						std::cout << "Now running naive greedy on the random set\n";
+        }
 		best_id = -1;
 		best_val = -1 * std::numeric_limits<float>::max();
 		//for (auto it = groundSet.begin(); it != groundSet.end(); ++it) {
@@ -94,6 +104,7 @@ std::vector<std::pair<ll, float>> StochasticGreedyOptimizer::maximize(SetFunctio
 		        std::cout << "\n";
 			}
 		}
+		i += 1;
 	}
 	return greedyVector;
 }

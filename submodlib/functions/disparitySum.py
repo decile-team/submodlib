@@ -156,7 +156,7 @@ class DisparitySumFunction(SetFunction):
 		
 		return self.cpp_obj.evaluate(X)
 
-	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbosity=False):
+	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False):
 		"""Find the optimal subset with maximum score
 
 		Parameters
@@ -173,7 +173,7 @@ class DisparitySumFunction(SetFunction):
 
 		"""
 
-		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, verbosity)
+		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, verbose)
 	
 	def marginalGain(self, X, element):
 		"""Find the marginal gain of adding an item to a set
