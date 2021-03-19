@@ -1,113 +1,68 @@
-#include <algorithm>
-#include <cmath>
-#include <iostream>
-#include <iterator>
-#include <map>
-#include <set>
-#include <string>
-#include <vector>
+#include<iostream>
+#include<vector>
+#include<string>
+#include<algorithm>
+#include<cmath>
+#include<set>
+#include<iterator>
+#include<map>
 #include "../utils/helper.h"
-
-#include "DisparitySum.h"
-
-// Note to self: Migrate all parameter related sanity/error checks from C++ FL
-// to Python FL
+#include"DisparitySum.h"
 
 DisparitySum::DisparitySum() {}
 
-// For dense mode
-DisparitySum::DisparitySum(ll n_, std::string mode_,
-                           std::vector<std::vector<float>> k_dense_,
-                           ll num_neighbors_, bool partial_,
-                           std::unordered_set<ll> ground_) {
-    if (mode_ != "dense") {
-        std::cerr << "Error: Incorrect mode specified for the provided dense "
-                     "similarity matrix\n";
-        return;
-    }
-
-    if (k_dense_.size() == 0) {
-        std::cerr << "Error: Empty similarity matrix\n";
-        return;
-    }
-
-    n = n_;
-    mode = mode_;
-    k_dense = k_dense_;
-    num_neighbors = num_neighbors_;
-    partial = partial_;
-    // Populating effectiveGroundSet
+// COnstructor for dense mode
+DisparitySum::DisparitySum(ll n_, std::vector<std::vector<float>> const &denseKernel_, bool partial_, std::unordered_set<ll> const &ground_): n(n_), mode(dense), denseKernel(denseKernel_), partial(partial_) {
     if (partial == true) {
+        //ground set will now be the subset provided
         effectiveGroundSet = ground_;
     } else {
-        for (ll i = 0; i < n; ++i) {
-            effectiveGroundSet.insert(i);  // each insert takes O(log(n)) time
-        }
+        //create groundSet with items 0 to n-1
+		effectiveGroundSet.reserve(n);
+		for (ll i = 0; i < n; ++i){
+			effectiveGroundSet.insert(i); //each insert takes O(1) time
+		}
     }
-
     numEffectiveGroundset = effectiveGroundSet.size();
     currentSum = 0;
 }
 
-// For sparse mode
-DisparitySum::DisparitySum(ll n_, std::string mode_, std::vector<float> arr_val,
-                           std::vector<ll> arr_count, std::vector<ll> arr_col,
-                           ll num_neighbors_, bool partial_,
-                           std::unordered_set<ll> ground_) {
-    // std::cout<<n_<<" "<<mode_<<" "<<num_neighbors_<<" "<<partial_<<"\n";
-    if (mode_ != "sparse") {
-        std::cerr << "Error: Incorrect mode specified for the provided sparse "
-                     "similarity matrix\n";
-        return;
-    }
-
+// Constructor for sparse mode
+DisparitySum::DisparitySum(ll n_, std::vector<float> const &arr_val, std::vector<ll> const &arr_count, std::vector<ll> const &arr_col): n(n_), mode(sparse), partial(false) {
     if (arr_val.size() == 0 || arr_count.size() == 0 || arr_col.size() == 0) {
-        std::cerr << "Error: Empty/Corrupt sparse similarity matrix\n";
-        return;
-    }
-
-    n = n_;
-    mode = mode_;
-    k_sparse = SparseSim(arr_val, arr_count, arr_col);
-    num_neighbors = num_neighbors_;
-    partial = partial_;
-    // Populating effectiveGroundSet
-    if (partial == true) {
-        effectiveGroundSet = ground_;
-    } else {
-        for (ll i = 0; i < n; ++i) {
-            effectiveGroundSet.insert(i);  // each insert takes O(log(n)) time
-        }
-    }
-
-    numEffectiveGroundset = effectiveGroundSet.size();
+		throw "Error: Empty/Corrupt sparse similarity kernel";
+	}
+    sparseKernel = SparseSim(arr_val, arr_count, arr_col);
+    effectiveGroundSet.reserve(n);
+	for (ll i = 0; i < n; ++i) {
+		effectiveGroundSet.insert(i); //each insert takes O(1) time
+	}
+	numEffectiveGroundset = effectiveGroundSet.size();
     currentSum = 0;
 }
 
 // helper friend function
-float get_sum_dense(std::unordered_set<ll> dataset_ind, DisparitySum obj) {
+float get_sum_dense(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj) {
     float sum = 0;
     for (auto it = dataset_ind.begin(); it != dataset_ind.end(); ++it) {
-        for (auto it2 = dataset_ind.begin(); it2 != dataset_ind.end(); ++it2) {
-            sum += 1 - obj.k_dense[*it][*it2];
+        for (auto nextIt = std::next(it, 1); nextIt != dataset_ind.end(); ++nextIt) {
+            sum += (1 - obj.denseKernel[*it][*nextIt]);
         }
     }
-    return sum / 2;
+    return sum;
 }
 
-float get_sum_sparse(std::unordered_set<ll> dataset_ind, DisparitySum obj) {
+float get_sum_sparse(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj) {
     float sum = 0;
     for (auto it = dataset_ind.begin(); it != dataset_ind.end(); ++it) {
-        for (auto it2 = dataset_ind.begin(); it2 != dataset_ind.end(); ++it2) {
-            sum += 1 - obj.k_sparse.get_val(*it, *it2);
+        for (auto nextIt = std::next(it, 1); nextIt != dataset_ind.end(); ++nextIt) {
+            sum += (1 - obj.sparseKernel.get_val(*it, *nextIt));
         }
     }
-    return sum / 2;
+    return sum;
 }
 
-// TODO: In all the methods below, get rid of code redundancy by merging dense
-// and sparse mode blocks together
-float DisparitySum::evaluate(std::unordered_set<ll> X) {
+float DisparitySum::evaluate(std::unordered_set<ll> const &X) {
     std::unordered_set<ll> effectiveX;
     float result = 0;
 
@@ -125,20 +80,17 @@ float DisparitySum::evaluate(std::unordered_set<ll> X) {
         return 0;
     }
 
-    if (mode == "dense") {
+    if (mode == dense) {
         result = get_sum_dense(effectiveX, *this);
-    } else if(mode =="sparse") {
+    } else if(mode ==sparse) {
         result = get_sum_sparse(effectiveX, *this);
     } else {
-        std::cerr << "ERROR: INVALID mode\n";
+        throw "Error: Only dense and sparse mode supported";
     }
     return result;
 }
 
-float DisparitySum::evaluateWithMemoization(
-    std::unordered_set<ll>
-        X)  // assumes that memoization exists for effectiveX
-{
+float DisparitySum::evaluateWithMemoization(std::unordered_set<ll> const &X) { 
     std::unordered_set<ll> effectiveX;
     float result = 0;
 
@@ -158,7 +110,7 @@ float DisparitySum::evaluateWithMemoization(
     return currentSum;
 }
 
-float DisparitySum::marginalGain(std::unordered_set<ll> X, ll item) {
+float DisparitySum::marginalGain(std::unordered_set<ll> const &X, ll item) {
     std::unordered_set<ll> effectiveX;
     float gain = 0;
 
@@ -172,34 +124,30 @@ float DisparitySum::marginalGain(std::unordered_set<ll> X, ll item) {
         effectiveX = X;
     }
 
-    if (effectiveX.size() == 0) {
-        return 0;
-    }
-
     if (effectiveX.find(item)!=effectiveX.end()) {
         return 0;
     }
 
-    if(mode == "dense") {
-        for (auto it = effectiveX.begin(); it != effectiveX.end(); ++it) {
-            gain += 1 - k_dense[item][*it];
+    if(mode == dense) {
+        for (auto elem: effectiveX) {
+            gain += (1 - denseKernel[item][elem]);
         }
-    } else if (mode == "sparse") {
-        for (auto it = effectiveX.begin(); it != effectiveX.end(); ++it) {
-            gain += 1 - k_sparse.get_val(item, *it);
+    } else if (mode == sparse) {
+        for (auto elem: effectiveX) {
+            gain += (1 - sparseKernel.get_val(item, elem));
         }
     } else {
-        std::cerr << "ERROR: INVALID mode\n";
+        throw "Error: Only dense and sparse mode supported";
     }
     
     return gain;
 }
 
-float DisparitySum::marginalGainWithMemoization(std::unordered_set<ll> X, ll item) {
+float DisparitySum::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
     return marginalGain(X, item);
 }
 
-void DisparitySum::updateMemoization(std::unordered_set<ll> X, ll item) {
+void DisparitySum::updateMemoization(std::unordered_set<ll> const &X, ll item) {
     currentSum += marginalGain(X, item);
 }
 
@@ -207,20 +155,19 @@ std::unordered_set<ll> DisparitySum::getEffectiveGroundSet() {
     return effectiveGroundSet;
 }
 
-std::vector<std::pair<ll, float>> DisparitySum::maximize(
-    std::string s, float budget, bool stopIfZeroGain = false,
-    bool stopIfNegativeGain = false,
-    bool verbose = false)  // TODO: migrate fixed things to constructor
-{
-    if (s == "NaiveGreedy") {
-        return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain,
-                                               stopIfNegativeGain, verbose);
-    }
-}
-
-void DisparitySum::cluster_init(ll n_, std::vector<std::vector<float>> k_dense_,
-                                std::unordered_set<ll> ground_) {
-    *this = DisparitySum(n_, "dense", k_dense_, -1, true, ground_);
+std::vector<std::pair<ll, float>> DisparitySum::maximize(std::string optimizer,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
+	// std::cout << "DisparitySum maximize\n";
+	if(optimizer == "NaiveGreedy") {
+		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
+	} else if(optimizer == "LazyGreedy") {
+        return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
+	} else if(optimizer == "StochasticGreedy") {
+        return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
+	} else if(optimizer == "LazierThanLazyGreedy") {
+        return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
+	} else {
+		std::cerr << "Optimizer not yet implemented" << std::endl;
+	}
 }
 
 void DisparitySum::clearMemoization()
@@ -228,7 +175,7 @@ void DisparitySum::clearMemoization()
     currentSum=0;	
 }
 
-void DisparitySum::setMemoization(std::unordered_set<ll> X)
+void DisparitySum::setMemoization(std::unordered_set<ll> const &X) 
 {
     currentSum=evaluate(X);
 }

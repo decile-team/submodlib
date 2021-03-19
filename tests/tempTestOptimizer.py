@@ -6,10 +6,10 @@ import numpy as np
 
 def test():
 
-    num_clusters = 10 #100 #3
-    cluster_std_dev = 4 #4 #1
-    num_samples = 500 #5000 #9
-    budget = 10 #10 #4
+    num_clusters = 3 #10 #100 #3
+    cluster_std_dev = 1 #4 #4 #1
+    num_samples = 9 #500 #5000 #9
+    budget = 4 #10 #10 #4
 
     points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=2, cluster_std=cluster_std_dev, center_box=(0,100), return_centers=True, random_state=4)
     data = list(map(tuple, points))
@@ -20,15 +20,20 @@ def test():
 
     dataArray = np.array(data)
 
-    from submodlib.functions.facilityLocation import FacilityLocationFunction
+    # from submodlib.functions.facilityLocation import FacilityLocationFunction
+    # obj = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
+    #print("Testing FacilityLocation's maximize")
 
-    obj = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
-    start = time.process_time()
+    from submodlib.functions.disparitySum import DisparitySumFunction
+    obj = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
+    print("Testing DisparitySum's maximize")
+
+    #start = time.process_time()
     #greedyList = obj.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
     #greedyList = obj.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
     greedyList = obj.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
     #greedyList = obj.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
-    print(f"Time taken by maximization = {time.process_time() - start}")
+    #print(f"Time taken by maximization = {time.process_time() - start}")
     print(f"Greedy vector: {greedyList}")
     greedyXs = [xs[x[0]] for x in greedyList]
     greedyYs = [ys[x[0]] for x in greedyList]

@@ -4,10 +4,12 @@ from sklearn.datasets import make_blobs
 import numpy as np
 import random
 from submodlib import FacilityLocationFunction
+from submodlib import DisparitySumFunction
 from submodlib import ClusteredFunction
 from submodlib.helper import create_kernel
 
-functions = ["FacilityLocation"]
+allFunctions = ["FacilityLocation", "DisparitySum"]
+clusteredFunctions = ["FacilityLocation"]
 num_internal_clusters = 10 #3
 num_sparse_neighbors = 10 #4
 num_random = 4 #2
@@ -83,6 +85,8 @@ def object_dense_cpp_kernel(request, data):
     num_samples, dataArray, _, _ = data
     if request.param == "FacilityLocation":
         obj = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
+    elif request.param == "DisparitySum":
+        obj = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
     else:
         return None
     return obj
@@ -93,6 +97,8 @@ def object_dense_py_kernel(request, data):
     _, K_dense = create_kernel(dataArray, 'dense','euclidean')
     if request.param == "FacilityLocation":
         obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_master=False)
+    elif request.param == "DisparitySum":
+        obj = DisparitySumFunction(n=num_samples, mode="dense", sijs = K_dense)
     else:
         return None
     return obj
@@ -104,6 +110,9 @@ def objects_dense_cpp_py_kernel(request, data):
     if request.param == "FacilityLocation":
         obj1 = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
         obj2 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_master=False)
+    elif request.param == "DisparitySum":
+        obj1 = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
+        obj2 = DisparitySumFunction(n=num_samples, mode="dense", sijs = K_dense)
     else:
         return None
     return obj1, obj2
@@ -113,6 +122,8 @@ def object_sparse_cpp_kernel(request, data):
     num_samples, dataArray, _, _ = data
     if request.param == "FacilityLocation":
         obj = FacilityLocationFunction(n=num_samples, mode="sparse", data=dataArray, metric="euclidean", num_neighbors=num_sparse_neighbors)
+    elif request.param == "DisparitySum":
+        obj = DisparitySumFunction(n=num_samples, mode="sparse", data=dataArray, metric="euclidean", num_neighbors=num_sparse_neighbors)
     else:
         return None
     return obj
@@ -123,6 +134,8 @@ def object_sparse_py_kernel(request, data):
     _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors)
     if request.param == "FacilityLocation":
         obj = FacilityLocationFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors)
+    elif request.param == "DisparitySum":
+        obj = DisparitySumFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors)
     else:
         return None
     return obj
@@ -134,6 +147,9 @@ def objects_sparse_cpp_py_kernel(request, data):
     if request.param == "FacilityLocation":
         obj1 = FacilityLocationFunction(n=num_samples, mode="sparse", data=dataArray, metric="euclidean", num_neighbors=num_sparse_neighbors)
         obj2 = FacilityLocationFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors)
+    elif request.param == "DisparitySum":
+        obj1 = DisparitySumFunction(n=num_samples, mode="sparse", data=dataArray, metric="euclidean", num_neighbors=num_sparse_neighbors)
+        obj2 = DisparitySumFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors)
     else:
         return None
     return obj1, obj2
@@ -216,14 +232,19 @@ def objects_clustered_birch(request, data):
 
 
 class TestAll:
-    ############ 4 tests for dense cpp kernel #######################
-    @pytest.mark.parametrize("object_dense_cpp_kernel", functions, indirect=['object_dense_cpp_kernel'])
+    ############ 5 tests for dense cpp kernel #######################
+    @pytest.mark.parametrize("object_dense_cpp_kernel", allFunctions, indirect=['object_dense_cpp_kernel'])
     def test_dense_cpp_eval_groundset(self, object_dense_cpp_kernel):
         groundSet = object_dense_cpp_kernel.getEffectiveGroundSet()
         eval = object_dense_cpp_kernel.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
 
-    @pytest.mark.parametrize("object_dense_cpp_kernel", functions, indirect=['object_dense_cpp_kernel'])
+    @pytest.mark.parametrize("object_dense_cpp_kernel", allFunctions, indirect=['object_dense_cpp_kernel'])
+    def test_dense_cpp_eval_emptyset(self, object_dense_cpp_kernel):
+        eval = object_dense_cpp_kernel.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+
+    @pytest.mark.parametrize("object_dense_cpp_kernel", allFunctions, indirect=['object_dense_cpp_kernel'])
     def test_dense_cpp_eval_evalfast(self, data, object_dense_cpp_kernel):
         _, _, set1, _ = data
         subset = set()
@@ -234,7 +255,7 @@ class TestAll:
         fastEval = object_dense_cpp_kernel.evaluateWithMemoization(subset)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
 
-    @pytest.mark.parametrize("object_dense_cpp_kernel", functions, indirect=['object_dense_cpp_kernel'])
+    @pytest.mark.parametrize("object_dense_cpp_kernel", allFunctions, indirect=['object_dense_cpp_kernel'])
     def test_dense_cpp_set_memoization(self, data, object_dense_cpp_kernel):
         _, _, set1, _ = data
         object_dense_cpp_kernel.setMemoization(set1)
@@ -242,7 +263,7 @@ class TestAll:
         fastEval = object_dense_cpp_kernel.evaluateWithMemoization(set1)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
 
-    @pytest.mark.parametrize("object_dense_cpp_kernel", functions, indirect=['object_dense_cpp_kernel'])
+    @pytest.mark.parametrize("object_dense_cpp_kernel", allFunctions, indirect=['object_dense_cpp_kernel'])
     def test_dense_cpp_gain(self, data, object_dense_cpp_kernel):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
@@ -259,13 +280,13 @@ class TestAll:
 
     ############ 4 tests for dense python kernel #######################
 
-    @pytest.mark.parametrize("object_dense_py_kernel", functions, indirect=['object_dense_py_kernel'])
+    @pytest.mark.parametrize("object_dense_py_kernel", allFunctions, indirect=['object_dense_py_kernel'])
     def test_dense_py_eval_groundset(self, object_dense_py_kernel):
         groundSet = object_dense_py_kernel.getEffectiveGroundSet()
         eval = object_dense_py_kernel.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
-
-    @pytest.mark.parametrize("object_dense_py_kernel", functions, indirect=['object_dense_py_kernel'])
+    
+    @pytest.mark.parametrize("object_dense_py_kernel", allFunctions, indirect=['object_dense_py_kernel'])
     def test_dense_py_eval_evalfast(self, data, object_dense_py_kernel):
         _, _, set1, _ = data
         subset = set()
@@ -276,7 +297,7 @@ class TestAll:
         fastEval = object_dense_py_kernel.evaluateWithMemoization(subset)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
 
-    @pytest.mark.parametrize("object_dense_py_kernel", functions, indirect=['object_dense_py_kernel'])
+    @pytest.mark.parametrize("object_dense_py_kernel", allFunctions, indirect=['object_dense_py_kernel'])
     def test_dense_py_set_memoization(self, data, object_dense_py_kernel):
         _, _, set1, _ = data
         object_dense_py_kernel.setMemoization(set1)
@@ -284,7 +305,7 @@ class TestAll:
         fastEval = object_dense_py_kernel.evaluateWithMemoization(set1)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
 
-    @pytest.mark.parametrize("object_dense_py_kernel", functions, indirect=['object_dense_py_kernel'])
+    @pytest.mark.parametrize("object_dense_py_kernel", allFunctions, indirect=['object_dense_py_kernel'])
     def test_dense_py_gain(self, data, object_dense_py_kernel):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
@@ -302,13 +323,13 @@ class TestAll:
 
     ############ 4 tests for sparse cpp kernel #######################
 
-    @pytest.mark.parametrize("object_sparse_cpp_kernel", functions, indirect=['object_sparse_cpp_kernel'])
+    @pytest.mark.parametrize("object_sparse_cpp_kernel", allFunctions, indirect=['object_sparse_cpp_kernel'])
     def test_sparse_cpp_eval_groundset(self, object_sparse_cpp_kernel):
         groundSet = object_sparse_cpp_kernel.getEffectiveGroundSet()
         eval = object_sparse_cpp_kernel.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
-
-    @pytest.mark.parametrize("object_sparse_cpp_kernel", functions, indirect=['object_sparse_cpp_kernel'])
+    
+    @pytest.mark.parametrize("object_sparse_cpp_kernel", allFunctions, indirect=['object_sparse_cpp_kernel'])
     def test_sparse_cpp_eval_evalfast(self, data, object_sparse_cpp_kernel):
         _, _, set1, _ = data
         subset = set()
@@ -319,7 +340,7 @@ class TestAll:
         fastEval = object_sparse_cpp_kernel.evaluateWithMemoization(subset)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
 
-    @pytest.mark.parametrize("object_sparse_cpp_kernel", functions, indirect=['object_sparse_cpp_kernel'])
+    @pytest.mark.parametrize("object_sparse_cpp_kernel", allFunctions, indirect=['object_sparse_cpp_kernel'])
     def test_sparse_cpp_set_memoization(self, data, object_sparse_cpp_kernel):
         _, _, set1, _ = data
         object_sparse_cpp_kernel.setMemoization(set1)
@@ -327,7 +348,7 @@ class TestAll:
         fastEval = object_sparse_cpp_kernel.evaluateWithMemoization(set1)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
 
-    @pytest.mark.parametrize("object_sparse_cpp_kernel", functions, indirect=['object_sparse_cpp_kernel'])
+    @pytest.mark.parametrize("object_sparse_cpp_kernel", allFunctions, indirect=['object_sparse_cpp_kernel'])
     def test_sparse_cpp_gain(self, data, object_sparse_cpp_kernel):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
@@ -344,13 +365,13 @@ class TestAll:
     
     ############ 4 tests for sparse python kernel #######################
 
-    @pytest.mark.parametrize("object_sparse_py_kernel", functions, indirect=['object_sparse_py_kernel'])
+    @pytest.mark.parametrize("object_sparse_py_kernel", allFunctions, indirect=['object_sparse_py_kernel'])
     def test_sparse_py_eval_groundset(self, object_sparse_py_kernel):
         groundSet = object_sparse_py_kernel.getEffectiveGroundSet()
         eval = object_sparse_py_kernel.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
 
-    @pytest.mark.parametrize("object_sparse_py_kernel", functions, indirect=['object_sparse_py_kernel'])
+    @pytest.mark.parametrize("object_sparse_py_kernel", allFunctions, indirect=['object_sparse_py_kernel'])
     def test_sparse_py_eval_evalfast(self, data, object_sparse_py_kernel):
         _, _, set1, _ = data
         subset = set()
@@ -361,7 +382,7 @@ class TestAll:
         fastEval = object_sparse_py_kernel.evaluateWithMemoization(subset)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
 
-    @pytest.mark.parametrize("object_sparse_py_kernel", functions, indirect=['object_sparse_py_kernel'])
+    @pytest.mark.parametrize("object_sparse_py_kernel", allFunctions, indirect=['object_sparse_py_kernel'])
     def test_sparse_py_set_memoization(self, data, object_sparse_py_kernel):
         _, _, set1, _ = data
         object_sparse_py_kernel.setMemoization(set1)
@@ -369,7 +390,7 @@ class TestAll:
         fastEval = object_sparse_py_kernel.evaluateWithMemoization(set1)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
 
-    @pytest.mark.parametrize("object_sparse_py_kernel", functions, indirect=['object_sparse_py_kernel'])
+    @pytest.mark.parametrize("object_sparse_py_kernel", allFunctions, indirect=['object_sparse_py_kernel'])
     def test_sparse_py_gain(self, data, object_sparse_py_kernel):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
@@ -384,16 +405,21 @@ class TestAll:
         fastGain = object_sparse_py_kernel.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
 
-    ############ 4 tests for clustered mode with internel clustering #######################
+    ############ 5 tests for clustered mode with internel clustering #######################
 
-    @pytest.mark.parametrize("object_clustered_mode_birch", functions, indirect=['object_clustered_mode_birch'])
-    def test_sparse_py_eval_groundset(self, object_clustered_mode_birch):
+    @pytest.mark.parametrize("object_clustered_mode_birch", clusteredFunctions, indirect=['object_clustered_mode_birch'])
+    def test_clustered_mode_birch_eval_groundset(self, object_clustered_mode_birch):
         groundSet = object_clustered_mode_birch.getEffectiveGroundSet()
         eval = object_clustered_mode_birch.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+    
+    @pytest.mark.parametrize("object_clustered_mode_birch", clusteredFunctions, indirect=['object_clustered_mode_birch'])
+    def test_clustered_mode_birch_eval_emptyset(self, object_clustered_mode_birch):
+        eval = object_clustered_mode_birch.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
 
-    @pytest.mark.parametrize("object_clustered_mode_birch", functions, indirect=['object_clustered_mode_birch'])
-    def test_sparse_py_eval_evalfast(self, data, object_clustered_mode_birch):
+    @pytest.mark.parametrize("object_clustered_mode_birch", clusteredFunctions, indirect=['object_clustered_mode_birch'])
+    def test_clustered_mode_birch_eval_evalfast(self, data, object_clustered_mode_birch):
         _, _, set1, _ = data
         subset = set()
         for elem in set1:
@@ -403,16 +429,16 @@ class TestAll:
         fastEval = object_clustered_mode_birch.evaluateWithMemoization(subset)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
 
-    @pytest.mark.parametrize("object_clustered_mode_birch", functions, indirect=['object_clustered_mode_birch'])
-    def test_sparse_py_set_memoization(self, data, object_clustered_mode_birch):
+    @pytest.mark.parametrize("object_clustered_mode_birch", clusteredFunctions, indirect=['object_clustered_mode_birch'])
+    def test_clustered_mode_birch_set_memoization(self, data, object_clustered_mode_birch):
         _, _, set1, _ = data
         object_clustered_mode_birch.setMemoization(set1)
         simpleEval = object_clustered_mode_birch.evaluate(set1)
         fastEval = object_clustered_mode_birch.evaluateWithMemoization(set1)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
 
-    @pytest.mark.parametrize("object_clustered_mode_birch", functions, indirect=['object_clustered_mode_birch'])
-    def test_sparse_py_gain(self, data, object_clustered_mode_birch):
+    @pytest.mark.parametrize("object_clustered_mode_birch", clusteredFunctions, indirect=['object_clustered_mode_birch'])
+    def test_clustered_mode_birch_gain(self, data, object_clustered_mode_birch):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
@@ -428,14 +454,14 @@ class TestAll:
     
     ############ 4 tests for clustered mode with user provided clustering #######################
 
-    @pytest.mark.parametrize("object_clustered_mode_user", functions, indirect=['object_clustered_mode_user'])
-    def test_sparse_py_eval_groundset(self, object_clustered_mode_user):
+    @pytest.mark.parametrize("object_clustered_mode_user", clusteredFunctions, indirect=['object_clustered_mode_user'])
+    def test_clustered_mode_user_eval_groundset(self, object_clustered_mode_user):
         groundSet = object_clustered_mode_user.getEffectiveGroundSet()
         eval = object_clustered_mode_user.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
 
-    @pytest.mark.parametrize("object_clustered_mode_user", functions, indirect=['object_clustered_mode_user'])
-    def test_sparse_py_eval_evalfast(self, data, object_clustered_mode_user):
+    @pytest.mark.parametrize("object_clustered_mode_user", clusteredFunctions, indirect=['object_clustered_mode_user'])
+    def test_clustered_mode_user_eval_evalfast(self, data, object_clustered_mode_user):
         _, _, set1, _ = data
         subset = set()
         for elem in set1:
@@ -445,16 +471,16 @@ class TestAll:
         fastEval = object_clustered_mode_user.evaluateWithMemoization(subset)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
 
-    @pytest.mark.parametrize("object_clustered_mode_user", functions, indirect=['object_clustered_mode_user'])
-    def test_sparse_py_set_memoization(self, data, object_clustered_mode_user):
+    @pytest.mark.parametrize("object_clustered_mode_user", clusteredFunctions, indirect=['object_clustered_mode_user'])
+    def test_clustered_mode_user_set_memoization(self, data, object_clustered_mode_user):
         _, _, set1, _ = data
         object_clustered_mode_user.setMemoization(set1)
         simpleEval = object_clustered_mode_user.evaluate(set1)
         fastEval = object_clustered_mode_user.evaluateWithMemoization(set1)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
 
-    @pytest.mark.parametrize("object_clustered_mode_user", functions, indirect=['object_clustered_mode_user'])
-    def test_sparse_py_gain(self, data, object_clustered_mode_user):
+    @pytest.mark.parametrize("object_clustered_mode_user", clusteredFunctions, indirect=['object_clustered_mode_user'])
+    def test_clustered_mode_user_gain(self, data, object_clustered_mode_user):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
@@ -468,16 +494,21 @@ class TestAll:
         fastGain = object_clustered_mode_user.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
 
-    ############ 4 tests for clustered function with internel clustering and multiple small kernels #######################
+    ############ 5 tests for clustered function with internel clustering and multiple small kernels #######################
 
-    @pytest.mark.parametrize("object_clustered_birch_multi", functions, indirect=['object_clustered_birch_multi'])
-    def test_sparse_py_eval_groundset(self, object_clustered_birch_multi):
+    @pytest.mark.parametrize("object_clustered_birch_multi", clusteredFunctions, indirect=['object_clustered_birch_multi'])
+    def test_clustered_birch_multi_eval_groundset(self, object_clustered_birch_multi):
         groundSet = object_clustered_birch_multi.getEffectiveGroundSet()
         eval = object_clustered_birch_multi.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+    
+    @pytest.mark.parametrize("object_clustered_birch_multi", clusteredFunctions, indirect=['object_clustered_birch_multi'])
+    def test_clustered_birch_multi_eval_emptyset(self, object_clustered_birch_multi):
+        eval = object_clustered_birch_multi.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
 
-    @pytest.mark.parametrize("object_clustered_birch_multi", functions, indirect=['object_clustered_birch_multi'])
-    def test_sparse_py_eval_evalfast(self, data, object_clustered_birch_multi):
+    @pytest.mark.parametrize("object_clustered_birch_multi", clusteredFunctions, indirect=['object_clustered_birch_multi'])
+    def test_clustered_birch_multi_eval_evalfast(self, data, object_clustered_birch_multi):
         _, _, set1, _ = data
         subset = set()
         for elem in set1:
@@ -487,16 +518,16 @@ class TestAll:
         fastEval = object_clustered_birch_multi.evaluateWithMemoization(subset)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
 
-    @pytest.mark.parametrize("object_clustered_birch_multi", functions, indirect=['object_clustered_birch_multi'])
-    def test_sparse_py_set_memoization(self, data, object_clustered_birch_multi):
+    @pytest.mark.parametrize("object_clustered_birch_multi", clusteredFunctions, indirect=['object_clustered_birch_multi'])
+    def test_clustered_birch_multi_set_memoization(self, data, object_clustered_birch_multi):
         _, _, set1, _ = data
         object_clustered_birch_multi.setMemoization(set1)
         simpleEval = object_clustered_birch_multi.evaluate(set1)
         fastEval = object_clustered_birch_multi.evaluateWithMemoization(set1)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
 
-    @pytest.mark.parametrize("object_clustered_birch_multi", functions, indirect=['object_clustered_birch_multi'])
-    def test_sparse_py_gain(self, data, object_clustered_birch_multi):
+    @pytest.mark.parametrize("object_clustered_birch_multi", clusteredFunctions, indirect=['object_clustered_birch_multi'])
+    def test_clustered_birch_multi_gain(self, data, object_clustered_birch_multi):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
@@ -512,14 +543,14 @@ class TestAll:
     
     ############ 4 tests for clustered function with user provided clustering and multiple small kernels #######################
 
-    @pytest.mark.parametrize("object_clustered_user_multi", functions, indirect=['object_clustered_user_multi'])
-    def test_sparse_py_eval_groundset(self, object_clustered_user_multi):
+    @pytest.mark.parametrize("object_clustered_user_multi", clusteredFunctions, indirect=['object_clustered_user_multi'])
+    def test_clustered_user_multi_eval_groundset(self, object_clustered_user_multi):
         groundSet = object_clustered_user_multi.getEffectiveGroundSet()
         eval = object_clustered_user_multi.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
 
-    @pytest.mark.parametrize("object_clustered_user_multi", functions, indirect=['object_clustered_user_multi'])
-    def test_sparse_py_eval_evalfast(self, data, object_clustered_user_multi):
+    @pytest.mark.parametrize("object_clustered_user_multi", clusteredFunctions, indirect=['object_clustered_user_multi'])
+    def test_clustered_user_multi_eval_evalfast(self, data, object_clustered_user_multi):
         _, _, set1, _ = data
         subset = set()
         for elem in set1:
@@ -529,16 +560,16 @@ class TestAll:
         fastEval = object_clustered_user_multi.evaluateWithMemoization(subset)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
 
-    @pytest.mark.parametrize("object_clustered_user_multi", functions, indirect=['object_clustered_user_multi'])
-    def test_sparse_py_set_memoization(self, data, object_clustered_user_multi):
+    @pytest.mark.parametrize("object_clustered_user_multi", clusteredFunctions, indirect=['object_clustered_user_multi'])
+    def test_clustered_user_multi_set_memoization(self, data, object_clustered_user_multi):
         _, _, set1, _ = data
         object_clustered_user_multi.setMemoization(set1)
         simpleEval = object_clustered_user_multi.evaluate(set1)
         fastEval = object_clustered_user_multi.evaluateWithMemoization(set1)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
 
-    @pytest.mark.parametrize("object_clustered_user_multi", functions, indirect=['object_clustered_user_multi'])
-    def test_sparse_py_gain(self, data, object_clustered_user_multi):
+    @pytest.mark.parametrize("object_clustered_user_multi", clusteredFunctions, indirect=['object_clustered_user_multi'])
+    def test_clustered_user_multi_gain(self, data, object_clustered_user_multi):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
@@ -552,16 +583,21 @@ class TestAll:
         fastGain = object_clustered_user_multi.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
 
-    ############ 4 tests for clustered function with internel clustering and single kernel #######################
+    ############ 5 tests for clustered function with internel clustering and single kernel #######################
 
-    @pytest.mark.parametrize("object_clustered_birch_single", functions, indirect=['object_clustered_birch_single'])
-    def test_sparse_py_eval_groundset(self, object_clustered_birch_single):
+    @pytest.mark.parametrize("object_clustered_birch_single", clusteredFunctions, indirect=['object_clustered_birch_single'])
+    def test_clustered_birch_single_eval_groundset(self, object_clustered_birch_single):
         groundSet = object_clustered_birch_single.getEffectiveGroundSet()
         eval = object_clustered_birch_single.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+    
+    @pytest.mark.parametrize("object_clustered_birch_single", clusteredFunctions, indirect=['object_clustered_birch_single'])
+    def test_clustered_birch_single_eval_emptyset(self, object_clustered_birch_single):
+        eval = object_clustered_birch_single.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
 
-    @pytest.mark.parametrize("object_clustered_birch_single", functions, indirect=['object_clustered_birch_single'])
-    def test_sparse_py_eval_evalfast(self, data, object_clustered_birch_single):
+    @pytest.mark.parametrize("object_clustered_birch_single", clusteredFunctions, indirect=['object_clustered_birch_single'])
+    def test_clustered_birch_single_eval_evalfast(self, data, object_clustered_birch_single):
         _, _, set1, _ = data
         subset = set()
         for elem in set1:
@@ -571,16 +607,16 @@ class TestAll:
         fastEval = object_clustered_birch_single.evaluateWithMemoization(subset)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
 
-    @pytest.mark.parametrize("object_clustered_birch_single", functions, indirect=['object_clustered_birch_single'])
-    def test_sparse_py_set_memoization(self, data, object_clustered_birch_single):
+    @pytest.mark.parametrize("object_clustered_birch_single", clusteredFunctions, indirect=['object_clustered_birch_single'])
+    def test_clustered_birch_single_set_memoization(self, data, object_clustered_birch_single):
         _, _, set1, _ = data
         object_clustered_birch_single.setMemoization(set1)
         simpleEval = object_clustered_birch_single.evaluate(set1)
         fastEval = object_clustered_birch_single.evaluateWithMemoization(set1)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
 
-    @pytest.mark.parametrize("object_clustered_birch_single", functions, indirect=['object_clustered_birch_single'])
-    def test_sparse_py_gain(self, data, object_clustered_birch_single):
+    @pytest.mark.parametrize("object_clustered_birch_single", clusteredFunctions, indirect=['object_clustered_birch_single'])
+    def test_clustered_birch_single_gain(self, data, object_clustered_birch_single):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
@@ -596,14 +632,14 @@ class TestAll:
     
     ############ 4 tests for clustered function with user provided clustering and single kernel #######################
 
-    @pytest.mark.parametrize("object_clustered_user_single", functions, indirect=['object_clustered_user_single'])
-    def test_sparse_py_eval_groundset(self, object_clustered_user_single):
+    @pytest.mark.parametrize("object_clustered_user_single", clusteredFunctions, indirect=['object_clustered_user_single'])
+    def test_clustered_user_single_eval_groundset(self, object_clustered_user_single):
         groundSet = object_clustered_user_single.getEffectiveGroundSet()
         eval = object_clustered_user_single.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
 
-    @pytest.mark.parametrize("object_clustered_user_single", functions, indirect=['object_clustered_user_single'])
-    def test_sparse_py_eval_evalfast(self, data, object_clustered_user_single):
+    @pytest.mark.parametrize("object_clustered_user_single", clusteredFunctions, indirect=['object_clustered_user_single'])
+    def test_clustered_user_single_eval_evalfast(self, data, object_clustered_user_single):
         _, _, set1, _ = data
         subset = set()
         for elem in set1:
@@ -613,16 +649,16 @@ class TestAll:
         fastEval = object_clustered_user_single.evaluateWithMemoization(subset)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
 
-    @pytest.mark.parametrize("object_clustered_user_single", functions, indirect=['object_clustered_user_single'])
-    def test_sparse_py_set_memoization(self, data, object_clustered_user_single):
+    @pytest.mark.parametrize("object_clustered_user_single", clusteredFunctions, indirect=['object_clustered_user_single'])
+    def test_clustered_user_single_set_memoization(self, data, object_clustered_user_single):
         _, _, set1, _ = data
         object_clustered_user_single.setMemoization(set1)
         simpleEval = object_clustered_user_single.evaluate(set1)
         fastEval = object_clustered_user_single.evaluateWithMemoization(set1)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
 
-    @pytest.mark.parametrize("object_clustered_user_single", functions, indirect=['object_clustered_user_single'])
-    def test_sparse_py_gain(self, data, object_clustered_user_single):
+    @pytest.mark.parametrize("object_clustered_user_single", clusteredFunctions, indirect=['object_clustered_user_single'])
+    def test_clustered_user_single_gain(self, data, object_clustered_user_single):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
@@ -638,14 +674,14 @@ class TestAll:
 
     ######### Tests to check the consistency between CPP dense and Py dense
 
-    @pytest.mark.parametrize("objects_dense_cpp_py_kernel", functions, indirect=['objects_dense_cpp_py_kernel'])
+    @pytest.mark.parametrize("objects_dense_cpp_py_kernel", allFunctions, indirect=['objects_dense_cpp_py_kernel'])
     def test_dense_cpp_py_eval(self, data, objects_dense_cpp_py_kernel):
         _, _, set1, _ = data
         eval1 = objects_dense_cpp_py_kernel[0].evaluate(set1)
         eval2 = objects_dense_cpp_py_kernel[1].evaluate(set1)
         assert math.isclose(eval1, eval2, rel_tol=1e-05), "Mismatch between evaluate() of CPP dense and PY dense"
     
-    @pytest.mark.parametrize("objects_dense_cpp_py_kernel", functions, indirect=['objects_dense_cpp_py_kernel'])
+    @pytest.mark.parametrize("objects_dense_cpp_py_kernel", allFunctions, indirect=['objects_dense_cpp_py_kernel'])
     def test_dense_cpp_py_gain(self, data, objects_dense_cpp_py_kernel):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
@@ -655,7 +691,7 @@ class TestAll:
         gain2 = objects_dense_cpp_py_kernel[1].marginalGain(subset, elem)
         assert math.isclose(gain1, gain2, rel_tol=1e-05), "Mismatch between marginalGain() of CPP dense and PY dense"
     
-    @pytest.mark.parametrize("objects_dense_cpp_py_kernel", functions, indirect=['objects_dense_cpp_py_kernel'])
+    @pytest.mark.parametrize("objects_dense_cpp_py_kernel", allFunctions, indirect=['objects_dense_cpp_py_kernel'])
     def test_dense_cpp_py_evalFast(self, data, objects_dense_cpp_py_kernel):
         _, _, set1, _ = data
         objects_dense_cpp_py_kernel[0].setMemoization(set1)
@@ -664,7 +700,7 @@ class TestAll:
         evalFast2 = objects_dense_cpp_py_kernel[1].evaluateWithMemoization(set1)
         assert math.isclose(evalFast1, evalFast2, rel_tol=1e-05), "Mismatch between evaluateWithMemoization() of CPP dense and PY dense"
     
-    @pytest.mark.parametrize("objects_dense_cpp_py_kernel", functions, indirect=['objects_dense_cpp_py_kernel'])
+    @pytest.mark.parametrize("objects_dense_cpp_py_kernel", allFunctions, indirect=['objects_dense_cpp_py_kernel'])
     def test_dense_cpp_py_gainFast(self, data, objects_dense_cpp_py_kernel):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
@@ -678,14 +714,14 @@ class TestAll:
 
     ######### Tests to check the consistency between CPP sparse and Py sparse
 
-    @pytest.mark.parametrize("objects_sparse_cpp_py_kernel", functions, indirect=['objects_sparse_cpp_py_kernel'])
+    @pytest.mark.parametrize("objects_sparse_cpp_py_kernel", allFunctions, indirect=['objects_sparse_cpp_py_kernel'])
     def test_sparse_cpp_py_eval(self, data, objects_sparse_cpp_py_kernel):
         _, _, set1, _ = data
         eval1 = objects_sparse_cpp_py_kernel[0].evaluate(set1)
         eval2 = objects_sparse_cpp_py_kernel[1].evaluate(set1)
         assert math.isclose(eval1, eval2, rel_tol=1e-05), "Mismatch between evaluate() of CPP sparse and PY sparse"
     
-    @pytest.mark.parametrize("objects_sparse_cpp_py_kernel", functions, indirect=['objects_sparse_cpp_py_kernel'])
+    @pytest.mark.parametrize("objects_sparse_cpp_py_kernel", allFunctions, indirect=['objects_sparse_cpp_py_kernel'])
     def test_sparse_cpp_py_gain(self, data, objects_sparse_cpp_py_kernel):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
@@ -695,7 +731,7 @@ class TestAll:
         gain2 = objects_sparse_cpp_py_kernel[1].marginalGain(subset, elem)
         assert math.isclose(gain1, gain2, rel_tol=1e-05), "Mismatch between marginalGain() of CPP sparse and PY sparse"
     
-    @pytest.mark.parametrize("objects_sparse_cpp_py_kernel", functions, indirect=['objects_sparse_cpp_py_kernel'])
+    @pytest.mark.parametrize("objects_sparse_cpp_py_kernel", allFunctions, indirect=['objects_sparse_cpp_py_kernel'])
     def test_sparse_cpp_py_evalFast(self, data, objects_sparse_cpp_py_kernel):
         _, _, set1, _ = data
         objects_sparse_cpp_py_kernel[0].setMemoization(set1)
@@ -704,7 +740,7 @@ class TestAll:
         evalFast2 = objects_sparse_cpp_py_kernel[1].evaluateWithMemoization(set1)
         assert math.isclose(evalFast1, evalFast2, rel_tol=1e-05), "Mismatch between evaluateWithMemoization() of CPP sparse and PY sparse"
     
-    @pytest.mark.parametrize("objects_sparse_cpp_py_kernel", functions, indirect=['objects_sparse_cpp_py_kernel'])
+    @pytest.mark.parametrize("objects_sparse_cpp_py_kernel", allFunctions, indirect=['objects_sparse_cpp_py_kernel'])
     def test_sparse_cpp_py_gainFast(self, data, objects_sparse_cpp_py_kernel):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
@@ -718,7 +754,7 @@ class TestAll:
 
     ######### Tests to check the consistency between clustered mode, clustered function single and clustered function multi when user provides the clusters
 
-    @pytest.mark.parametrize("objects_clustered_user", functions, indirect=['objects_clustered_user'])
+    @pytest.mark.parametrize("objects_clustered_user", clusteredFunctions, indirect=['objects_clustered_user'])
     def test_objects_clustered_user_eval(self, data, objects_clustered_user):
         _, _, set1, _ = data
         eval1 = objects_clustered_user[0].evaluate(set1)
@@ -726,7 +762,7 @@ class TestAll:
         eval3 = objects_clustered_user[2].evaluate(set1)
         assert math.isclose(eval1, eval2, rel_tol=1e-05) and math.isclose(eval2, eval3, rel_tol=1e-05), "Mismatch between evaluate() of clustered mode, clustered function single and clustered function multi"
     
-    @pytest.mark.parametrize("objects_clustered_user", functions, indirect=['objects_clustered_user'])
+    @pytest.mark.parametrize("objects_clustered_user", clusteredFunctions, indirect=['objects_clustered_user'])
     def test_objects_clustered_user_gain(self, data, objects_clustered_user):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
@@ -737,7 +773,7 @@ class TestAll:
         gain3 = objects_clustered_user[2].marginalGain(subset, elem)
         assert math.isclose(gain1, gain2, rel_tol=1e-05) and math.isclose(gain2, gain3, rel_tol=1e-05), "Mismatch between marginalGain() of clustered mode, clustered function single and clustered function multi"
     
-    @pytest.mark.parametrize("objects_clustered_user", functions, indirect=['objects_clustered_user'])
+    @pytest.mark.parametrize("objects_clustered_user", clusteredFunctions, indirect=['objects_clustered_user'])
     def test_objects_clustered_user_evalFast(self, data, objects_clustered_user):
         _, _, set1, _ = data
         objects_clustered_user[0].setMemoization(set1)
@@ -748,7 +784,7 @@ class TestAll:
         evalFast3 = objects_clustered_user[2].evaluateWithMemoization(set1)
         assert math.isclose(evalFast1, evalFast2, rel_tol=1e-05) and math.isclose(evalFast2, evalFast3, rel_tol=1e-05), "Mismatch between evaluateWithMemoization() of clustered mode, clustered function single and clustered function multi"
     
-    @pytest.mark.parametrize("objects_clustered_user", functions, indirect=['objects_clustered_user'])
+    @pytest.mark.parametrize("objects_clustered_user", clusteredFunctions, indirect=['objects_clustered_user'])
     def test_objects_clustered_user_gainFast(self, data, objects_clustered_user):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
@@ -764,7 +800,7 @@ class TestAll:
     
     ######### Tests to check the consistency between clustered mode, clustered function single and clustered function multi when internal BIRCH clustering is used
 
-    @pytest.mark.parametrize("objects_clustered_birch", functions, indirect=['objects_clustered_birch'])
+    @pytest.mark.parametrize("objects_clustered_birch", clusteredFunctions, indirect=['objects_clustered_birch'])
     def test_objects_clustered_birch_eval(self, data, objects_clustered_birch):
         _, _, set1, _ = data
         eval1 = objects_clustered_birch[0].evaluate(set1)
@@ -772,7 +808,7 @@ class TestAll:
         eval3 = objects_clustered_birch[2].evaluate(set1)
         assert math.isclose(eval1, eval2, rel_tol=1e-05) and math.isclose(eval2, eval3, rel_tol=1e-05), "Mismatch between evaluate() of clustered mode, clustered function single and clustered function multi"
     
-    @pytest.mark.parametrize("objects_clustered_birch", functions, indirect=['objects_clustered_birch'])
+    @pytest.mark.parametrize("objects_clustered_birch", clusteredFunctions, indirect=['objects_clustered_birch'])
     def test_objects_clustered_birch_gain(self, data, objects_clustered_birch):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)
@@ -783,7 +819,7 @@ class TestAll:
         gain3 = objects_clustered_birch[2].marginalGain(subset, elem)
         assert math.isclose(gain1, gain2, rel_tol=1e-05) and math.isclose(gain2, gain3, rel_tol=1e-05), "Mismatch between marginalGain() of clustered mode, clustered function single and clustered function multi"
     
-    @pytest.mark.parametrize("objects_clustered_birch", functions, indirect=['objects_clustered_birch'])
+    @pytest.mark.parametrize("objects_clustered_birch", clusteredFunctions, indirect=['objects_clustered_birch'])
     def test_objects_clustered_birch_evalFast(self, data, objects_clustered_birch):
         _, _, set1, _ = data
         objects_clustered_birch[0].setMemoization(set1)
@@ -794,7 +830,7 @@ class TestAll:
         evalFast3 = objects_clustered_birch[2].evaluateWithMemoization(set1)
         assert math.isclose(evalFast1, evalFast2, rel_tol=1e-05) and math.isclose(evalFast2, evalFast3, rel_tol=1e-05), "Mismatch between evaluateWithMemoization() of clustered mode, clustered function single and clustered function multi"
     
-    @pytest.mark.parametrize("objects_clustered_birch", functions, indirect=['objects_clustered_birch'])
+    @pytest.mark.parametrize("objects_clustered_birch", clusteredFunctions, indirect=['objects_clustered_birch'])
     def test_objects_clustered_birch_gainFast(self, data, objects_clustered_birch):
         _, _, set1, _ = data
         elems = random.sample(set1, num_random)

@@ -55,7 +55,7 @@ std::vector<std::pair<ll, float>> NaiveGreedyOptimizer::maximize(SetFunction &f_
 				continue;
 			}
 			float gain = f_obj.marginalGainWithMemoization(greedySet, i);
-			//std::cout << "Gain of " << i << " is " << gain << "\n";
+			if(verbose) std::cout << "Gain of " << i << " is " << gain << "\n";
 			if (gain > best_val) {
 				best_id = i;
 				best_val = gain;
