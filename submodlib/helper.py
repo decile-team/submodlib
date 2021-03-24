@@ -81,7 +81,8 @@ def create_cluster_kernels(X, metric, cluster_lab=None, num_cluster=None, onlyCl
         if num_cluster==None:
             raise Exception("ERROR: num_cluster needs to be specified if cluster_lab is provided")
         lab=cluster_lab
-
+    
+    #print("Custer labels: ", lab)
 
     l_cluster= [set() for _ in range(num_cluster)]
     l_ind = [0]*np.shape(X)[0]
@@ -89,9 +90,12 @@ def create_cluster_kernels(X, metric, cluster_lab=None, num_cluster=None, onlyCl
     
     for i, el in enumerate(lab):#For any cluster ID (el), smallest datapoint (i) is filled first
                                 #Therefore, the set l_cluster will always be sorted
+        #print(f"{i} is in cluster {el}")
         l_cluster[el].add(i)
         l_ind[i]=l_count[el]
         l_count[el]=l_count[el]+1
+
+    #print("l_cluster inside helper: ", l_cluster)
 
     if onlyClusters:
         return l_cluster, None, None

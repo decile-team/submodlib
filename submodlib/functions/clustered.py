@@ -38,7 +38,7 @@ class ClusteredFunction(SetFunction):
 		
 	"""
 
-	def __init__(self, n, f_name, data, mode, cluster_lab=None, num_clusters=None, metric="cosine"):
+	def __init__(self, n, f_name, data, mode, cluster_lab=None, num_clusters=None, metric="cosine", lambdaVal=1):
 		self.n = n
 		self.f_name = f_name
 		self.num_clusters=num_clusters
@@ -89,7 +89,7 @@ class ClusteredFunction(SetFunction):
 				l=[]
 				l.append(self.cpp_sijs)
 				self.cpp_sijs=l
-			self.cpp_obj = Clustered(self.n, self.f_name, self.clusters, self.cpp_sijs)
+			self.cpp_obj = Clustered(self.n, self.f_name, self.clusters, self.cpp_sijs, lambdaVal)
 		else:
 			self.clusters, self.cluster_sijs, self.cluster_map = create_cluster_kernels(self.data.tolist(), self.metric, self.cluster_lab, self.num_clusters)
 			l_temp = []
@@ -103,7 +103,10 @@ class ClusteredFunction(SetFunction):
 					temp=l
 				l_temp.append(temp)
 			self.cluster_sijs = l_temp
-			self.cpp_obj = Clustered(self.n, self.f_name, self.clusters, self.cluster_sijs, self.cluster_map)
+			#print("Clusters: ", self.clusters)
+			#print("cluster_sijs: ", self.cluster_sijs)
+			#print("cluster_map: ", self.cluster_map)
+			self.cpp_obj = Clustered(self.n, self.f_name, self.clusters, self.cluster_sijs, self.cluster_map, lambdaVal)
 		self.effective_ground=self.cpp_obj.getEffectiveGroundSet()
 
 	def evaluate(self, X):
@@ -295,4 +298,4 @@ class ClusteredFunction(SetFunction):
 		"""Get the effective ground set of this Clustered Function object. This is equal to the ground set when instantiated with partial=False and is equal to the ground_sub when instantiated with partial=True
 
 		"""
-		return self.cpp_obj.getEffectiveGroundSet()
+		return self.effective_ground

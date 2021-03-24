@@ -205,8 +205,6 @@ class FacilityLocationFunction(SetFunction):
 		
 		if separate_master==None:
 			self.separate_master = False
-
-		
 		
 		if self.partial==False: 
 			self.cpp_ground_sub = {-1} #Provide a dummy set for pybind11 binding to be successful
@@ -446,4 +444,4 @@ class FacilityLocationFunction(SetFunction):
 		"""Get the effective ground set of this Facility Location object. This is equal to the ground set when instantiated with partial=False and is equal to the ground_sub when instantiated with partial=True
 
 		"""
-		return self.cpp_obj.getEffectiveGroundSet()
+		return self.effective_ground

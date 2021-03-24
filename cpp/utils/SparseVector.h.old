@@ -1,0 +1,8 @@
+#include<vector>
+
+struct SparseVector {
+    std::vector<int> indices;
+    std::vector<float> values;
+};
+
+SparseVector getSparseVector(std::vector<float> &features);

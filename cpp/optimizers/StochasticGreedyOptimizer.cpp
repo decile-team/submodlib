@@ -18,17 +18,17 @@ bool StochasticGreedyOptimizer::equals(double val1, double val2, double eps) {
   }
 }
 
-std::vector<std::pair<ll, float>> StochasticGreedyOptimizer::maximize(SetFunction &f_obj, ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
+std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFunction &f_obj, ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
 	//TODO: take care of handling equal guys later
 	//TODO: take care of different sizes of each items - becomes a candidate only if best and within budget, cost sensitive selection
-	std::vector<std::pair<ll, float>>greedyVector;
+	std::vector<std::pair<ll, double>>greedyVector;
 	greedyVector.reserve(budget);
 	std::unordered_set<ll> greedySet;
 	greedySet.reserve(budget);
 	ll rem_budget = budget;
 	std::unordered_set<ll> remainingSet = f_obj.getEffectiveGroundSet();
 	ll n = remainingSet.size();
-	ll randomSetSize = ((float)n/budget)* log(1/epsilon);
+	ll randomSetSize = ((double)n/budget)* log(1/epsilon);
 
 	if (verbose) {
 		std::cout << "Epsilon = " << epsilon << "\n";
@@ -49,7 +49,7 @@ std::vector<std::pair<ll, float>> StochasticGreedyOptimizer::maximize(SetFunctio
 	f_obj.clearMemoization();
 	srand(1);
 	ll best_id;
-	float best_val;
+	double best_val;
 	int i = 0;
 	while (rem_budget > 0) {
 		std::unordered_set<ll> randomSet;
@@ -72,11 +72,11 @@ std::vector<std::pair<ll, float>> StochasticGreedyOptimizer::maximize(SetFunctio
 						std::cout << "Now running naive greedy on the random set\n";
         }
 		best_id = -1;
-		best_val = -1 * std::numeric_limits<float>::max();
+		best_val = -1 * std::numeric_limits<double>::max();
 		//for (auto it = groundSet.begin(); it != groundSet.end(); ++it) {
 		for (auto i: randomSet) {
 			//ll i = *it;
-			float gain = f_obj.marginalGainWithMemoization(greedySet, i);
+			double gain = f_obj.marginalGainWithMemoization(greedySet, i);
 			//std::cout << "Gain of " << i << " is " << gain << "\n";
 			if (gain > best_val) {
 				best_id = i;
@@ -92,7 +92,7 @@ std::vector<std::pair<ll, float>> StochasticGreedyOptimizer::maximize(SetFunctio
 		} else {
 			f_obj.updateMemoization(greedySet, best_id);
 			greedySet.insert(best_id); //greedily insert the best datapoint index of current iteration of while loop
-			greedyVector.push_back(std::pair<ll, float>(best_id, best_val));
+			greedyVector.push_back(std::pair<ll, double>(best_id, best_val));
 			rem_budget-=1;
 			remainingSet.erase(best_id);
 			if(verbose) {

@@ -17,10 +17,10 @@ bool NaiveGreedyOptimizer::equals(double val1, double val2, double eps) {
   }
 }
 
-std::vector<std::pair<ll, float>> NaiveGreedyOptimizer::maximize(SetFunction &f_obj, ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbose=false) {
+std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f_obj, ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbose=false) {
 	//TODO: take care of handling equal guys later
 	//TODO: take care of different sizes of each items - becomes a candidate only if best and within budget, cost sensitive selection
-	std::vector<std::pair<ll, float>>greedyVector;
+	std::vector<std::pair<ll, double>>greedyVector;
 	greedyVector.reserve(budget);
 	std::unordered_set<ll> greedySet;
 	greedySet.reserve(budget);
@@ -43,10 +43,10 @@ std::vector<std::pair<ll, float>> NaiveGreedyOptimizer::maximize(SetFunction &f_
 	}
 	f_obj.clearMemoization();
 	ll best_id;
-	float best_val;
+	double best_val;
 	while (rem_budget > 0) {
 		best_id = -1;
-		best_val = -1 * std::numeric_limits<float>::max();
+		best_val = -1 * std::numeric_limits<double>::max();
 		//for (auto it = groundSet.begin(); it != groundSet.end(); ++it) {
 		for (auto i: groundSet) {
 			//ll i = *it;
@@ -54,7 +54,7 @@ std::vector<std::pair<ll, float>> NaiveGreedyOptimizer::maximize(SetFunction &f_
 				//if this datapoint has already been included in greedySet, skip it
 				continue;
 			}
-			float gain = f_obj.marginalGainWithMemoization(greedySet, i);
+			double gain = f_obj.marginalGainWithMemoization(greedySet, i);
 			if(verbose) std::cout << "Gain of " << i << " is " << gain << "\n";
 			if (gain > best_val) {
 				best_id = i;
@@ -70,7 +70,7 @@ std::vector<std::pair<ll, float>> NaiveGreedyOptimizer::maximize(SetFunction &f_
 		} else {
 			f_obj.updateMemoization(greedySet, best_id);
 			greedySet.insert(best_id); //greedily insert the best datapoint index of current iteration of while loop
-			greedyVector.push_back(std::pair<ll, float>(best_id, best_val));
+			greedyVector.push_back(std::pair<ll, double>(best_id, best_val));
 			rem_budget-=1;
 			if(verbose) {
 				std::cout<<"Added element "<< best_id << " and the gain is " << best_val <<"\n";

@@ -3,6 +3,7 @@ if [ "$1" = "--cleanbuild" ] ; then
   rm -r dist ;
   rm -r build ;
   rm -r submodlib.egg-info ;
+  rm submodlib_cpp.cpython-39-x86_64-linux-gnu.so
   echo "Uninstalling submodlib..."
   pip uninstall submodlib ;
   echo "Building submodlib..."

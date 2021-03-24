@@ -11,7 +11,7 @@
 #include "LazierThanLazyGreedyOptimizer.h"
 
 struct classcomp {
-  bool operator() (const std::pair<float, ll>& lhs, const std::pair<float, ll>& rhs) const
+  bool operator() (const std::pair<double, ll>& lhs, const std::pair<double, ll>& rhs) const
   {return lhs.first > rhs.first;}
 };
 
@@ -36,7 +36,7 @@ bool LazierThanLazyGreedyOptimizer::equals(double val1, double val2,
 //     std::cout << "]\n";
 // }
 
-bool printSortedSet(std::set<std::pair<float, ll>, classcomp> &sortedSet) {
+bool printSortedSet(std::set<std::pair<double, ll>, classcomp> &sortedSet) {
     std::cout << "[";
     for (auto it = sortedSet.begin(); it != sortedSet.end();
          it++) {
@@ -176,21 +176,21 @@ greedySet) { std::cout << i << " ";
         return greedyVector;
 }*/
 
-std::vector<std::pair<ll, float>> LazierThanLazyGreedyOptimizer::maximize(
+std::vector<std::pair<ll, double>> LazierThanLazyGreedyOptimizer::maximize(
     SetFunction &f_obj, ll budget, bool stopIfZeroGain = false,
     bool stopIfNegativeGain = false, float epsilon = 0.1,
     bool verbose = false) {
     // TODO: take care of handling equal guys later
     // TODO: take care of different sizes of each items - becomes a candidate
     // only if best and within budget, cost sensitive selection
-    std::vector<std::pair<ll, float>> greedyVector;
+    std::vector<std::pair<ll, double>> greedyVector;
     greedyVector.reserve(budget);
     std::unordered_set<ll> greedySet;
     greedySet.reserve(budget);
     ll rem_budget = budget;
     std::unordered_set<ll> remainingSet = f_obj.getEffectiveGroundSet();
     ll n = remainingSet.size();
-    ll randomSetSize = ((float)n / budget) * log(1 / epsilon);
+    ll randomSetSize = ((double)n / budget) * log(1 / epsilon);
 
     if (verbose) {
         std::cout << "Epsilon = " << epsilon << "\n";
@@ -212,13 +212,13 @@ std::vector<std::pair<ll, float>> LazierThanLazyGreedyOptimizer::maximize(
     f_obj.clearMemoization();
     srand(1);
     ll best_id;
-    float best_val;
+    double best_val;
 
     // initialize sorted list of initial gains for each element
-    std::set<std::pair<float, ll>, classcomp> sortedGains;
+    std::set<std::pair<double, ll>, classcomp> sortedGains;
     // for each element in the ground set
     for (auto elem : remainingSet) {
-        sortedGains.insert(std::pair<float, ll>(
+        sortedGains.insert(std::pair<double, ll>(
             f_obj.marginalGainWithMemoization(greedySet, elem), elem));
     }
 
@@ -251,10 +251,10 @@ std::vector<std::pair<ll, float>> LazierThanLazyGreedyOptimizer::maximize(
             std::cout << "Now running lazy greedy on the random set\n";
         }
         ll best_id;
-        float best_val;
-        float candidate_val;
+        double best_val;
+        double candidate_val;
         ll candidate_id;
-        float newCandidateBound;
+        double newCandidateBound;
         
         for (auto it = sortedGains.begin(); it != sortedGains.end();) {
             // if (verbose) {
@@ -292,7 +292,7 @@ std::vector<std::pair<ll, float>> LazierThanLazyGreedyOptimizer::maximize(
                     //if(verbose) std::cout <<"After erase, it is pointing to: " << (*it).second <<"\n";
                     //it = nextElem;
 					//if(verbose) std::cout <<"After resetting to next element, it is pointing to: " << (*it).second <<"\n";
-                    sortedGains.insert(std::pair<float, ll>(newCandidateBound, candidate_id));
+                    sortedGains.insert(std::pair<double, ll>(newCandidateBound, candidate_id));
                     //if(verbose) std::cout <<"After insert, it is pointing to: " << (*it).second <<"\n";
                     it = nextElem;
 					//if(verbose) std::cout <<"After insert and fixing iterator, it is pointing to: " << (*it).second <<"\n";
@@ -306,7 +306,7 @@ std::vector<std::pair<ll, float>> LazierThanLazyGreedyOptimizer::maximize(
             std::cout << "Next best item to add is " << best_id
                       << " and its value addition is " << best_val << "\n";
         }
-        sortedGains.erase(std::pair<float, ll>(candidate_val, candidate_id));
+        sortedGains.erase(std::pair<double, ll>(candidate_val, candidate_id));
 
         if ((best_val < 0 && stopIfNegativeGain) ||
             (equals(best_val, 0, 1e-5) && stopIfZeroGain)) {
@@ -316,7 +316,7 @@ std::vector<std::pair<ll, float>> LazierThanLazyGreedyOptimizer::maximize(
             greedySet.insert(
                 best_id);  // greedily insert the best datapoint index of
                            // current iteration of while loop
-            greedyVector.push_back(std::pair<ll, float>(best_id, best_val));
+            greedyVector.push_back(std::pair<ll, double>(best_id, best_val));
             rem_budget -= 1;
             remainingSet.erase(best_id);
             if (verbose) {

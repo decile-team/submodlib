@@ -5,4 +5,11 @@ requires = [
     "pybind11>=2.6.0",
 ]
 
+[tool.pytest.ini_options]
+markers = [
+    "fb_regular: marks regular tests for FeatureBased functions",
+    "fb_opt: marks optimizer tests for FeatureBased functions",
+    "clustered_mode: marks tests which are supported only by functions that can work in clustered mode",
+]
+
 build-backend = "setuptools.build_meta"

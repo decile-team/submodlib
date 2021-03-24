@@ -8,7 +8,7 @@
 #include<map>
 #include"Clustered.h"
 
-Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unordered_set<ll>> const&clusters_, std::vector<std::vector<std::vector<float>>> const &clusterKernels_, std::vector<ll> const &clusterIndexMap_ ): n(n_), mode(multi), num_clusters(clusters_.size()), function_name(function_name_), clusters(clusters_), clusterKernels(clusterKernels_), clusterIndexMap(clusterIndexMap_) {
+Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unordered_set<ll>> const&clusters_, std::vector<std::vector<std::vector<float>>> const &clusterKernels_, std::vector<ll> const &clusterIndexMap_, float lambda_): n(n_), mode(multi), num_clusters(clusters_.size()), function_name(function_name_), clusters(clusters_), clusterKernels(clusterKernels_), clusterIndexMap(clusterIndexMap_), lambda(lambda_) {
     // std::cout << "Clustered multi constructor\n";
     //n = n_;
     //mode = "many_cluster_kernels";
@@ -39,15 +39,19 @@ Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unorder
         SetFunction *f_obj;
         if(function_name=="FacilityLocation") {
             f_obj = new FacilityLocation;
+            f_obj->cluster_init(cti.size(), kernel, cti, false, 1); 
         } else if(function_name == "DisparitySum") {
             f_obj = new DisparitySum;
+            f_obj->cluster_init(cti.size(), kernel, cti, false, 1); 
+        } else if(function_name == "GraphCut") {
+            f_obj = new GraphCut;
+            f_obj->cluster_init(cti.size(), kernel, cti, false, lambda); 
         }
-        f_obj->cluster_init(cti.size(), kernel, cti, false); 
         mixture.push_back(f_obj);
 	}
 }
 
-Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unordered_set<ll>> const &clusters_, std::vector<std::vector<float>> const &denseKernel_): n(n_), mode(single), num_clusters(clusters_.size()), denseKernel(denseKernel_), function_name(function_name_), clusters(clusters_) {
+Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unordered_set<ll>> const &clusters_, std::vector<std::vector<float>> const &denseKernel_, float lambda_): n(n_), mode(single), num_clusters(clusters_.size()), denseKernel(denseKernel_), function_name(function_name_), clusters(clusters_), lambda(lambda_) {
     // std::cout << "Clustered single constructor\n";
     //n = n_;
     //mode = "single_dense_kernel";
@@ -71,10 +75,15 @@ Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unorder
         SetFunction *f_obj;
         if(function_name=="FacilityLocation") {
             f_obj = new FacilityLocation;
+            f_obj->cluster_init(n, denseKernel, ci, true, 1); 
         } else if(function_name == "DisparitySum") {
             f_obj = new DisparitySum;
+            f_obj->cluster_init(n, denseKernel, ci, true, 1); 
+        } else if(function_name == "GraphCut") {
+            f_obj = new GraphCut;
+            f_obj->cluster_init(n, denseKernel, ci, true, lambda); 
         }
-        f_obj->cluster_init(n, denseKernel, ci, true); 
+        
         mixture.push_back(f_obj);
     }
 }
@@ -91,25 +100,37 @@ std::unordered_set<ll> translate_X(std::unordered_set<ll> const &X, Clustered co
     return X_res;
 }
 
-float Clustered::evaluate(std::unordered_set<ll> const &X) {
+double Clustered::evaluate(std::unordered_set<ll> const &X) {
     // std::cout << "Clustered evaluate\n";
-    float res=0;
+    // std::cout << "Set to evaluate: {";
+    // for(auto elem: X) {
+    //     std::cout << elem << ", ";
+    // }
+    // std::cout << "}\n";
+    double res=0;
     if (mode == single) {
         for(int i=0;i<num_clusters;++i) {
             res += mixture[i]->evaluate(X);
         }
     } else {
+        //std::cout << "Eval of multi mode\n";
         for(int i=0;i<num_clusters;++i) {
+            //std::cout << "Cluster " << i << "\n";
             std::unordered_set<ll> X_temp = translate_X(X, *this, i);
+            // std::cout<<"X_temp = {";
+            // for(auto elem: X_temp) {
+            //     std::cout << elem << ", ";
+            // }
+            // std::cout << "}\n";
             res+=mixture[i]->evaluate(X_temp);
         }
     }
     return res;
 }
 
-float Clustered::evaluateWithMemoization(std::unordered_set<ll> const &X) {
+double Clustered::evaluateWithMemoization(std::unordered_set<ll> const &X) {
     // std::cout << "Clustered evaluateWithMemoization\n";
-    float res=0;
+    double res=0;
     if(mode == single) {
         for(int i=0;i<num_clusters;++i) {
             res+=mixture[i]->evaluateWithMemoization(X);
@@ -123,7 +144,7 @@ float Clustered::evaluateWithMemoization(std::unordered_set<ll> const &X) {
     return res;
 }
 
-float Clustered::marginalGain(std::unordered_set<ll> const &X, ll item) {
+double Clustered::marginalGain(std::unordered_set<ll> const &X, ll item) {
     // std::cout << "Clustered marginalGain\n";
     ll i = clusterIDs[item];
     if (mode == single) {
@@ -133,7 +154,7 @@ float Clustered::marginalGain(std::unordered_set<ll> const &X, ll item) {
         ll item_temp = clusterIndexMap[item];
         
         // if(X_temp.size()==0) {
-        //     float gain=0;
+        //     double gain=0;
         //     std::unordered_set<ll>ci = clusters[i];
 
         //     for (auto it = ci.begin(); it != ci.end(); ++it) {
@@ -148,7 +169,7 @@ float Clustered::marginalGain(std::unordered_set<ll> const &X, ll item) {
     }
 }
 
-float Clustered::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+double Clustered::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
     // std::cout << "Clustered marginalGainWithMemoization\n";
     ll i = clusterIDs[item];
     if (mode == single) {
@@ -193,7 +214,7 @@ std::unordered_set<ll> Clustered::getEffectiveGroundSet()
     return effectiveGroundSet;
 }
 
-std::vector<std::pair<ll, float>> Clustered::maximize(std::string optimizer,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false)
+std::vector<std::pair<ll, double>> Clustered::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false)
 {
     // std::cout << "Clustered maximize\n";
 	if(optimizer=="NaiveGreedy")
@@ -206,7 +227,7 @@ std::vector<std::pair<ll, float>> Clustered::maximize(std::string optimizer,floa
     } else if (optimizer=="LazierThanLazyGreedy") { 
         return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
     } else {
-        std::cerr << "Optimizer not yet implemented" << std::endl;
+        std::cerr << "Invalid Optimizer" << std::endl;
     }
 }
 

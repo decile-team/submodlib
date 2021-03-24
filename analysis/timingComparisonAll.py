@@ -30,8 +30,10 @@ num_set = 40 #80 #6   #should be <= num_clusters and <= num points in each clust
 num_neighbors = 100 #100 #10
 num_executions = 5 #1 #5
 num_places = 6
+num_features = 10
 
-points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=2, cluster_std=cluster_std_dev, center_box=(0,100), return_centers=True, random_state=4)
+# points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=2, cluster_std=cluster_std_dev, center_box=(0,100), return_centers=True, random_state=4)
+points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
 data = list(map(tuple, points))
 
 # get num_set data points belonging to cluster#1

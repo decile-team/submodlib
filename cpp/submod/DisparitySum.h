@@ -1,9 +1,7 @@
 #ifndef DISPARITYSUM_H
 #define DISPARITYSUM_H
 #include"../optimizers/NaiveGreedyOptimizer.h"
-#include"../optimizers/LazyGreedyOptimizer.h"
 #include"../optimizers/StochasticGreedyOptimizer.h"
-#include"../optimizers/LazierThanLazyGreedyOptimizer.h"
 #include"../SetFunction.h"
 #include"../utils/sparse_utils.h"
 #include <unordered_set>
@@ -26,31 +24,30 @@ class DisparitySum : public SetFunction {
     std::vector<std::vector<float>> denseKernel;
     SparseSim sparseKernel = SparseSim();
 
-    float currentSum;
+    double currentSum;
 
    public:
     DisparitySum();
-
     // For dense similarity matrix
     DisparitySum(ll n_, std::vector<std::vector<float>> const &denseKernel_, bool partial_, std::unordered_set<ll> const &ground_);
-
     // For sparse similarity matrix
     DisparitySum(ll n_, std::vector<float> const &arr_val, std::vector<ll> const &arr_count, std::vector<ll> const &arr_col);
 
-    float evaluate(std::unordered_set<ll> const &X);
-	float evaluateWithMemoization(std::unordered_set<ll> const &X);
-	float marginalGain(std::unordered_set<ll> const &X, ll item);
-	float marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item);
+    double evaluate(std::unordered_set<ll> const &X);
+	double evaluateWithMemoization(std::unordered_set<ll> const &X);
+	double marginalGain(std::unordered_set<ll> const &X, ll item);
+	double marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item);
 	void updateMemoization(std::unordered_set<ll> const &X, ll item);
 	std::unordered_set<ll> getEffectiveGroundSet();
-	std::vector<std::pair<ll, float>> maximize(std::string, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose);
-	void clearMemoization();
+	std::vector<std::pair<ll, double>> maximize(std::string, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose);
+	void cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda);
+    void clearMemoization();
 	void setMemoization(std::unordered_set<ll> const &X);
 
-    friend float get_sum_dense(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj);
-    friend float get_sum_sparse(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj);
+    friend double get_sum_dense(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj);
+    friend double get_sum_sparse(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj);
 };
 
-float get_sum_dense(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj);
-float get_sum_sparse(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj);
+double get_sum_dense(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj);
+double get_sum_sparse(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj);
 #endif

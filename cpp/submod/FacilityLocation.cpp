@@ -215,10 +215,10 @@ float get_max_sim_cluster(ll datapoint_ind, std::unordered_set<ll> const &datase
 	return m;
 }
 
-float FacilityLocation::evaluate(std::unordered_set<ll> const &X) {
+double FacilityLocation::evaluate(std::unordered_set<ll> const &X) {
 	// std::cout << "FacilityLocation evaluate\n";
 	std::unordered_set<ll> effectiveX;
-	float result=0;
+	double result=0;
 
 	if (partial == true) {
 		//effectiveX = intersect(X, effectiveGroundSet)
@@ -269,12 +269,12 @@ float FacilityLocation::evaluate(std::unordered_set<ll> const &X) {
 }
 
 
-float FacilityLocation::evaluateWithMemoization(std::unordered_set<ll> const &X) { 
+double FacilityLocation::evaluateWithMemoization(std::unordered_set<ll> const &X) { 
 	// std::cout << "FacilityLocation evaluateWithMemoization\n";
     //assumes that appropriate pre computed memoized statistics exist for effectiveX
 
 	std::unordered_set<ll> effectiveX;
-	float result = 0;
+	double result = 0;
 
 	if (partial == true) {
 		//effectiveX = intersect(X, effectiveGroundSet)
@@ -311,10 +311,10 @@ float FacilityLocation::evaluateWithMemoization(std::unordered_set<ll> const &X)
 }
 
 
-float FacilityLocation::marginalGain(std::unordered_set<ll> const &X, ll item) {
+double FacilityLocation::marginalGain(std::unordered_set<ll> const &X, ll item) {
 	// std::cout << "FacilityLocation marginalGain\n";
 	std::unordered_set<ll> effectiveX;
-	float gain = 0;
+	double gain = 0;
 
 	if (partial == true) {
 		//effectiveX = intersect(X, effectiveGroundSet)
@@ -378,10 +378,10 @@ float FacilityLocation::marginalGain(std::unordered_set<ll> const &X, ll item) {
 }
 
 
-float FacilityLocation::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+double FacilityLocation::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
 	// std::cout << "FacilityLocation marginalGainWithMemoization\n";
 	std::unordered_set<ll> effectiveX;
-	float gain = 0;
+	double gain = 0;
 	if (partial == true) {
 		// std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(), effectiveGroundSet.end(), std::inserter(effectiveX, effectiveX.begin()));
 	    effectiveX = set_intersection(X, effectiveGroundSet);
@@ -489,7 +489,7 @@ std::unordered_set<ll> FacilityLocation::getEffectiveGroundSet() {
 }
 
 
-std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string optimizer,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
+std::vector<std::pair<ll, double>> FacilityLocation::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
 	// std::cout << "FacilityLocation maximize\n";
 	if(optimizer == "NaiveGreedy") {
 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
@@ -500,12 +500,12 @@ std::vector<std::pair<ll, float>> FacilityLocation::maximize(std::string optimiz
 	} else if(optimizer == "LazierThanLazyGreedy") {
         return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
 	} else {
-		std::cerr << "Optimizer not yet implemented" << std::endl;
+		std::cerr << "Invalid Optimizer" << std::endl;
 	}
 }
 
 
-void FacilityLocation::cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial) {
+void FacilityLocation::cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda) {
 	// std::cout << "FacilityLocation clusterInit\n";
 	*this = FacilityLocation(n_, denseKernel_, partial, ground_, false);
 }

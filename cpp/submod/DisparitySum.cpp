@@ -9,9 +9,9 @@
 #include "../utils/helper.h"
 #include"DisparitySum.h"
 
-DisparitySum::DisparitySum() {}
+DisparitySum::DisparitySum(){}
 
-// COnstructor for dense mode
+// Constructor for dense mode
 DisparitySum::DisparitySum(ll n_, std::vector<std::vector<float>> const &denseKernel_, bool partial_, std::unordered_set<ll> const &ground_): n(n_), mode(dense), denseKernel(denseKernel_), partial(partial_) {
     if (partial == true) {
         //ground set will now be the subset provided
@@ -25,6 +25,13 @@ DisparitySum::DisparitySum(ll n_, std::vector<std::vector<float>> const &denseKe
     }
     numEffectiveGroundset = effectiveGroundSet.size();
     currentSum = 0;
+    if(partial == true) {
+		ll ind = 0;
+		for (auto it: effectiveGroundSet) {
+			originalToPartialIndexMap[it] = ind;
+			ind += 1;
+		}
+	}
 }
 
 // Constructor for sparse mode
@@ -42,31 +49,52 @@ DisparitySum::DisparitySum(ll n_, std::vector<float> const &arr_val, std::vector
 }
 
 // helper friend function
-float get_sum_dense(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj) {
-    float sum = 0;
-    for (auto it = dataset_ind.begin(); it != dataset_ind.end(); ++it) {
-        for (auto nextIt = std::next(it, 1); nextIt != dataset_ind.end(); ++nextIt) {
-            sum += (1 - obj.denseKernel[*it][*nextIt]);
+double get_sum_dense(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj) {
+    double sum = 0;
+    // for (auto it = dataset_ind.begin(); it != dataset_ind.end(); ++it) {
+    //     for (auto nextIt = std::next(it, 1); nextIt != dataset_ind.end(); ++nextIt) {
+    //         sum += (1 - obj.denseKernel[*it][*nextIt]);
+    //     }
+    // }
+    //std::cout << "Inside get_sum_dense\n";
+    for(auto elem1: dataset_ind) {
+        for(auto elem2: dataset_ind) {
+            //std::cout << "Adding 1-" << obj.denseKernel[elem1][elem2] << "\n";
+            sum += (1 - obj.denseKernel[elem1][elem2]);
         }
     }
-    return sum;
+    return sum/2;
 }
 
-float get_sum_sparse(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj) {
-    float sum = 0;
-    for (auto it = dataset_ind.begin(); it != dataset_ind.end(); ++it) {
-        for (auto nextIt = std::next(it, 1); nextIt != dataset_ind.end(); ++nextIt) {
-            sum += (1 - obj.sparseKernel.get_val(*it, *nextIt));
+double get_sum_sparse(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj) {
+    double sum = 0;
+    // for (auto it = dataset_ind.begin(); it != dataset_ind.end(); ++it) {
+    //     for (auto nextIt = std::next(it, 1); nextIt != dataset_ind.end(); ++nextIt) {
+    //         sum += (1 - obj.sparseKernel.get_val(*it, *nextIt));
+    //     }
+    // }
+    for(auto elem1: dataset_ind) {
+        for(auto elem2: dataset_ind) {
+            //std::cout << elem1 << ", " << elem2 << ": " << obj.sparseKernel.get_val(elem1, elem2) << "\n";
+            sum += (1 - obj.sparseKernel.get_val(elem1, elem2));
         }
     }
-    return sum;
+    return sum/2;
 }
 
-float DisparitySum::evaluate(std::unordered_set<ll> const &X) {
+double DisparitySum::evaluate(std::unordered_set<ll> const &X) {
+    //std::cout << "DisparitySum's evaluate called\n";
     std::unordered_set<ll> effectiveX;
-    float result = 0;
+    double result = 0;
+
+    // std::cout << "X = { ";
+    // for(auto elem: X) {
+    //     std::cout << elem << ", ";
+    // }
+    // std::cout << "}\n";
 
     if (partial == true) {
+        //std::cout << "Partial is TRUE!!!!\n";
         // effectiveX = intersect(X, effectiveGroundSet)
         // std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(),
         //                       effectiveGroundSet.end(),
@@ -75,6 +103,12 @@ float DisparitySum::evaluate(std::unordered_set<ll> const &X) {
     } else {
         effectiveX = X;
     }
+
+    // std::cout << "EffectiveX = { ";
+    // for(auto elem: effectiveX) {
+    //     std::cout << elem << ", ";
+    // }
+    // std::cout << "}\n";
 
     if (effectiveX.size() == 0) {
         return 0;
@@ -90,9 +124,9 @@ float DisparitySum::evaluate(std::unordered_set<ll> const &X) {
     return result;
 }
 
-float DisparitySum::evaluateWithMemoization(std::unordered_set<ll> const &X) { 
+double DisparitySum::evaluateWithMemoization(std::unordered_set<ll> const &X) { 
     std::unordered_set<ll> effectiveX;
-    float result = 0;
+    double result = 0;
 
     if (partial == true) {
         // effectiveX = intersect(X, effectiveGroundSet)
@@ -110,9 +144,9 @@ float DisparitySum::evaluateWithMemoization(std::unordered_set<ll> const &X) {
     return currentSum;
 }
 
-float DisparitySum::marginalGain(std::unordered_set<ll> const &X, ll item) {
+double DisparitySum::marginalGain(std::unordered_set<ll> const &X, ll item) {
     std::unordered_set<ll> effectiveX;
-    float gain = 0;
+    double gain = 0;
 
     if (partial == true) {
         // effectiveX = intersect(X, effectiveGroundSet)
@@ -143,7 +177,7 @@ float DisparitySum::marginalGain(std::unordered_set<ll> const &X, ll item) {
     return gain;
 }
 
-float DisparitySum::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+double DisparitySum::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
     return marginalGain(X, item);
 }
 
@@ -155,19 +189,24 @@ std::unordered_set<ll> DisparitySum::getEffectiveGroundSet() {
     return effectiveGroundSet;
 }
 
-std::vector<std::pair<ll, float>> DisparitySum::maximize(std::string optimizer,float budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
+std::vector<std::pair<ll, double>> DisparitySum::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
 	// std::cout << "DisparitySum maximize\n";
 	if(optimizer == "NaiveGreedy") {
 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
 	} else if(optimizer == "LazyGreedy") {
-        return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
+        throw "Being non submodular, DisparitySum doesn't support LazyGreedy maximization";
 	} else if(optimizer == "StochasticGreedy") {
         return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
 	} else if(optimizer == "LazierThanLazyGreedy") {
-        return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
+        throw "Being non submodular, DisparitySum doesn't support LazierThanLazyGreedy maximization";
 	} else {
-		std::cerr << "Optimizer not yet implemented" << std::endl;
+		throw "Invalid optimizer";
 	}
+}
+
+void DisparitySum::cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda) {
+	// std::cout << "DisparitySum clusterInit\n";
+	*this = DisparitySum(n_, denseKernel_, partial, ground_);
 }
 
 void DisparitySum::clearMemoization()
