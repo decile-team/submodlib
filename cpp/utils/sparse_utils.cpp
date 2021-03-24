@@ -96,15 +96,21 @@ float SparseSim::get_val(ll r, ll c) // O(log(num_neigh))
 		std::cerr << "ERROR: Incorrect row/column provided\n";
 		return -2;
 	}
-
 	if (v_col_ID[r].find(c) == v_col_ID[r].end())
 	{
-		return 0;
+		// c is not in the neighbor list of r
+		if (v_col_ID[c].find(r) == v_col_ID[c].end()) {
+			// r is not in neighbor list of c
+			return 0;
+		} else {
+			return v_val_map[c][r];
+		}
 	}
 	else
 	{
 		return v_val_map[r][c];
 	}
+	
 }
 
 std::vector<float> SparseSim::get_row(ll r) // O(num_ind) (More optimal then get_col() in case of csr)

@@ -29,17 +29,7 @@ GraphCut::GraphCut(ll n_, std::vector<std::vector<float>> const &masterGroundKer
 	//master set will now be same as the ground set
 	n_master=numEffectiveGroundset;
 	masterSet=effectiveGroundSet;
-	
-	totalSimilarityWithSubset.resize(n);
-	totalSimilarityWithMaster.resize(n);
-	for (int i = 0; i < n; i++) {
-		totalSimilarityWithSubset[i] = 0; 
-		totalSimilarityWithMaster[i] = 0;
-		for(int j = 0; j < n_master; j++){
-			totalSimilarityWithMaster[i] +=masterGroundKernel[j][i];
-		}
-	}
-	
+
 	if(partial == true) {
 		ll ind = 0;
 		//for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it) {
@@ -47,7 +37,34 @@ GraphCut::GraphCut(ll n_, std::vector<std::vector<float>> const &masterGroundKer
 			originalToPartialIndexMap[it] = ind;
 			ind += 1;
 		}
+		// std::cout << "originalToPartialIndexMap = {";
+		// for (auto it: effectiveGroundSet) {
+		// 	std::cout << it << ":" << originalToPartialIndexMap[it] <<", ";
+		// }
+		// std::cout << "}\n";
 	}
+	
+	
+	totalSimilarityWithSubset.resize(numEffectiveGroundset);
+	totalSimilarityWithMaster.resize(numEffectiveGroundset);
+	for(auto elem: effectiveGroundSet) {
+		totalSimilarityWithSubset[(partial)?originalToPartialIndexMap[elem]:elem] = 0;
+        totalSimilarityWithMaster[(partial)?originalToPartialIndexMap[elem]:elem] = 0;
+		for(auto j: masterSet) {
+			totalSimilarityWithMaster[(partial)?originalToPartialIndexMap[elem]:elem] += masterGroundKernel[j][elem];
+		}
+	}
+	// std::cout << "Effective ground set: {";
+	// for(auto elem: effectiveGroundSet) {
+	// 	std::cout << elem << ", ";
+	// }
+	// std::cout << "}\n";
+
+	// std::cout << "Total similarity with master: {";
+	// for(auto elem: totalSimilarityWithMaster) {
+	// 	std::cout << elem << ", ";
+	// }
+	// std::cout << "}\n";
 }
 
 //Constructor for dense mode with separateMaster
@@ -123,14 +140,14 @@ double GraphCut::evaluate(std::unordered_set<ll> const &X) {
 
 	if (mode == dense) {
 		for(auto elem: effectiveX) {
-			result += totalSimilarityWithMaster[elem];
+			result += totalSimilarityWithMaster[(partial)?originalToPartialIndexMap[elem]:elem];
 			for(auto elem2: effectiveX) {
 				result -= lambda * groundGroundKernel[elem][elem2];
 			}
 		}
 	} else if (mode == sparse) {
         for(auto elem: effectiveX) {
-			result += totalSimilarityWithMaster[elem];
+			result += totalSimilarityWithMaster[(partial)?originalToPartialIndexMap[elem]:elem];
 			for(auto elem2: effectiveX) {
 				result -= lambda * sparseKernel.get_val(elem, elem2);
 			}
@@ -160,7 +177,7 @@ double GraphCut::evaluateWithMemoization(std::unordered_set<ll> const &X) {
 
 	if (mode == dense || mode == sparse) {
 		for(auto elem: effectiveX) {
-			result += totalSimilarityWithMaster[elem] - lambda * totalSimilarityWithSubset[elem];
+			result += totalSimilarityWithMaster[(partial)?originalToPartialIndexMap[elem]:elem] - lambda * totalSimilarityWithSubset[(partial)?originalToPartialIndexMap[elem]:elem];
 		}
 	} else {
 		throw "Error: Only dense and sparse mode supported";
@@ -183,7 +200,7 @@ double GraphCut::marginalGain(std::unordered_set<ll> const &X, ll item) {
 		return 0;
 	}
 
-	double gain = totalSimilarityWithMaster[item];
+	double gain = totalSimilarityWithMaster[(partial)?originalToPartialIndexMap[item]:item];
 
 	if (mode == dense) {
 		for(auto elem: effectiveX) {
@@ -216,9 +233,9 @@ double GraphCut::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll
 		return 0;
 	}
 	if (mode == dense) {
-		gain = totalSimilarityWithMaster[item] - 2 * lambda * totalSimilarityWithSubset[item] - lambda * groundGroundKernel[item][item];
+		gain = totalSimilarityWithMaster[(partial)?originalToPartialIndexMap[item]:item] - 2 * lambda * totalSimilarityWithSubset[(partial)?originalToPartialIndexMap[item]:item] - lambda * groundGroundKernel[item][item];
 	} else if (mode == sparse) {
-		gain = totalSimilarityWithMaster[item] - 2 * lambda * totalSimilarityWithSubset[item] - lambda * sparseKernel.get_val(item, item);
+		gain = totalSimilarityWithMaster[(partial)?originalToPartialIndexMap[item]:item] - 2 * lambda * totalSimilarityWithSubset[(partial)?originalToPartialIndexMap[item]:item] - lambda * sparseKernel.get_val(item, item);
 	} else {
 		throw "Error: Only dense and sparse mode supported";
 	}
@@ -240,11 +257,11 @@ void GraphCut::updateMemoization(std::unordered_set<ll> const &X, ll item) {
 		return;
 	}
 	if (mode == dense) {
-		for (int i = 0; i < n; i++)
-			totalSimilarityWithSubset[i] += groundGroundKernel[i][item];
+		for(auto elem: effectiveGroundSet) 
+			totalSimilarityWithSubset[(partial)?originalToPartialIndexMap[elem]:elem] += groundGroundKernel[elem][item];
 	} else if (mode == sparse) {
-		for (int i = 0; i < n; i++)
-			totalSimilarityWithSubset[i] += sparseKernel.get_val(i, item);
+		for(auto elem: effectiveGroundSet)
+			totalSimilarityWithSubset[(partial)?originalToPartialIndexMap[elem]:elem] += sparseKernel.get_val(elem, item);
 	} else {
         throw "Error: Only dense and sparse mode supported";
 	}
@@ -279,7 +296,7 @@ void GraphCut::cluster_init(ll n_, std::vector<std::vector<float>> const &denseK
 
 void GraphCut::clearMemoization() {
 	if(mode==dense || mode==sparse) {
-		for(int i=0;i<n;++i) {
+		for(int i=0;i<numEffectiveGroundset;++i) {
 			totalSimilarityWithSubset[i]=0;
 		}
 	} else {

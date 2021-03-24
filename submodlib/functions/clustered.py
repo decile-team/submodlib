@@ -54,6 +54,7 @@ class ClusteredFunction(SetFunction):
 		self.cpp_content = None
 		self.cpp_sijs = None
 		self.effective_ground=None
+		self.lambdaVal = lambdaVal
 
 		if self.n <= 0:
 			raise Exception("ERROR: Number of elements in ground set must be positive")
@@ -89,7 +90,12 @@ class ClusteredFunction(SetFunction):
 				l=[]
 				l.append(self.cpp_sijs)
 				self.cpp_sijs=l
-			self.cpp_obj = Clustered(self.n, self.f_name, self.clusters, self.cpp_sijs, lambdaVal)
+			# print("self.n: ", self.n)
+			# print("self.f_name: ", self.f_name)
+			# print("self.clusters: ", self.clusters)
+			# print("self.cpp_sijs: ", self.cpp_sijs)
+			# print("self.lambdaVal: ", self.lambdaVal)
+			self.cpp_obj = Clustered(self.n, self.f_name, self.clusters, self.cpp_sijs, self.lambdaVal)
 		else:
 			self.clusters, self.cluster_sijs, self.cluster_map = create_cluster_kernels(self.data.tolist(), self.metric, self.cluster_lab, self.num_clusters)
 			l_temp = []
@@ -103,9 +109,12 @@ class ClusteredFunction(SetFunction):
 					temp=l
 				l_temp.append(temp)
 			self.cluster_sijs = l_temp
-			#print("Clusters: ", self.clusters)
-			#print("cluster_sijs: ", self.cluster_sijs)
-			#print("cluster_map: ", self.cluster_map)
+			# print("self.n: ", self.n)
+			# print("self.f_name: ", self.f_name)
+			# print("self.clusters: ", self.clusters)
+			# print("self.cluster_sijs: ", self.cluster_sijs)
+			# print("self.cluster_map: ", self.cluster_map)
+			# print("self.lambdaVal: ", self.lambdaVal)
 			self.cpp_obj = Clustered(self.n, self.f_name, self.clusters, self.cluster_sijs, self.cluster_map, lambdaVal)
 		self.effective_ground=self.cpp_obj.getEffectiveGroundSet()
 

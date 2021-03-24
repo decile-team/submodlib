@@ -89,7 +89,7 @@ class GraphCutFunction(SetFunction):
 				raise Exception("ggsijs provided, but is not dense")
 			
 		if mode == "dense":
-			if separate_master == True:
+			if self.separate_master == True:
 				if type(self.mgsijs) == type(None):
 					#not provided mgsij - make it
 					if (type(data) == type(None)) or (type(data_master) == type(None)):
@@ -149,7 +149,7 @@ class GraphCutFunction(SetFunction):
 					#both are available - something is wrong
 					raise Exception("Two kernels have been wrongly provided when separate_master=False")
 		elif mode == "sparse":
-			if separate_master == True:
+			if self.separate_master == True:
 					raise Exception("Separate master is supported only in dense mode")
 			if self.num_neighbors is None or self.num_neighbors <=0:
 				raise Exception("Valid num_neighbors is needed for sparse mode")
@@ -177,10 +177,10 @@ class GraphCutFunction(SetFunction):
 				#both are available - something is wrong
 				raise Exception("Two kernels have been wrongly provided when separate_master=False")
 
-		if separate_master==None:
+		if self.separate_master==None:
 			self.separate_master = False
 
-		if self.mode=="dense" and separate_master == False :
+		if self.mode=="dense" and self.separate_master == False :
 			self.cpp_ggsijs = self.ggsijs.tolist() #break numpy ndarray to native list of list datastructure
 			
 			if type(self.cpp_ggsijs[0])==int or type(self.cpp_ggsijs[0])==float: #Its critical that we pass a list of list to pybind11
@@ -191,7 +191,7 @@ class GraphCutFunction(SetFunction):
 
 			self.cpp_obj = GraphCut(self.n, self.cpp_ggsijs, False, self.cpp_ground_sub, self.lambdaVal)
 		
-		elif self.mode=="dense" and separate_master == True :
+		elif self.mode=="dense" and self.separate_master == True :
 			self.cpp_ggsijs = self.ggsijs.tolist() #break numpy ndarray to native list of list datastructure
 			
 			if type(self.cpp_ggsijs[0])==int or type(self.cpp_ggsijs[0])==float: #Its critical that we pass a list of list to pybind11

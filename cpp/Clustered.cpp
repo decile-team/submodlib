@@ -9,14 +9,6 @@
 #include"Clustered.h"
 
 Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unordered_set<ll>> const&clusters_, std::vector<std::vector<std::vector<float>>> const &clusterKernels_, std::vector<ll> const &clusterIndexMap_, float lambda_): n(n_), mode(multi), num_clusters(clusters_.size()), function_name(function_name_), clusters(clusters_), clusterKernels(clusterKernels_), clusterIndexMap(clusterIndexMap_), lambda(lambda_) {
-    // std::cout << "Clustered multi constructor\n";
-    //n = n_;
-    //mode = "many_cluster_kernels";
-    //num_clusters = clusters_.size();
-    //function_name = function_name_;
-    //clusters = clusters_;
-    //clusterKernels = clusterKernels_;
-    //clusterIndexMap = clusterIndexMap_;
     clusterIDs.resize(n);
     clusters_translated.resize(num_clusters);
     effectiveGroundSet.reserve(n);

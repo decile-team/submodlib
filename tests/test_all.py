@@ -6,15 +6,15 @@ import random
 from submodlib import FacilityLocationFunction
 from submodlib import FeatureBasedFunction
 from submodlib import DisparitySumFunction
-#from submodlib import GraphCutFunction
+from submodlib import GraphCutFunction
 from submodlib import ClusteredFunction
 from submodlib.helper import create_kernel
 
-#allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut"]
+allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut"]
+#allKernelFunctions = ["GraphCut"]
 clusteredModeFunctions = ["FacilityLocation"]
-allKernelFunctions = ["FacilityLocation", "DisparitySum"]
-#optimizerTests = ["FacilityLocation", "GraphCut"]
-optimizerTests = ["FacilityLocation"]
+optimizerTests = ["FacilityLocation", "GraphCut"]
+#optimizerTests = ["GraphCut"]
 
 
 num_internal_clusters = 20 #3
@@ -26,7 +26,8 @@ num_samples = 500 #8
 num_set = 20 #3
 num_features = 500
 metric = "euclidean"
-num_sparse_neighbors_full = num_samples #because less than this doesn't work for DisparitySum
+#num_sparse_neighbors_full = num_samples #because less than this doesn't work for DisparitySum
+num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
 budget = 20
 
 # num_internal_clusters = 3 #3
@@ -38,7 +39,8 @@ budget = 20
 # num_set = 3 #3
 # num_features = 2
 # metric = "euclidean"
-# num_sparse_neighbors_full = num_samples #because less than this doesn't work for DisparitySum
+# #num_sparse_neighbors_full = num_samples #because less than this doesn't work for DisparitySum
+# num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
 # budget = 5
 
 @pytest.fixture

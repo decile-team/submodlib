@@ -164,7 +164,7 @@ double DisparitySum::marginalGain(std::unordered_set<ll> const &X, ll item) {
 
     if(mode == dense) {
         for (auto elem: effectiveX) {
-            gain += (1 - denseKernel[item][elem]);
+            gain += (1 - denseKernel[elem][item]);
         }
     } else if (mode == sparse) {
         for (auto elem: effectiveX) {
