@@ -150,7 +150,7 @@ std::vector<std::pair<ll, double>> FeatureBased::maximize(std::string optimizer,
 	} else if(optimizer == "LazierThanLazyGreedy") {
         return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
 	} else {
-		std::cerr << "Invalid Optimizer" << std::endl;
+		throw "Error: Invalid Optimizer";
 	}
 }
 

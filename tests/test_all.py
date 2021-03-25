@@ -8,6 +8,7 @@ from submodlib import FeatureBasedFunction
 from submodlib import DisparitySumFunction
 from submodlib import GraphCutFunction
 from submodlib import ClusteredFunction
+from submodlib import SetCoverFunction
 from submodlib.helper import create_kernel
 
 allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut"]
@@ -29,6 +30,7 @@ metric = "euclidean"
 #num_sparse_neighbors_full = num_samples #because less than this doesn't work for DisparitySum
 num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
 budget = 20
+num_concepts = 50
 
 # num_internal_clusters = 3 #3
 # num_sparse_neighbors = 5 #10 #4
@@ -42,6 +44,7 @@ budget = 20
 # #num_sparse_neighbors_full = num_samples #because less than this doesn't work for DisparitySum
 # num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
 # budget = 5
+# num_concepts = 3
 
 @pytest.fixture
 def data():
@@ -100,6 +103,19 @@ def data_features():
 
     obj = FeatureBasedFunction(n=num_samples, features=features, numFeatures=num_features, sparse=False)
 
+    return (obj, set1)
+
+@pytest.fixture
+def data_concepts():
+    cover_set = []
+    np.random.seed(1)
+    random.seed(1)
+    concept_weights = np.random.rand(num_concepts).tolist()
+    for i in range(num_samples):
+        cover_set.append(set(random.sample(list(range(num_concepts)), random.randint(0,num_concepts))))
+    obj = SetCoverFunction(n=num_samples, cover_set=cover_set, num_concepts=num_concepts, concept_weights=concept_weights)
+    subset1 = random.sample(list(range(num_samples)), num_set)
+    set1 = set(subset1[:-1])
     return (obj, set1)
 
 @pytest.fixture
@@ -1045,4 +1061,71 @@ class TestAll:
         subset.remove(elem)
         simpleGain = object_fb.marginalGain(subset, elem)
         fastGain = object_fb.marginalGainWithMemoization(subset, elem)
+        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+    
+    ######## Optimizers test for SetCover #####################
+    @pytest.mark.sc_opt
+    def test_sc_optimizer_naive_lazy(self, data_concepts):
+        object_sc, _ = data_concepts
+        greedyListNaive = object_sc.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_sc.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        naiveGains = [x[1] for x in greedyListNaive]
+        lazyGains = [x[1] for x in greedyListLazy]
+        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+    
+    @pytest.mark.sc_opt
+    def test_sc_optimizer_stochastic_lazierThanLazy(self, data_concepts):
+        object_sc, _ = data_concepts
+        greedyListStochastic = object_sc.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazierThanLazy = object_sc.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        stochasticGains = [x[1] for x in greedyListStochastic]
+        lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
+        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+
+    ############ 5 regular tests for SetCover Function #######################
+    @pytest.mark.sc_regular
+    def test_sc_eval_groundset(self, data_concepts):
+        object_sc, _ = data_concepts
+        groundSet = object_sc.getEffectiveGroundSet()
+        eval = object_sc.evaluate(groundSet)
+        assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+
+    @pytest.mark.sc_regular
+    def test_sc_eval_emptyset(self, data_concepts):
+        object_sc, _ = data_concepts
+        eval = object_sc.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+
+    @pytest.mark.sc_regular
+    def test_sc_eval_evalfast(self, data_concepts):
+        object_sc, set1 = data_concepts
+        subset = set()
+        for elem in set1:
+            object_sc.updateMemoization(subset, elem)
+            subset.add(elem)
+        simpleEval = object_sc.evaluate(subset)
+        fastEval = object_sc.evaluateWithMemoization(subset)
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+
+    @pytest.mark.sc_regular
+    def test_sc_set_memoization(self, data_concepts):
+        object_sc, set1 = data_concepts
+        object_sc.setMemoization(set1)
+        simpleEval = object_sc.evaluate(set1)
+        fastEval = object_sc.evaluateWithMemoization(set1)
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+
+    @pytest.mark.sc_regular
+    def test_sc_gain(self, data_concepts):
+        object_sc, set1 = data_concepts
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        object_sc.setMemoization(subset)
+        firstEval = object_sc.evaluateWithMemoization(subset)
+        subset.add(elem)
+        naiveGain = object_sc.evaluate(subset) - firstEval
+        subset.remove(elem)
+        simpleGain = object_sc.marginalGain(subset, elem)
+        fastGain = object_sc.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"

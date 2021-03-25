@@ -12,7 +12,9 @@
 
 struct classcomp {
   bool operator() (const std::pair<double, ll>& lhs, const std::pair<double, ll>& rhs) const
-  {return lhs.first > rhs.first;}
+  {
+    return ((lhs.first==rhs.first)?(lhs.second>rhs.second):(lhs.first > rhs.first));
+  }
 };
 
 LazierThanLazyGreedyOptimizer::LazierThanLazyGreedyOptimizer() {}
@@ -222,10 +224,10 @@ std::vector<std::pair<ll, double>> LazierThanLazyGreedyOptimizer::maximize(
             f_obj.marginalGainWithMemoization(greedySet, elem), elem));
     }
 
-    // if (verbose) {
-    //     std::cout << "Initial sorted set = ";
-    //     printSortedSet(sortedGains);
-    // }
+    if (verbose) {
+        std::cout << "Initial sorted set = ";
+        printSortedSet(sortedGains);
+    }
     int i = 0;
     while (rem_budget > 0) {
         std::unordered_set<ll> randomSet;
@@ -257,36 +259,36 @@ std::vector<std::pair<ll, double>> LazierThanLazyGreedyOptimizer::maximize(
         double newCandidateBound;
         
         for (auto it = sortedGains.begin(); it != sortedGains.end();) {
-            // if (verbose) {
-            //     std::cout << "Current sortedGains = ";
-            //     printSortedSet(sortedGains);
-            //     std::cout << "Checking what iterator is pointing at " << (*it).second << "...\n";
-            // }
+            if (verbose) {
+                std::cout << "Current sortedGains = ";
+                printSortedSet(sortedGains);
+                std::cout << "Checking what iterator is pointing at " << (*it).second << "...\n";
+            }
 
             if (randomSet.find((*it).second) != randomSet.end()) {
-                //if (verbose) std::cout << "...present in random set....\n";
+                if (verbose) std::cout << "...present in random set....\n";
                 candidate_id = (*it).second;
                 candidate_val = (*it).first;
                 newCandidateBound =
                     f_obj.marginalGainWithMemoization(greedySet, candidate_id);
-                // if (verbose)
-                //     std::cout << "Updated gain as per updated greedy set = "
-                //               << newCandidateBound << "\n";
+                if (verbose)
+                    std::cout << "Updated gain as per updated greedy set = "
+                              << newCandidateBound << "\n";
                 auto nextElem = std::next(it, 1);
-				//if(verbose) std::cout << "Next element is: " << (*nextElem).second <<"\n";
-                if (newCandidateBound > (*nextElem).first) {
-                    // if (verbose)
-                    //     std::cout << "..better than next best upper bound, "
-                    //                  "selecting...\n";
+				if(verbose) std::cout << "Next element is: " << (*nextElem).second <<"\n";
+                if (newCandidateBound >= (*nextElem).first) {
+                    if (verbose)
+                        std::cout << "..better than next best upper bound, "
+                                     "selecting...\n";
                     best_id = candidate_id;
                     best_val = newCandidateBound;
                     break;
                 } else {
-                    // if (verbose) {
-                    //     std::cout << "... NOT better than next best upper "
-                    //                  "bound, updating...\n";
-                    //     std::cout << "...updating its value in sorted set\n";
-                    // }
+                    if (verbose) {
+                        std::cout << "... NOT better than next best upper "
+                                     "bound, updating...\n";
+                        std::cout << "...updating its value in sorted set\n";
+                    }
                     //if(verbose) std::cout <<"Before erase, it is pointing to: " << (*it).second <<"\n";
                     sortedGains.erase(*it);
                     //if(verbose) std::cout <<"After erase, it is pointing to: " << (*it).second <<"\n";

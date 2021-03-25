@@ -54,12 +54,18 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
         maxHeap.push(std::pair<double, ll>(
             f_obj.marginalGainWithMemoization(greedySet, elem), elem));
     }
+    if(verbose) std::cout << "Max heap constructed\n";
     while (rem_budget > 0) {
         std::pair<double, ll> currentMax = maxHeap.top();
         maxHeap.pop();
+        if(verbose) std::cout << "currentMax element: " << currentMax.second <<" and its uper bound: " << currentMax.first << "\n";
         double newMaxBound =
             f_obj.marginalGainWithMemoization(greedySet, currentMax.second);
-        if (newMaxBound > maxHeap.top().first) {
+        if(verbose) {
+            std::cout << "newMaxBound: " << newMaxBound <<"\n";
+            std::cout << "nextBest element: " << maxHeap.top().second <<"and its bound: " << maxHeap.top().first << "\n";
+        }
+        if (newMaxBound >= maxHeap.top().first) {
             // add currentMax.first to greedy set after checking stop conditions
             if ((newMaxBound < 0 && stopIfNegativeGain) ||
                 (equals(newMaxBound, 0, 1e-5) && stopIfZeroGain)) {

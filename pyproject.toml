@@ -10,6 +10,8 @@ markers = [
     "fb_regular: marks regular tests for FeatureBased functions",
     "fb_opt: marks optimizer tests for FeatureBased functions",
     "clustered_mode: marks tests which are supported only by functions that can work in clustered mode",
+    "sc_regular: marks regular tests for SetCover functions",
+    "sc_opt: marks optimizer tests for SetCover functions",
 ]
 
 build-backend = "setuptools.build_meta"

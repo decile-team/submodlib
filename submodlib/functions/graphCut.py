@@ -222,17 +222,17 @@ class GraphCutFunction(SetFunction):
 		self.effective_ground = self.cpp_obj.getEffectiveGroundSet()
 
 	def evaluate(self, X):
-		"""Computes the Facility Location score of a set
+		"""Computes the Graph Cut score of a set
 
 		Parameters
 		----------
 		X : set
-			The set whose Facility Location score needs to be computed
+			The set whose Graph Cut score needs to be computed
 		
 		Returns
 		-------
 		float
-			The Facility Location function evaluation on the given set
+			The Graph Cut function evaluation on the given set
 
 		"""
 		if type(X)!=set:
@@ -246,7 +246,7 @@ class GraphCutFunction(SetFunction):
 		return self.cpp_obj.evaluate(X)
 
 	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon = 0.1, verbose=False):
-		"""Find the optimal subset with maximum Facility Location score for a given budget
+		"""Find the optimal subset with maximum Graph Cut score for a given budget
 
 		Parameters
 		----------
@@ -273,7 +273,7 @@ class GraphCutFunction(SetFunction):
 		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose)
 	
 	def marginalGain(self, X, element):
-		"""Find the marginal gain in Facility Location score when a single item (element) is added to a set (X)
+		"""Find the marginal gain in Graph Cut score when a single item (element) is added to a set (X)
 
 		Parameters
 		----------
@@ -307,7 +307,7 @@ class GraphCutFunction(SetFunction):
 		return self.cpp_obj.marginalGain(X, element)
 
 	def marginalGainWithMemoization(self, X, element):
-		"""Efficiently find the marginal gain in Facility Location score when a single item (element) is added to a set (X) assuming that memoized statistics for it are already computed
+		"""Efficiently find the marginal gain in Graph Cut score when a single item (element) is added to a set (X) assuming that memoized statistics for it are already computed
 
 		Parameters
 		----------
@@ -340,17 +340,17 @@ class GraphCutFunction(SetFunction):
 		return self.cpp_obj.marginalGainWithMemoization(X, element)
 
 	def evaluateWithMemoization(self, X):
-		"""Efficiently compute the Facility Location score of a set assuming that memoized statistics for it are already computed
+		"""Efficiently compute the Graph Cut score of a set assuming that memoized statistics for it are already computed
 
 		Parameters
 		----------
 		X : set
-			The set whose Facility Location score needs to be computed
+			The set whose Graph Cut score needs to be computed
 		
 		Returns
 		-------
 		float
-			The Facility Location function evaluation on the given set
+			The Graph Cut function evaluation on the given set
 
 		"""
 		if type(X)!=set:
@@ -416,7 +416,7 @@ class GraphCutFunction(SetFunction):
 		self.cpp_obj.setMemoization(X)
 	
 	def getEffectiveGroundSet(self):
-		"""Get the effective ground set of this Facility Location object. This is equal to the ground set when instantiated with partial=False and is equal to the ground_sub when instantiated with partial=True
+		"""Get the effective ground set of this Graph Cut object. This is equal to the ground set when instantiated with partial=False and is equal to the ground_sub when instantiated with partial=True
 
 		"""
 		return self.effective_ground
