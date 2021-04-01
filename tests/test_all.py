@@ -9,7 +9,9 @@ from submodlib import DisparitySumFunction
 from submodlib import GraphCutFunction
 from submodlib import ClusteredFunction
 from submodlib import SetCoverFunction
+from submodlib import ProbabilisticSetCoverFunction
 from submodlib.helper import create_kernel
+from submodlib_cpp import FeatureBased
 
 allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut"]
 #allKernelFunctions = ["GraphCut"]
@@ -91,7 +93,7 @@ def data_with_clusters():
     return (num_samples, dataArray, set1, set2, cluster_ids)
 
 @pytest.fixture
-def data_features():
+def data_features_log():
     points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
     features = list(map(tuple, points))
 
@@ -106,6 +108,37 @@ def data_features():
     return (obj, set1)
 
 @pytest.fixture
+def data_features_sqrt():
+    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
+    features = list(map(tuple, points))
+
+    # get num_set data points belonging to cluster#1
+    random.seed(1)
+    cluster1Indices = [index for index, val in enumerate(cluster_ids) if val == 1]
+    subset1 = random.sample(cluster1Indices, num_set)
+    set1 = set(subset1[:-1])
+
+    obj = FeatureBasedFunction(n=num_samples, features=features, numFeatures=num_features, mode=FeatureBased.squareRoot, sparse=False)
+
+    return (obj, set1)
+
+@pytest.fixture
+def data_features_inverse():
+    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
+    features = list(map(tuple, points))
+
+    # get num_set data points belonging to cluster#1
+    random.seed(1)
+    cluster1Indices = [index for index, val in enumerate(cluster_ids) if val == 1]
+    subset1 = random.sample(cluster1Indices, num_set)
+    set1 = set(subset1[:-1])
+
+    obj = FeatureBasedFunction(n=num_samples, features=features, numFeatures=num_features, mode=FeatureBased.inverse, sparse=False)
+
+    return (obj, set1)
+
+
+@pytest.fixture
 def data_concepts():
     cover_set = []
     np.random.seed(1)
@@ -114,6 +147,19 @@ def data_concepts():
     for i in range(num_samples):
         cover_set.append(set(random.sample(list(range(num_concepts)), random.randint(0,num_concepts))))
     obj = SetCoverFunction(n=num_samples, cover_set=cover_set, num_concepts=num_concepts, concept_weights=concept_weights)
+    subset1 = random.sample(list(range(num_samples)), num_set)
+    set1 = set(subset1[:-1])
+    return (obj, set1)
+
+@pytest.fixture
+def data_prob_concepts():
+    probs = []
+    np.random.seed(1)
+    random.seed(1)
+    concept_weights = np.random.rand(num_concepts).tolist()
+    for i in range(num_samples):
+        probs.append(np.random.rand(num_concepts).tolist())
+    obj = ProbabilisticSetCoverFunction(n=num_samples, probs=probs, num_concepts=num_concepts, concept_weights=concept_weights)
     subset1 = random.sample(list(range(num_samples)), num_set)
     set1 = set(subset1[:-1])
     return (obj, set1)
@@ -290,7 +336,7 @@ def objects_mode_clustered_birch(request, data):
 
 
 class TestAll:
-    ############ 5 tests for dense cpp kernel #######################
+    ############ 6 tests for dense cpp kernel #######################
     @pytest.mark.parametrize("object_dense_cpp_kernel", allKernelFunctions, indirect=['object_dense_cpp_kernel'])
     def test_dense_cpp_eval_groundset(self, object_dense_cpp_kernel):
         groundSet = object_dense_cpp_kernel.getEffectiveGroundSet()
@@ -301,6 +347,20 @@ class TestAll:
     def test_dense_cpp_eval_emptyset(self, object_dense_cpp_kernel):
         eval = object_dense_cpp_kernel.evaluate(set())
         assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.parametrize("object_dense_cpp_kernel", allKernelFunctions, indirect=['object_dense_cpp_kernel'])
+    def test_dense_cpp_gain_on_empty(self, data, object_dense_cpp_kernel):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_dense_cpp_kernel.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_dense_cpp_kernel.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_dense_cpp_kernel.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
 
     @pytest.mark.parametrize("object_dense_cpp_kernel", allKernelFunctions, indirect=['object_dense_cpp_kernel'])
     def test_dense_cpp_eval_evalfast(self, data, object_dense_cpp_kernel):
@@ -336,13 +396,32 @@ class TestAll:
         fastGain = object_dense_cpp_kernel.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
 
-    ############ 4 tests for dense python kernel #######################
+    ############ 6 tests for dense python kernel #######################
 
     @pytest.mark.parametrize("object_dense_py_kernel", allKernelFunctions, indirect=['object_dense_py_kernel'])
     def test_dense_py_eval_groundset(self, object_dense_py_kernel):
         groundSet = object_dense_py_kernel.getEffectiveGroundSet()
         eval = object_dense_py_kernel.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+    
+    @pytest.mark.parametrize("object_dense_py_kernel", allKernelFunctions, indirect=['object_dense_py_kernel'])
+    def test_dense_py_eval_emptyset(self, object_dense_py_kernel):
+        eval = object_dense_py_kernel.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.parametrize("object_dense_py_kernel", allKernelFunctions, indirect=['object_dense_py_kernel'])
+    def test_dense_py_gain_on_empty(self, data, object_dense_py_kernel):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_dense_py_kernel.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_dense_py_kernel.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_dense_py_kernel.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
     
     @pytest.mark.parametrize("object_dense_py_kernel", allKernelFunctions, indirect=['object_dense_py_kernel'])
     def test_dense_py_eval_evalfast(self, data, object_dense_py_kernel):
@@ -379,13 +458,32 @@ class TestAll:
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
     
 
-    ############ 4 tests for sparse cpp kernel #######################
+    ############ 6 tests for sparse cpp kernel #######################
 
     @pytest.mark.parametrize("object_sparse_cpp_kernel", allKernelFunctions, indirect=['object_sparse_cpp_kernel'])
     def test_sparse_cpp_eval_groundset(self, object_sparse_cpp_kernel):
         groundSet = object_sparse_cpp_kernel.getEffectiveGroundSet()
         eval = object_sparse_cpp_kernel.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+    
+    @pytest.mark.parametrize("object_sparse_cpp_kernel", allKernelFunctions, indirect=['object_sparse_cpp_kernel'])
+    def test_sparse_cpp_eval_emptyset(self, object_sparse_cpp_kernel):
+        eval = object_sparse_cpp_kernel.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.parametrize("object_sparse_cpp_kernel", allKernelFunctions, indirect=['object_sparse_cpp_kernel'])
+    def test_sparse_cpp_gain_on_empty(self, data, object_sparse_cpp_kernel):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_sparse_cpp_kernel.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_sparse_cpp_kernel.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_sparse_cpp_kernel.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
     
     @pytest.mark.parametrize("object_sparse_cpp_kernel", allKernelFunctions, indirect=['object_sparse_cpp_kernel'])
     def test_sparse_cpp_eval_evalfast(self, data, object_sparse_cpp_kernel):
@@ -421,13 +519,32 @@ class TestAll:
         fastGain = object_sparse_cpp_kernel.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
     
-    ############ 4 tests for sparse python kernel #######################
+    ############ 6 tests for sparse python kernel #######################
 
     @pytest.mark.parametrize("object_sparse_py_kernel", allKernelFunctions, indirect=['object_sparse_py_kernel'])
     def test_sparse_py_eval_groundset(self, object_sparse_py_kernel):
         groundSet = object_sparse_py_kernel.getEffectiveGroundSet()
         eval = object_sparse_py_kernel.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+    
+    @pytest.mark.parametrize("object_sparse_py_kernel", allKernelFunctions, indirect=['object_sparse_py_kernel'])
+    def test_sparse_py_eval_emptyset(self, object_sparse_py_kernel):
+        eval = object_sparse_py_kernel.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.parametrize("object_sparse_py_kernel", allKernelFunctions, indirect=['object_sparse_py_kernel'])
+    def test_sparse_py_gain_on_empty(self, data, object_sparse_py_kernel):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_sparse_py_kernel.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_sparse_py_kernel.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_sparse_py_kernel.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
 
     @pytest.mark.parametrize("object_sparse_py_kernel", allKernelFunctions, indirect=['object_sparse_py_kernel'])
     def test_sparse_py_eval_evalfast(self, data, object_sparse_py_kernel):
@@ -463,7 +580,7 @@ class TestAll:
         fastGain = object_sparse_py_kernel.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
 
-    ############ 5 tests for clustered mode with internel clustering #######################
+    ############ 6 tests for clustered mode with internel clustering #######################
 
     @pytest.mark.parametrize("object_clustered_mode_birch", clusteredModeFunctions, indirect=['object_clustered_mode_birch'])
     @pytest.mark.clustered_mode
@@ -477,6 +594,21 @@ class TestAll:
     def test_clustered_mode_birch_eval_emptyset(self, object_clustered_mode_birch):
         eval = object_clustered_mode_birch.evaluate(set())
         assert eval == 0, "Eval on empty set is not = 0"
+
+    @pytest.mark.parametrize("object_clustered_mode_birch", clusteredModeFunctions, indirect=['object_clustered_mode_birch'])
+    @pytest.mark.clustered_mode
+    def test_clustered_mode_birch_gain_on_empty(self, data, object_clustered_mode_birch):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_clustered_mode_birch.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_clustered_mode_birch.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_clustered_mode_birch.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
 
     @pytest.mark.parametrize("object_clustered_mode_birch", clusteredModeFunctions, indirect=['object_clustered_mode_birch'])
     @pytest.mark.clustered_mode
@@ -515,7 +647,7 @@ class TestAll:
         fastGain = object_clustered_mode_birch.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
     
-    ############ 4 tests for clustered mode with user provided clustering #######################
+    ############ 6 tests for clustered mode with user provided clustering #######################
 
     @pytest.mark.parametrize("object_clustered_mode_user", clusteredModeFunctions, indirect=['object_clustered_mode_user'])
     @pytest.mark.clustered_mode
@@ -523,6 +655,27 @@ class TestAll:
         groundSet = object_clustered_mode_user.getEffectiveGroundSet()
         eval = object_clustered_mode_user.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+    
+    @pytest.mark.parametrize("object_clustered_mode_user", clusteredModeFunctions, indirect=['object_clustered_mode_user'])
+    @pytest.mark.clustered_mode
+    def test_clustered_mode_user_eval_emptyset(self, object_clustered_mode_user):
+        eval = object_clustered_mode_user.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+
+    @pytest.mark.parametrize("object_clustered_mode_user", clusteredModeFunctions, indirect=['object_clustered_mode_user'])
+    @pytest.mark.clustered_mode
+    def test_clustered_mode_user_gain_on_empty(self, data, object_clustered_mode_user):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_clustered_mode_user.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_clustered_mode_user.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_clustered_mode_user.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
 
     @pytest.mark.parametrize("object_clustered_mode_user", clusteredModeFunctions, indirect=['object_clustered_mode_user'])
     @pytest.mark.clustered_mode
@@ -561,7 +714,7 @@ class TestAll:
         fastGain = object_clustered_mode_user.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
 
-    ############ 5 tests for clustered function with internel clustering and multiple small kernels #######################
+    ############ 6 tests for clustered function with internel clustering and multiple small kernels #######################
 
     @pytest.mark.parametrize("object_clustered_birch_multi", allKernelFunctions, indirect=['object_clustered_birch_multi'])
     def test_clustered_birch_multi_eval_groundset(self, object_clustered_birch_multi):
@@ -573,6 +726,20 @@ class TestAll:
     def test_clustered_birch_multi_eval_emptyset(self, object_clustered_birch_multi):
         eval = object_clustered_birch_multi.evaluate(set())
         assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.parametrize("object_clustered_birch_multi", allKernelFunctions, indirect=['object_clustered_birch_multi'])
+    def test_clustered_birch_multi_gain_on_empty(self, data, object_clustered_birch_multi):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_clustered_birch_multi.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_clustered_birch_multi.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_clustered_birch_multi.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
 
     @pytest.mark.parametrize("object_clustered_birch_multi", allKernelFunctions, indirect=['object_clustered_birch_multi'])
     def test_clustered_birch_multi_eval_evalfast(self, data, object_clustered_birch_multi):
@@ -608,13 +775,32 @@ class TestAll:
         fastGain = object_clustered_birch_multi.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
     
-    ############ 4 tests for clustered function with user provided clustering and multiple small kernels #######################
+    ############ 6 tests for clustered function with user provided clustering and multiple small kernels #######################
 
     @pytest.mark.parametrize("object_clustered_user_multi", allKernelFunctions, indirect=['object_clustered_user_multi'])
     def test_clustered_user_multi_eval_groundset(self, object_clustered_user_multi):
         groundSet = object_clustered_user_multi.getEffectiveGroundSet()
         eval = object_clustered_user_multi.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+    
+    @pytest.mark.parametrize("object_clustered_user_multi", allKernelFunctions, indirect=['object_clustered_user_multi'])
+    def test_clustered_user_multi_eval_emptyset(self, object_clustered_user_multi):
+        eval = object_clustered_user_multi.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.parametrize("object_clustered_user_multi", allKernelFunctions, indirect=['object_clustered_user_multi'])
+    def test_clustered_user_multi_gain_on_empty(self, data, object_clustered_user_multi):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_clustered_user_multi.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_clustered_user_multi.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_clustered_user_multi.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
 
     @pytest.mark.parametrize("object_clustered_user_multi", allKernelFunctions, indirect=['object_clustered_user_multi'])
     def test_clustered_user_multi_eval_evalfast(self, data, object_clustered_user_multi):
@@ -650,7 +836,7 @@ class TestAll:
         fastGain = object_clustered_user_multi.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
 
-    ############ 5 tests for clustered function with internel clustering and single kernel #######################
+    ############ 6 tests for clustered function with internel clustering and single kernel #######################
 
     @pytest.mark.parametrize("object_clustered_birch_single", allKernelFunctions, indirect=['object_clustered_birch_single'])
     def test_clustered_birch_single_eval_groundset(self, object_clustered_birch_single):
@@ -662,6 +848,20 @@ class TestAll:
     def test_clustered_birch_single_eval_emptyset(self, object_clustered_birch_single):
         eval = object_clustered_birch_single.evaluate(set())
         assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.parametrize("object_clustered_birch_single", allKernelFunctions, indirect=['object_clustered_birch_single'])
+    def test_clustered_birch_single_gain_on_empty(self, data, object_clustered_birch_single):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_clustered_birch_single.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_clustered_birch_single.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_clustered_birch_single.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
 
     @pytest.mark.parametrize("object_clustered_birch_single", allKernelFunctions, indirect=['object_clustered_birch_single'])
     def test_clustered_birch_single_eval_evalfast(self, data, object_clustered_birch_single):
@@ -697,13 +897,32 @@ class TestAll:
         fastGain = object_clustered_birch_single.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
     
-    ############ 4 tests for clustered function with user provided clustering and single kernel #######################
+    ############ 6 tests for clustered function with user provided clustering and single kernel #######################
 
     @pytest.mark.parametrize("object_clustered_user_single", allKernelFunctions, indirect=['object_clustered_user_single'])
     def test_clustered_user_single_eval_groundset(self, object_clustered_user_single):
         groundSet = object_clustered_user_single.getEffectiveGroundSet()
         eval = object_clustered_user_single.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+    
+    @pytest.mark.parametrize("object_clustered_user_single", allKernelFunctions, indirect=['object_clustered_user_single'])
+    def test_clustered_user_single_eval_emptyset(self, object_clustered_user_single):
+        eval = object_clustered_user_single.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.parametrize("object_clustered_user_single", allKernelFunctions, indirect=['object_clustered_user_single'])
+    def test_clustered_user_single_gain_on_empty(self, data, object_clustered_user_single):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_clustered_user_single.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_clustered_user_single.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_clustered_user_single.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
 
     @pytest.mark.parametrize("object_clustered_user_single", allKernelFunctions, indirect=['object_clustered_user_single'])
     def test_clustered_user_single_eval_evalfast(self, data, object_clustered_user_single):
@@ -1000,38 +1219,52 @@ class TestAll:
         greedyListLazierThanLazy = object_dense_cpp_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
-    ######## Optimizers test for FeatureBased #####################
+    ######## Optimizers test for FeatureBased Logarithmic #####################
     @pytest.mark.fb_opt
-    def test_fb_optimizer_naive_lazy(self, data_features):
-        object_fb, _ = data_features
+    def test_fb_log_optimizer_naive_lazy(self, data_features_log):
+        object_fb, _ = data_features_log
         greedyListNaive = object_fb.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazy = object_fb.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         assert greedyListNaive == greedyListLazy, "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.fb_opt
-    def test_fb_optimizer_stochastic_lazierThanLazy(self, data_features):
-        object_fb, _ = data_features
+    def test_fb_log_optimizer_stochastic_lazierThanLazy(self, data_features_log):
+        object_fb, _ = data_features_log
         greedyListStochastic = object_fb.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazierThanLazy = object_fb.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
-    ############ 5 regular tests for FeatureBased Function #######################
+    ############ 6 regular tests for FeatureBased Logarithmic Function #######################
     @pytest.mark.fb_regular
-    def test_fb_eval_groundset(self, data_features):
-        object_fb, _ = data_features
+    def test_fb_log_eval_groundset(self, data_features_log):
+        object_fb, _ = data_features_log
         groundSet = object_fb.getEffectiveGroundSet()
         eval = object_fb.evaluate(groundSet)
         assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
 
     @pytest.mark.fb_regular
-    def test_fb_eval_emptyset(self, data_features):
-        object_fb, _ = data_features
+    def test_fb_log_eval_emptyset(self, data_features_log):
+        object_fb, _ = data_features_log
         eval = object_fb.evaluate(set())
         assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.fb_regular
+    def test_fb_log_gain_on_empty(self, data_features_log):
+        object_fb, set1 = data_features_log
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_fb.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_fb.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_fb.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
 
     @pytest.mark.fb_regular
-    def test_fb_eval_evalfast(self, data_features):
-        object_fb, set1 = data_features
+    def test_fb_log_eval_evalfast(self, data_features_log):
+        object_fb, set1 = data_features_log
         subset = set()
         for elem in set1:
             object_fb.updateMemoization(subset, elem)
@@ -1041,16 +1274,170 @@ class TestAll:
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
 
     @pytest.mark.fb_regular
-    def test_fb_set_memoization(self, data_features):
-        object_fb, set1 = data_features
+    def test_fb_log_set_memoization(self, data_features_log):
+        object_fb, set1 = data_features_log
         object_fb.setMemoization(set1)
         simpleEval = object_fb.evaluate(set1)
         fastEval = object_fb.evaluateWithMemoization(set1)
         assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
 
     @pytest.mark.fb_regular
-    def test_fb_gain(self, data_features):
-        object_fb, set1 = data_features
+    def test_fb_log_gain(self, data_features_log):
+        object_fb, set1 = data_features_log
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        object_fb.setMemoization(subset)
+        firstEval = object_fb.evaluateWithMemoization(subset)
+        subset.add(elem)
+        naiveGain = object_fb.evaluate(subset) - firstEval
+        subset.remove(elem)
+        simpleGain = object_fb.marginalGain(subset, elem)
+        fastGain = object_fb.marginalGainWithMemoization(subset, elem)
+        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+    
+    ######## Optimizers test for FeatureBased SquareRoot #####################
+    @pytest.mark.fb_opt
+    def test_fb_sqrt_optimizer_naive_lazy(self, data_features_sqrt):
+        object_fb, _ = data_features_sqrt
+        greedyListNaive = object_fb.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_fb.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        assert greedyListNaive == greedyListLazy, "Mismatch between naiveGreedy and lazyGreedy"
+    
+    @pytest.mark.fb_opt
+    def test_fb_sqrt_optimizer_stochastic_lazierThanLazy(self, data_features_sqrt):
+        object_fb, _ = data_features_sqrt
+        greedyListStochastic = object_fb.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazierThanLazy = object_fb.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+
+    ############ 6 regular tests for FeatureBased SquareRoot Function #######################
+    @pytest.mark.fb_regular
+    def test_fb_sqrt_eval_groundset(self, data_features_sqrt):
+        object_fb, _ = data_features_sqrt
+        groundSet = object_fb.getEffectiveGroundSet()
+        eval = object_fb.evaluate(groundSet)
+        assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+
+    @pytest.mark.fb_regular
+    def test_fb_sqrt_eval_emptyset(self, data_features_sqrt):
+        object_fb, _ = data_features_sqrt
+        eval = object_fb.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.fb_regular
+    def test_fb_sqrt_gain_on_empty(self, data_features_sqrt):
+        object_fb, set1 = data_features_sqrt
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_fb.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_fb.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_fb.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
+
+    @pytest.mark.fb_regular
+    def test_fb_sqrt_eval_evalfast(self, data_features_sqrt):
+        object_fb, set1 = data_features_sqrt
+        subset = set()
+        for elem in set1:
+            object_fb.updateMemoization(subset, elem)
+            subset.add(elem)
+        simpleEval = object_fb.evaluate(subset)
+        fastEval = object_fb.evaluateWithMemoization(subset)
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+
+    @pytest.mark.fb_regular
+    def test_fb_sqrt_set_memoization(self, data_features_sqrt):
+        object_fb, set1 = data_features_sqrt
+        object_fb.setMemoization(set1)
+        simpleEval = object_fb.evaluate(set1)
+        fastEval = object_fb.evaluateWithMemoization(set1)
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+
+    @pytest.mark.fb_regular
+    def test_fb_sqrt_gain(self, data_features_sqrt):
+        object_fb, set1 = data_features_sqrt
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        object_fb.setMemoization(subset)
+        firstEval = object_fb.evaluateWithMemoization(subset)
+        subset.add(elem)
+        naiveGain = object_fb.evaluate(subset) - firstEval
+        subset.remove(elem)
+        simpleGain = object_fb.marginalGain(subset, elem)
+        fastGain = object_fb.marginalGainWithMemoization(subset, elem)
+        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+    
+    ######## Optimizers test for FeatureBased Inverse #####################
+    @pytest.mark.fb_opt
+    def test_fb_inverse_optimizer_naive_lazy(self, data_features_inverse):
+        object_fb, _ = data_features_inverse
+        greedyListNaive = object_fb.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_fb.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        assert greedyListNaive == greedyListLazy, "Mismatch between naiveGreedy and lazyGreedy"
+    
+    @pytest.mark.fb_opt
+    def test_fb_inverse_optimizer_stochastic_lazierThanLazy(self, data_features_inverse):
+        object_fb, _ = data_features_inverse
+        greedyListStochastic = object_fb.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazierThanLazy = object_fb.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+
+    ############ 6 regular tests for FeatureBased Inverse Function #######################
+    @pytest.mark.fb_regular
+    def test_fb_inverse_eval_groundset(self, data_features_inverse):
+        object_fb, _ = data_features_inverse
+        groundSet = object_fb.getEffectiveGroundSet()
+        eval = object_fb.evaluate(groundSet)
+        assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+
+    @pytest.mark.fb_regular
+    def test_fb_inverse_eval_emptyset(self, data_features_inverse):
+        object_fb, _ = data_features_inverse
+        eval = object_fb.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.fb_regular
+    def test_fb_inverse_gain_on_empty(self, data_features_inverse):
+        object_fb, set1 = data_features_inverse
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_fb.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_fb.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_fb.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
+
+    @pytest.mark.fb_regular
+    def test_fb_inverse_eval_evalfast(self, data_features_inverse):
+        object_fb, set1 = data_features_inverse
+        subset = set()
+        for elem in set1:
+            object_fb.updateMemoization(subset, elem)
+            subset.add(elem)
+        simpleEval = object_fb.evaluate(subset)
+        fastEval = object_fb.evaluateWithMemoization(subset)
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+
+    @pytest.mark.fb_regular
+    def test_fb_inverse_set_memoization(self, data_features_inverse):
+        object_fb, set1 = data_features_inverse
+        object_fb.setMemoization(set1)
+        simpleEval = object_fb.evaluate(set1)
+        fastEval = object_fb.evaluateWithMemoization(set1)
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+
+    @pytest.mark.fb_regular
+    def test_fb_inverse_gain(self, data_features_inverse):
+        object_fb, set1 = data_features_inverse
         elems = random.sample(set1, num_random)
         subset = set(elems[:-1])
         elem = elems[-1]
@@ -1082,7 +1469,7 @@ class TestAll:
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
         assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
-    ############ 5 regular tests for SetCover Function #######################
+    ############ 6 regular tests for SetCover Function #######################
     @pytest.mark.sc_regular
     def test_sc_eval_groundset(self, data_concepts):
         object_sc, _ = data_concepts
@@ -1095,6 +1482,20 @@ class TestAll:
         object_sc, _ = data_concepts
         eval = object_sc.evaluate(set())
         assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.sc_regular
+    def test_sc_gain_on_empty(self, data_concepts):
+        object_sc, set1 = data_concepts
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_sc.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_sc.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_sc.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
 
     @pytest.mark.sc_regular
     def test_sc_eval_evalfast(self, data_concepts):
@@ -1129,3 +1530,88 @@ class TestAll:
         simpleGain = object_sc.marginalGain(subset, elem)
         fastGain = object_sc.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+    
+    ######## Optimizers test for ProbabilisticSetCover #####################
+    @pytest.mark.psc_opt
+    def test_psc_optimizer_naive_lazy(self, data_prob_concepts):
+        object_psc, _ = data_prob_concepts
+        greedyListNaive = object_psc.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_psc.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        naiveGains = [x[1] for x in greedyListNaive]
+        lazyGains = [x[1] for x in greedyListLazy]
+        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+    
+    @pytest.mark.psc_opt
+    def test_psc_optimizer_stochastic_lazierThanLazy(self, data_prob_concepts):
+        object_psc, _ = data_prob_concepts
+        greedyListStochastic = object_psc.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazierThanLazy = object_psc.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        stochasticGains = [x[1] for x in greedyListStochastic]
+        lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
+        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+
+    ############ 6 regular tests for ProbabilisticSetCover Function #######################
+    @pytest.mark.psc_regular
+    def test_psc_eval_groundset(self, data_prob_concepts):
+        object_psc, _ = data_prob_concepts
+        groundSet = object_psc.getEffectiveGroundSet()
+        eval = object_psc.evaluate(groundSet)
+        assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+
+    @pytest.mark.psc_regular
+    def test_psc_eval_emptyset(self, data_prob_concepts):
+        object_psc, _ = data_prob_concepts
+        eval = object_psc.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.psc_regular
+    def test_psc_gain_on_empty(self, data_prob_concepts):
+        object_psc, set1 = data_prob_concepts
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_psc.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_psc.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_psc.marginalGain(set(), elem)
+        assert math.isclose(gain1, gain2, rel_tol=1e-05), "Mismatch for gain on empty set"
+        #assert gain1 == gain2, "Mismatch for gain on empty set"
+
+    @pytest.mark.psc_regular
+    def test_psc_eval_evalfast(self, data_prob_concepts):
+        object_psc, set1 = data_prob_concepts
+        subset = set()
+        for elem in set1:
+            object_psc.updateMemoization(subset, elem)
+            subset.add(elem)
+        simpleEval = object_psc.evaluate(subset)
+        fastEval = object_psc.evaluateWithMemoization(subset)
+        #assert math.isclose(simpleEval, fastEval, rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+
+    @pytest.mark.psc_regular
+    def test_psc_set_memoization(self, data_prob_concepts):
+        object_psc, set1 = data_prob_concepts
+        object_psc.setMemoization(set1)
+        simpleEval = object_psc.evaluate(set1)
+        fastEval = object_psc.evaluateWithMemoization(set1)
+        #assert math.isclose(simpleEval, fastEval, rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+
+    @pytest.mark.psc_regular
+    def test_psc_gain(self, data_prob_concepts):
+        object_psc, set1 = data_prob_concepts
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        object_psc.setMemoization(subset)
+        firstEval = object_psc.evaluateWithMemoization(subset)
+        subset.add(elem)
+        naiveGain = object_psc.evaluate(subset) - firstEval
+        subset.remove(elem)
+        simpleGain = object_psc.marginalGain(subset, elem)
+        fastGain = object_psc.marginalGainWithMemoization(subset, elem)
+        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+        #assert naiveGain == simpleGain and simpleGain == fastGain, "Mismatch between naive, simple and fast margins"

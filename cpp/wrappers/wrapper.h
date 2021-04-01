@@ -7,6 +7,7 @@ void cl_FacilityLocation(py::module_ &);
 void cl_FeatureBased(py::module_ &); 
 void cl_GraphCut(py::module_ &); 
 void cl_SetCover(py::module_ &);
+void cl_ProbabilisticSetCover(py::module_ &);
 void cl_DisparitySum(py::module_ &); 
 void cl_sparse_utils(py::module &);
 void cl_Clustered(py::module &);
