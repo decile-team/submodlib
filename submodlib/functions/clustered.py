@@ -138,7 +138,6 @@ class ClusteredFunction(SetFunction):
 
 		if X.issubset(self.effective_ground)==False:
 			raise Exception("ERROR: X should be a subset of effective ground set")
-
 		return self.cpp_obj.evaluate(X)
 
 	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon=0.1, verbose=False):

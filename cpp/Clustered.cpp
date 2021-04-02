@@ -35,6 +35,9 @@ Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unorder
         } else if(function_name == "DisparitySum") {
             f_obj = new DisparitySum;
             f_obj->cluster_init(cti.size(), kernel, cti, false, 1); 
+        } else if(function_name == "DisparityMin") {
+            f_obj = new DisparityMin;
+            f_obj->cluster_init(cti.size(), kernel, cti, false, 1); 
         } else if(function_name == "GraphCut") {
             f_obj = new GraphCut;
             f_obj->cluster_init(cti.size(), kernel, cti, false, lambda); 
@@ -70,6 +73,9 @@ Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unorder
             f_obj->cluster_init(n, denseKernel, ci, true, 1); 
         } else if(function_name == "DisparitySum") {
             f_obj = new DisparitySum;
+            f_obj->cluster_init(n, denseKernel, ci, true, 1); 
+        } else if(function_name == "DisparityMin") {
+            f_obj = new DisparityMin;
             f_obj->cluster_init(n, denseKernel, ci, true, 1); 
         } else if(function_name == "GraphCut") {
             f_obj = new GraphCut;
@@ -114,6 +120,7 @@ double Clustered::evaluate(std::unordered_set<ll> const &X) {
             //     std::cout << elem << ", ";
             // }
             // std::cout << "}\n";
+            //std::cout << "Just before DM eval\n";
             res+=mixture[i]->evaluate(X_temp);
         }
     }

@@ -8,6 +8,7 @@ PYBIND11_MODULE(submodlib_cpp, m)
     cl_FacilityLocation(m);
     cl_FeatureBased(m);
     cl_DisparitySum(m);
+    cl_DisparityMin(m);
     cl_GraphCut(m);
     cl_SetCover(m);
     cl_ProbabilisticSetCover(m);

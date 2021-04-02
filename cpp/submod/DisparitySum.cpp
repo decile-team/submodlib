@@ -125,22 +125,6 @@ double DisparitySum::evaluate(std::unordered_set<ll> const &X) {
 }
 
 double DisparitySum::evaluateWithMemoization(std::unordered_set<ll> const &X) { 
-    std::unordered_set<ll> effectiveX;
-    double result = 0;
-
-    if (partial == true) {
-        // effectiveX = intersect(X, effectiveGroundSet)
-        // std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(),
-        //                       effectiveGroundSet.end(),
-        //                       std::inserter(effectiveX, effectiveX.begin()));
-        effectiveX = set_intersection(X, effectiveGroundSet);
-    } else {
-        effectiveX = X;
-    }
-    if (effectiveX.size() == 0)  
-    {
-        return 0;
-    }
     return currentSum;
 }
 
@@ -178,7 +162,37 @@ double DisparitySum::marginalGain(std::unordered_set<ll> const &X, ll item) {
 }
 
 double DisparitySum::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
-    return marginalGain(X, item);
+    //identical to marginalGain, but duplicating here to save an extra function call
+    std::unordered_set<ll> effectiveX;
+    double gain = 0;
+
+    if (partial == true) {
+        // effectiveX = intersect(X, effectiveGroundSet)
+        // std::set_intersection(X.begin(), X.end(), effectiveGroundSet.begin(),
+        //                       effectiveGroundSet.end(),
+        //                       std::inserter(effectiveX, effectiveX.begin()));
+        effectiveX = set_intersection(X, effectiveGroundSet);
+    } else {
+        effectiveX = X;
+    }
+
+    if (effectiveX.find(item)!=effectiveX.end()) {
+        return 0;
+    }
+
+    if(mode == dense) {
+        for (auto elem: effectiveX) {
+            gain += (1 - denseKernel[elem][item]);
+        }
+    } else if (mode == sparse) {
+        for (auto elem: effectiveX) {
+            gain += (1 - sparseKernel.get_val(item, elem));
+        }
+    } else {
+        throw "Error: Only dense and sparse mode supported";
+    }
+    
+    return gain;
 }
 
 void DisparitySum::updateMemoization(std::unordered_set<ll> const &X, ll item) {

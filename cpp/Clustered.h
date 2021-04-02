@@ -1,6 +1,7 @@
 #include"SetFunction.h"
 #include "submod/FacilityLocation.h"
 #include "submod/DisparitySum.h"
+#include "submod/DisparityMin.h"
 #include "submod/GraphCut.h"
 #include <unordered_set>
 

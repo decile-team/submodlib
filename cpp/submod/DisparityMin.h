@@ -1,53 +1,53 @@
-#include "../optimizers/NaiveGreedyOptimizer.h"
-#include "SetFunction.h"
+#ifndef DISPARITYMIN_H
+#define DISPARITYMIN_H
+#include"../optimizers/NaiveGreedyOptimizer.h"
+#include"../optimizers/StochasticGreedyOptimizer.h"
+#include"../SetFunction.h"
 #include"../utils/sparse_utils.h"
+#include <unordered_set>
+
 
 class DisparityMin : public SetFunction {
-    // Generic stuff
-    ll n;  // number of datapoints in ground set
-    std::string mode;
-    ll num_neighbors;
+    protected:
+    ll n;  
+    enum Mode {
+        dense,
+		sparse,
+		clustered	
+	};
+	Mode mode;
     bool partial;
     std::unordered_set<ll> effectiveGroundSet;
     ll numEffectiveGroundset;
+    std::map<ll, ll> originalToPartialIndexMap;
 
-    // Main kernels and containers for all 3 modes
-    std::vector<std::vector<float>> k_dense;
-    SparseSim k_sparse = SparseSim();
+    std::vector<std::vector<float>> denseKernel;
+    SparseSim sparseKernel = SparseSim();
 
-    float currentSum;
+    double currentMin;   //by convention, 0 for size 0 and size 1 sets
 
    public:
     DisparityMin();
-
     // For dense similarity matrix
-    DisparityMin(ll n_, std::string mode_,
-                 std::vector<std::vector<float>> k_dense_, ll num_neighbors_,
-                 bool partial_, std::unordered_set<ll> ground_);
-
+    DisparityMin(ll n_, std::vector<std::vector<float>> const &denseKernel_, bool partial_, std::unordered_set<ll> const &ground_);
     // For sparse similarity matrix
-    DisparityMin(ll n_, std::string mode_, std::vector<float> arr_val,
-                 std::vector<ll> arr_count, std::vector<ll> arr_col,
-                 ll num_neighbors_, bool partial_, std::unordered_set<ll> ground_);
+    DisparityMin(ll n_, std::vector<float> const &arr_val, std::vector<ll> const &arr_count, std::vector<ll> const &arr_col);
 
-    float evaluate(std::unordered_set<ll> X);
-    float evaluateWithMemoization(std::unordered_set<ll> X);
-    float marginalGain(std::unordered_set<ll> X, ll item);
-    float marginalGainWithMemoization(std::unordered_set<ll> X, ll item);
-    void updateMemoization(std::unordered_set<ll> X, ll item);
-    std::unordered_set<ll> getEffectiveGroundSet();
-    std::vector<std::pair<ll, float>> maximize(std::string, float budget,
-                                               bool stopIfZeroGain,
-                                               bool stopIfNegativeGain,
-                                               bool verbose);
-    void cluster_init(ll n_, std::vector<std::vector<float>> k_dense_,
-                      std::unordered_set<ll> ground_);
+    double evaluate(std::unordered_set<ll> const &X);
+	double evaluateWithMemoization(std::unordered_set<ll> const &X);
+	double marginalGain(std::unordered_set<ll> const &X, ll item);
+	double marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item);
+	void updateMemoization(std::unordered_set<ll> const &X, ll item);
+	std::unordered_set<ll> getEffectiveGroundSet();
+	std::vector<std::pair<ll, double>> maximize(std::string, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose);
+	void cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda);
     void clearMemoization();
-    void setMemoization(std::unordered_set<ll> X);
+	void setMemoization(std::unordered_set<ll> const &X);
 
-    friend float get_sum_dense(std::unordered_set<ll> dataset_ind, DisparityMin obj);
-    friend float get_sum_sparse(std::unordered_set<ll> dataset_ind, DisparityMin obj);
+    friend double get_min_dense(std::unordered_set<ll> const &dataset_ind, DisparityMin &obj);
+    friend double get_min_sparse(std::unordered_set<ll> const &dataset_ind, DisparityMin &obj);
 };
 
-float get_sum_dense(std::unordered_set<ll> dataset_ind, DisparityMin obj);
-float get_sum_sparse(std::unordered_set<ll> dataset_ind, DisparityMin obj);
+double get_min_dense(std::unordered_set<ll> const &dataset_ind, DisparityMin &obj);
+double get_min_sparse(std::unordered_set<ll> const &dataset_ind, DisparityMin &obj);
+#endif

@@ -24,7 +24,7 @@ class DisparitySum : public SetFunction {
     std::vector<std::vector<float>> denseKernel;
     SparseSim sparseKernel = SparseSim();
 
-    double currentSum;
+    double currentSum;  //by convention, 0 for size 0 and size 1 sets
 
    public:
     DisparitySum();

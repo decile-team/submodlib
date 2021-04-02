@@ -6,6 +6,7 @@ import random
 from submodlib import FacilityLocationFunction
 from submodlib import FeatureBasedFunction
 from submodlib import DisparitySumFunction
+from submodlib import DisparityMinFunction
 from submodlib import GraphCutFunction
 from submodlib import ClusteredFunction
 from submodlib import SetCoverFunction
@@ -13,11 +14,20 @@ from submodlib import ProbabilisticSetCoverFunction
 from submodlib.helper import create_kernel
 from submodlib_cpp import FeatureBased
 
-allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut"]
-#allKernelFunctions = ["GraphCut"]
+#allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "DisparityMin"]
+allKernelFunctions = ["DisparityMin"]
 clusteredModeFunctions = ["FacilityLocation"]
 optimizerTests = ["FacilityLocation", "GraphCut"]
 #optimizerTests = ["GraphCut"]
+
+#########Available markers############
+# clustered_mode - for clustered mode related test cases
+# fb_opt - for optimizer tests of FB functions
+# fb_regular - for regular tests of FB functions
+# sc_opt - for optimizer tests of SC functions
+# sc_regular - for regular tests of PSC functions
+# psc_opt -for optimizer tests of PSC functions
+# psc_regular - for regular tests of PSC functions
 
 
 num_internal_clusters = 20 #3
@@ -171,6 +181,8 @@ def object_dense_cpp_kernel(request, data):
         obj = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
     elif request.param == "DisparitySum":
         obj = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
+    elif request.param == "DisparityMin":
+        obj = DisparityMinFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
     elif request.param == "GraphCut":
         obj = GraphCutFunction(n=num_samples, mode="dense", lambdaVal=1, data=dataArray, metric=metric)
     else:
@@ -185,6 +197,8 @@ def object_dense_py_kernel(request, data):
         obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_master=False)
     elif request.param == "DisparitySum":
         obj = DisparitySumFunction(n=num_samples, mode="dense", sijs = K_dense)
+    elif request.param == "DisparityMin":
+        obj = DisparityMinFunction(n=num_samples, mode="dense", sijs = K_dense)
     elif request.param == "GraphCut":
         obj = GraphCutFunction(n=num_samples, mode="dense", lambdaVal=1, ggsijs=K_dense)
     else:
@@ -201,6 +215,9 @@ def objects_dense_cpp_py_kernel(request, data):
     elif request.param == "DisparitySum":
         obj1 = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
         obj2 = DisparitySumFunction(n=num_samples, mode="dense", sijs = K_dense)
+    elif request.param == "DisparityMin":
+        obj1 = DisparityMinFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
+        obj2 = DisparityMinFunction(n=num_samples, mode="dense", sijs = K_dense)
     elif request.param == "GraphCut":
         obj1 = GraphCutFunction(n=num_samples, mode="dense", lambdaVal=1, data=dataArray, metric=metric)
         obj2 = GraphCutFunction(n=num_samples, mode="dense", lambdaVal=1, ggsijs=K_dense)
@@ -215,6 +232,8 @@ def object_sparse_cpp_kernel(request, data):
         obj = FacilityLocationFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors)
     elif request.param == "DisparitySum":
         obj = DisparitySumFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full)
+    elif request.param == "DisparityMin":
+        obj = DisparityMinFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full)
     elif request.param == "GraphCut":
         obj = GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors)
     else:
@@ -231,6 +250,9 @@ def object_sparse_py_kernel(request, data):
     elif request.param == "DisparitySum":
         _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors_full)
         obj = DisparitySumFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full)
+    elif request.param == "DisparityMin":
+        _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors_full)
+        obj = DisparityMinFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full)
     elif request.param == "GraphCut":
         _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors)
         obj = GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, ggsijs=K_sparse, num_neighbors=num_sparse_neighbors)
@@ -250,6 +272,10 @@ def objects_sparse_cpp_py_kernel(request, data):
         _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors_full)
         obj1 = DisparitySumFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full)
         obj2 = DisparitySumFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full)
+    elif request.param == "DisparityMin":
+        _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors_full)
+        obj1 = DisparityMinFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full)
+        obj2 = DisparityMinFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full)
     elif request.param == "GraphCut":
         _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors)
         obj1= GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors)
