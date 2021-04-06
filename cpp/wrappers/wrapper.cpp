@@ -11,6 +11,7 @@ PYBIND11_MODULE(submodlib_cpp, m)
     cl_DisparityMin(m);
     cl_GraphCut(m);
     cl_SetCover(m);
+    cl_LogDeterminant(m);
     cl_ProbabilisticSetCover(m);
     cl_helper(m);
     cl_sparse_utils(m);

@@ -328,6 +328,10 @@ double FacilityLocation::marginalGain(std::unordered_set<ll> const &X, ll item) 
 		return 0;
 	}
 
+	if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+        return 0;
+    }
+
 	if (mode == dense) {
 		//for (auto it = masterSet.begin(); it != masterSet.end(); ++it) {
 		for (auto ind: masterSet) {
@@ -391,6 +395,9 @@ double FacilityLocation::marginalGainWithMemoization(std::unordered_set<ll> cons
 	if (effectiveX.find(item)!=effectiveX.end()) {
 		return 0;
 	}
+	if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+        return 0;
+    }
 	if (mode == dense) {
 		//for (auto it = masterSet.begin(); it != masterSet.end(); ++it) {
 		for (auto ind: masterSet) {
@@ -450,6 +457,9 @@ void FacilityLocation::updateMemoization(std::unordered_set<ll> const &X, ll ite
 	if (effectiveX.find(item)!=effectiveX.end()) {
 		return;
 	}
+	if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+        return;
+    }
 	if (mode == dense) {
 		//for (auto it = masterSet.begin(); it != masterSet.end(); ++it) {
 		for (auto ind: masterSet) {

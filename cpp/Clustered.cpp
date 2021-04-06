@@ -38,6 +38,9 @@ Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unorder
         } else if(function_name == "DisparityMin") {
             f_obj = new DisparityMin;
             f_obj->cluster_init(cti.size(), kernel, cti, false, 1); 
+        } else if(function_name == "LogDeterminant") {
+            f_obj = new LogDeterminant;
+            f_obj->cluster_init(cti.size(), kernel, cti, false, lambda); 
         } else if(function_name == "GraphCut") {
             f_obj = new GraphCut;
             f_obj->cluster_init(cti.size(), kernel, cti, false, lambda); 
@@ -77,6 +80,10 @@ Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unorder
         } else if(function_name == "DisparityMin") {
             f_obj = new DisparityMin;
             f_obj->cluster_init(n, denseKernel, ci, true, 1); 
+        } else if(function_name == "LogDeterminant") {
+            //std::cout << "Creating LogDet object\n";
+            f_obj = new LogDeterminant;
+            f_obj->cluster_init(n, denseKernel, ci, true, lambda); 
         } else if(function_name == "GraphCut") {
             f_obj = new GraphCut;
             f_obj->cluster_init(n, denseKernel, ci, true, lambda); 
@@ -99,7 +106,7 @@ std::unordered_set<ll> translate_X(std::unordered_set<ll> const &X, Clustered co
 }
 
 double Clustered::evaluate(std::unordered_set<ll> const &X) {
-    // std::cout << "Clustered evaluate\n";
+    //std::cout << "Clustered evaluate\n";
     // std::cout << "Set to evaluate: {";
     // for(auto elem: X) {
     //     std::cout << elem << ", ";

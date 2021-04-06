@@ -199,6 +199,9 @@ double GraphCut::marginalGain(std::unordered_set<ll> const &X, ll item) {
 	if (effectiveX.find(item)!=effectiveX.end()) {
 		return 0;
 	}
+	if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+        return 0;
+    }
 
 	double gain = totalSimilarityWithMaster[(partial)?originalToPartialIndexMap[item]:item];
 
@@ -232,6 +235,9 @@ double GraphCut::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll
 	if (effectiveX.find(item)!=effectiveX.end()) {
 		return 0;
 	}
+	if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+        return 0;
+    }
 	if (mode == dense) {
 		gain = totalSimilarityWithMaster[(partial)?originalToPartialIndexMap[item]:item] - 2 * lambda * totalSimilarityWithSubset[(partial)?originalToPartialIndexMap[item]:item] - lambda * groundGroundKernel[item][item];
 	} else if (mode == sparse) {
@@ -256,6 +262,9 @@ void GraphCut::updateMemoization(std::unordered_set<ll> const &X, ll item) {
 	if (effectiveX.find(item)!=effectiveX.end()) {
 		return;
 	}
+	if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+        return;
+    }
 	if (mode == dense) {
 		for(auto elem: effectiveGroundSet) 
 			totalSimilarityWithSubset[(partial)?originalToPartialIndexMap[elem]:elem] += groundGroundKernel[elem][item];

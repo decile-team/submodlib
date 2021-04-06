@@ -12,6 +12,10 @@ markers = [
     "clustered_mode: marks tests which are supported only by functions that can work in clustered mode",
     "sc_regular: marks regular tests for SetCover functions",
     "sc_opt: marks optimizer tests for SetCover functions",
+    "psc_regular: marks regular tests for ProbabilisticSetCover functions",
+    "psc_opt: marks optimizer tests for ProbabilisticSetCover functions",
+    "opt_regular: marks regular optimizer tests for functions listed in optimizerTests list",
+    "regular: marks regular tests for functions listed in allKernelFunctions list",
 ]
 
 build-backend = "setuptools.build_meta"

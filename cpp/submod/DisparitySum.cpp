@@ -146,6 +146,10 @@ double DisparitySum::marginalGain(std::unordered_set<ll> const &X, ll item) {
         return 0;
     }
 
+    if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+        return 0;
+    }
+
     if(mode == dense) {
         for (auto elem: effectiveX) {
             gain += (1 - denseKernel[elem][item]);
@@ -177,6 +181,10 @@ double DisparitySum::marginalGainWithMemoization(std::unordered_set<ll> const &X
     }
 
     if (effectiveX.find(item)!=effectiveX.end()) {
+        return 0;
+    }
+
+    if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
         return 0;
     }
 

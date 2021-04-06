@@ -149,6 +149,10 @@ double DisparityMin::marginalGain(std::unordered_set<ll> const &X, ll item) {
         return 0;
     }
 
+    if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+        return 0;
+    }
+
     double min;
     if(effectiveX.size() == 1) {
         min = 1;
@@ -193,6 +197,10 @@ double DisparityMin::marginalGainWithMemoization(std::unordered_set<ll> const &X
         return 0;
     }
 
+    if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+        return 0;
+    }
+
     double min;
     if(effectiveX.size() == 1) {
         min = 1;
@@ -230,6 +238,12 @@ void DisparityMin::updateMemoization(std::unordered_set<ll> const &X, ll item) {
         effectiveX = set_intersection(X, effectiveGroundSet);
     } else {
         effectiveX = X;
+    }
+    if(effectiveX.find(item) != effectiveX.end()) {
+        return;
+    }
+    if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+        return;
     }
     if(effectiveX.size() == 1) {
         if(mode == dense) {
