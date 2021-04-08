@@ -11,6 +11,7 @@ void cl_ProbabilisticSetCover(py::module_ &);
 void cl_DisparitySum(py::module_ &); 
 void cl_LogDeterminant(py::module_ &); 
 void cl_DisparityMin(py::module_ &); 
+void cl_FacilityLocationMutualInformation(py::module_ &); 
 void cl_sparse_utils(py::module &);
 void cl_Clustered(py::module &);
 //void cl_set(py::module &);

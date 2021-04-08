@@ -12,14 +12,17 @@ from submodlib import ClusteredFunction
 from submodlib import LogDeterminantFunction
 from submodlib import SetCoverFunction
 from submodlib import ProbabilisticSetCoverFunction
+from submodlib import FacilityLocationMutualInformationFunction
 from submodlib.helper import create_kernel
 from submodlib_cpp import FeatureBased
 
-#allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "DisparityMin", "LogDeterminant"]
-allKernelFunctions = ["LogDeterminant"]
+allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "DisparityMin", "LogDeterminant"]
+#allKernelFunctions = ["LogDeterminant"]
+allKernelMIFunctions = ["FacilityLocationMutualInformation"]
 clusteredModeFunctions = ["FacilityLocation"]
-#optimizerTests = ["FacilityLocation", "GraphCut", "LogDeterminant"]
-optimizerTests = ["LogDeterminant"]
+optimizerTests = ["FacilityLocation", "GraphCut", "LogDeterminant"]
+#optimizerTests = ["LogDeterminant"]
+optimizerMITests = ["FacilityLocationMutualInformation"]
 
 #########Available markers############
 # clustered_mode - for clustered mode related test cases
@@ -31,6 +34,8 @@ optimizerTests = ["LogDeterminant"]
 # psc_regular - for regular tests of PSC functions
 # opt_regular - regular optimizer tests for functions listed in optimizerTests list
 # regular - regular tests for functions listed in allKernelFunctions list
+# mi_regular - regular tests for functions listed in allKernelMIFunctions list
+# mi_opt_regular - regular optimizer tests for functions listed in optimizerMITests list
 
 num_internal_clusters = 20 #3
 num_sparse_neighbors = 100 #10 #4
@@ -45,6 +50,7 @@ metric = "euclidean"
 num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
 budget = 20
 num_concepts = 50
+num_queries = 10
 
 # num_internal_clusters = 3 #3
 # num_sparse_neighbors = 5 #10 #4
@@ -103,6 +109,36 @@ def data_with_clusters():
 
     dataArray = np.array(data)
     return (num_samples, dataArray, set1, set2, cluster_ids)
+
+
+@pytest.fixture
+def data_queries():
+    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
+    
+    pointsMinusQuery = list(map(tuple, points)) 
+
+    queries = []
+    query_features = []
+    random_clusters = random.sample(range(num_clusters), num_queries)
+    for c in range(num_queries): #select 10 query points
+        crand = random_clusters[c]
+        q_ind = cluster_ids.tolist().index(crand) #find the ind of first point that belongs to cluster crand
+        queries.append(q_ind)
+        query_features.append(tuple(points[q_ind]))
+        pointsMinusQuery.remove(tuple(points[q_ind]))
+    
+    # get num_set data points belonging to cluster#1
+    random.seed(1)
+    cluster1Indices = [index for index, val in enumerate(cluster_ids) if val == 1]
+    cluster1DataMinusQuery = np.setdiff1d(cluster1Indices, queries)
+    subset1 = random.sample(cluster1DataMinusQuery.tolist(), num_set)
+    set1 = set(subset1[:-1])
+
+    imageData = np.array(pointsMinusQuery)
+    queryData = np.array(query_features)
+
+    return (num_samples-num_queries, num_queries, imageData, queryData, set1)
+    
 
 @pytest.fixture
 def data_features_log():
@@ -189,6 +225,26 @@ def object_dense_cpp_kernel(request, data):
         obj = GraphCutFunction(n=num_samples, mode="dense", lambdaVal=1, data=dataArray, metric=metric)
     elif request.param == "LogDeterminant":
         obj = LogDeterminantFunction(n=num_samples, mode="dense", lambdaVal=1, data=dataArray, metric=metric)
+    else:
+        return None
+    return obj
+
+@pytest.fixture
+def object_mi_dense_cpp_kernel(request, data_queries):
+    num_data, num_q, imageData, queryData, _ = data_queries
+    if request.param == "FacilityLocationMutualInformation":
+        obj = FacilityLocationMutualInformationFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric)
+    else:
+        return None
+    return obj
+
+@pytest.fixture
+def object_mi_dense_py_kernel(request, data_queries):
+    num_data, num_q, imageData, queryData, _ = data_queries
+    _, imageKernel = create_kernel(imageData, mode="dense", metric=metric)
+    queryKernel = create_kernel(queryData, mode="dense", metric=metric, X_master=imageData)
+    if request.param == "FacilityLocationMutualInformation":
+        obj = FacilityLocationMutualInformationFunction(n=num_data, num_queries=num_q, image_sijs=imageKernel, query_sijs=queryKernel)
     else:
         return None
     return obj
@@ -916,7 +972,7 @@ class TestAll:
         fastGain = object_clustered_user_multi.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
 
-    ############ 6 tests for clustered function with internel clustering and single kernel #######################
+    ############ 7 tests for clustered function with internel clustering and single kernel #######################
 
     @pytest.mark.regular
     @pytest.mark.parametrize("object_clustered_birch_single", allKernelFunctions, indirect=['object_clustered_birch_single'])
@@ -1734,3 +1790,152 @@ class TestAll:
         fastGain = object_psc.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
         #assert naiveGain == simpleGain and simpleGain == fastGain, "Mismatch between naive, simple and fast margins"
+    
+
+    ############ 6 tests for MI dense cpp kernel #######################
+    @pytest.mark.mi_regular
+    @pytest.mark.parametrize("object_mi_dense_cpp_kernel", allKernelMIFunctions, indirect=['object_mi_dense_cpp_kernel'])
+    def test_mi_dense_cpp_eval_groundset(self, object_mi_dense_cpp_kernel):
+        groundSet = object_mi_dense_cpp_kernel.getEffectiveGroundSet()
+        eval = object_mi_dense_cpp_kernel.evaluate(groundSet)
+        assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+
+    @pytest.mark.mi_regular
+    @pytest.mark.parametrize("object_mi_dense_cpp_kernel", allKernelMIFunctions, indirect=['object_mi_dense_cpp_kernel'])
+    def test_mi_dense_cpp_eval_emptyset(self, object_mi_dense_cpp_kernel):
+        eval = object_mi_dense_cpp_kernel.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.mi_regular
+    @pytest.mark.parametrize("object_mi_dense_cpp_kernel", allKernelMIFunctions, indirect=['object_mi_dense_cpp_kernel'])
+    def test_mi_dense_cpp_gain_on_empty(self, data_queries, object_mi_dense_cpp_kernel):
+        _, _, _, _, set1 = data_queries
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_mi_dense_cpp_kernel.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_mi_dense_cpp_kernel.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_mi_dense_cpp_kernel.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
+
+    @pytest.mark.mi_regular
+    @pytest.mark.parametrize("object_mi_dense_cpp_kernel", allKernelMIFunctions, indirect=['object_mi_dense_cpp_kernel'])
+    def test_mi_dense_cpp_eval_evalfast(self, data_queries, object_mi_dense_cpp_kernel):
+        _, _, _, _, set1 = data_queries
+        subset = set()
+        for elem in set1:
+            object_mi_dense_cpp_kernel.updateMemoization(subset, elem)
+            subset.add(elem)
+        simpleEval = object_mi_dense_cpp_kernel.evaluate(subset)
+        fastEval = object_mi_dense_cpp_kernel.evaluateWithMemoization(subset)
+        assert math.isclose(simpleEval, fastEval, rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+
+    @pytest.mark.mi_regular
+    @pytest.mark.parametrize("object_mi_dense_cpp_kernel", allKernelMIFunctions, indirect=['object_mi_dense_cpp_kernel'])
+    def test_mi_dense_cpp_set_memoization(self, data_queries, object_mi_dense_cpp_kernel):
+        _, _, _, _, set1 = data_queries
+        object_mi_dense_cpp_kernel.setMemoization(set1)
+        simpleEval = object_mi_dense_cpp_kernel.evaluate(set1)
+        fastEval = object_mi_dense_cpp_kernel.evaluateWithMemoization(set1)
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+
+    @pytest.mark.mi_regular
+    @pytest.mark.parametrize("object_mi_dense_cpp_kernel", allKernelMIFunctions, indirect=['object_mi_dense_cpp_kernel'])
+    def test_mi_dense_cpp_gain(self, data_queries, object_mi_dense_cpp_kernel):
+        _, _, _, _, set1 = data_queries
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        object_mi_dense_cpp_kernel.setMemoization(subset)
+        firstEval = object_mi_dense_cpp_kernel.evaluateWithMemoization(subset)
+        subset.add(elem)
+        naiveGain = object_mi_dense_cpp_kernel.evaluate(subset) - firstEval
+        subset.remove(elem)
+        simpleGain = object_mi_dense_cpp_kernel.marginalGain(subset, elem)
+        fastGain = object_mi_dense_cpp_kernel.marginalGainWithMemoization(subset, elem)
+        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+
+    ############ 6 tests for dense python kernel #######################
+
+    @pytest.mark.mi_regular
+    @pytest.mark.parametrize("object_mi_dense_py_kernel", allKernelMIFunctions, indirect=['object_mi_dense_py_kernel'])
+    def test_mi_dense_py_eval_groundset(self, object_mi_dense_py_kernel):
+        groundSet = object_mi_dense_py_kernel.getEffectiveGroundSet()
+        eval = object_mi_dense_py_kernel.evaluate(groundSet)
+        assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+    
+    @pytest.mark.mi_regular
+    @pytest.mark.parametrize("object_mi_dense_py_kernel", allKernelMIFunctions, indirect=['object_mi_dense_py_kernel'])
+    def test_mi_dense_py_eval_emptyset(self, object_mi_dense_py_kernel):
+        eval = object_mi_dense_py_kernel.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.mi_regular
+    @pytest.mark.parametrize("object_mi_dense_py_kernel", allKernelMIFunctions, indirect=['object_mi_dense_py_kernel'])
+    def test_mi_dense_py_gain_on_empty(self, data_queries, object_mi_dense_py_kernel):
+        _, _, _, _, set1 = data_queries
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_mi_dense_py_kernel.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_mi_dense_py_kernel.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_mi_dense_py_kernel.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
+    
+    @pytest.mark.mi_regular
+    @pytest.mark.parametrize("object_mi_dense_py_kernel", allKernelMIFunctions, indirect=['object_mi_dense_py_kernel'])
+    def test_mi_dense_py_eval_evalfast(self, data_queries, object_mi_dense_py_kernel):
+        _, _, _, _, set1 = data_queries
+        subset = set()
+        for elem in set1:
+            object_mi_dense_py_kernel.updateMemoization(subset, elem)
+            subset.add(elem)
+        simpleEval = object_mi_dense_py_kernel.evaluate(subset)
+        fastEval = object_mi_dense_py_kernel.evaluateWithMemoization(subset)
+        assert math.isclose(simpleEval, fastEval,rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+
+    @pytest.mark.mi_regular
+    @pytest.mark.parametrize("object_mi_dense_py_kernel", allKernelMIFunctions, indirect=['object_mi_dense_py_kernel'])
+    def test_mi_dense_py_set_memoization(self, data_queries, object_mi_dense_py_kernel):
+        _, _, _, _, set1 = data_queries
+        object_mi_dense_py_kernel.setMemoization(set1)
+        simpleEval = object_mi_dense_py_kernel.evaluate(set1)
+        fastEval = object_mi_dense_py_kernel.evaluateWithMemoization(set1)
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+
+    @pytest.mark.mi_regular
+    @pytest.mark.parametrize("object_mi_dense_py_kernel", allKernelMIFunctions, indirect=['object_mi_dense_py_kernel'])
+    def test_mi_dense_py_gain(self, data_queries, object_mi_dense_py_kernel):
+        _, _, _, _, set1 = data_queries
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        object_mi_dense_py_kernel.setMemoization(subset)
+        firstEval = object_mi_dense_py_kernel.evaluateWithMemoization(subset)
+        subset.add(elem)
+        naiveGain = object_mi_dense_py_kernel.evaluate(subset) - firstEval
+        subset.remove(elem)
+        simpleGain = object_mi_dense_py_kernel.marginalGain(subset, elem)
+        fastGain = object_mi_dense_py_kernel.marginalGainWithMemoization(subset, elem)
+        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+
+    ######## Tests for MI optimizers ################
+    @pytest.mark.mi_opt_regular
+    @pytest.mark.parametrize("object_mi_dense_cpp_kernel", optimizerMITests, indirect=['object_mi_dense_cpp_kernel'])
+    def test_mi_naive_lazy(self, object_mi_dense_cpp_kernel):
+        greedyListNaive = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        assert greedyListNaive == greedyListLazy, "Mismatch between naiveGreedy and lazyGreedy"
+    
+    @pytest.mark.mi_opt_regular
+    @pytest.mark.parametrize("object_mi_dense_cpp_kernel", optimizerMITests, indirect=['object_mi_dense_cpp_kernel'])
+    def test_mi_stochastic_lazierThanLazy(self, object_mi_dense_cpp_kernel):
+        greedyListStochastic = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazierThanLazy = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"

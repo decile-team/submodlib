@@ -86,10 +86,10 @@ GraphCut::GraphCut(ll n_, std::vector<std::vector<float>> const &masterGroundKer
 	
 	totalSimilarityWithSubset.resize(n);
 	totalSimilarityWithMaster.resize(n);
-	for (int i = 0; i < n; i++) { 
+	for (ll i = 0; i < n; i++) { 
 		totalSimilarityWithSubset[i] = 0; 
 		totalSimilarityWithMaster[i] = 0;
-		for(int j = 0; j < n_master; j++){
+		for(ll j = 0; j < n_master; j++){
 			totalSimilarityWithMaster[i] +=masterGroundKernel[j][i];
 		}
 	}
@@ -113,10 +113,10 @@ GraphCut::GraphCut(ll n_, std::vector<float> const &arr_val, std::vector<ll> con
     
 	totalSimilarityWithSubset.resize(n);
 	totalSimilarityWithMaster.resize(n);
-	for (int i = 0; i < n; i++) { 
+	for (ll i = 0; i < n; i++) { 
 		totalSimilarityWithSubset[i] = 0; 
 		totalSimilarityWithMaster[i] = 0;
-		for(int j = 0; j < n; j++){
+		for(ll j = 0; j < n; j++){
 			totalSimilarityWithMaster[i] += sparseKernel.get_val(j, i);
 		}
 	}
@@ -305,7 +305,7 @@ void GraphCut::cluster_init(ll n_, std::vector<std::vector<float>> const &denseK
 
 void GraphCut::clearMemoization() {
 	if(mode==dense || mode==sparse) {
-		for(int i=0;i<numEffectiveGroundset;++i) {
+		for(ll i=0;i<numEffectiveGroundset;++i) {
 			totalSimilarityWithSubset[i]=0;
 		}
 	} else {

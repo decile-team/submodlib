@@ -56,7 +56,7 @@ LogDeterminant::LogDeterminant(
             memoizedD.push_back(sqrt(denseKernel[it][it] + lambda));
         }
     } else {
-        for (int i = 0; i < n; i++) {
+        for (ll i = 0; i < n; i++) {
             memoizedD.push_back(sqrt(denseKernel[i][i] + lambda));
         }
     }
@@ -89,7 +89,7 @@ LogDeterminant::LogDeterminant(ll n_, std::vector<float> const &arr_val,
     memoizedC = std::vector<std::vector<double>>(n, std::vector<double>());
     memoizedD.clear();
     prevDetVal = 0;
-    for (int i = 0; i < n; i++) {
+    for (ll i = 0; i < n; i++) {
         memoizedD.push_back(sqrt(sparseKernel.get_val(i, i) + lambda));
     }
     prevItem = -1;
@@ -275,7 +275,7 @@ void LogDeterminant::updateMemoization(std::unordered_set<ll> const &X,
 
         } else if (mode == sparse) {
             //std::cout << "Updating memoizedC and memoizedD\n";
-            for (int i = 0; i < n; i++) {
+            for (ll i = 0; i < n; i++) {
                 //std::cout << i << ": ";
                 if (effectiveX.find(i) != effectiveX.end()) {
                     //std::cout << "skipping\n";
@@ -360,12 +360,12 @@ void LogDeterminant::clearMemoization() {
                 memoizedD[index] = sqrt(denseKernel[it][it] + lambda);
             }
         } else {
-            for (int i = 0; i < n; i++) {
+            for (ll i = 0; i < n; i++) {
                 memoizedD[i] = sqrt(denseKernel[i][i] + lambda);
             }
         }
     } else if (mode == sparse) {
-        for (int i = 0; i < n; i++) {
+        for (ll i = 0; i < n; i++) {
             memoizedD[i] = sqrt(sparseKernel.get_val(i, i) + lambda);
         }
     } else {

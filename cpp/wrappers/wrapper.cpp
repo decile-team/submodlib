@@ -13,6 +13,7 @@ PYBIND11_MODULE(submodlib_cpp, m)
     cl_SetCover(m);
     cl_LogDeterminant(m);
     cl_ProbabilisticSetCover(m);
+    cl_FacilityLocationMutualInformation(m);
     cl_helper(m);
     cl_sparse_utils(m);
     cl_Clustered(m);

@@ -526,7 +526,7 @@ void FacilityLocation::clearMemoization() {
 
     //reset similarityWithNearestInEffectiveX for dense and sparse modes
 	if(mode==dense || mode==sparse) {
-		for(int i=0;i<n_master;++i) {
+		for(ll i=0;i<n_master;++i) {
 			similarityWithNearestInEffectiveX[i]=0;
 		}
 	} else {
@@ -534,7 +534,7 @@ void FacilityLocation::clearMemoization() {
 		for(int i=0;i<num_clusters;++i) {
 			relevantX[i].clear();
 		}
-		for(int i=0;i<n;++i) {
+		for(ll i=0;i<n;++i) {
 			clusteredSimilarityWithNearestInRelevantX[i]=0;
 		}
 	}

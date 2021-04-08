@@ -5,6 +5,8 @@ requires = [
     "pybind11>=2.6.0",
 ]
 
+build-backend = "setuptools.build_meta"
+
 [tool.pytest.ini_options]
 markers = [
     "fb_regular: marks regular tests for FeatureBased functions",
@@ -16,6 +18,6 @@ markers = [
     "psc_opt: marks optimizer tests for ProbabilisticSetCover functions",
     "opt_regular: marks regular optimizer tests for functions listed in optimizerTests list",
     "regular: marks regular tests for functions listed in allKernelFunctions list",
+    "mi_regular: marks regular tests for functions listed in allKernelMIFunctions list",
+    "mi_opt_regular: marks regular optimizer tests for functions listed in optimizerMITests list",
 ]
-
-build-backend = "setuptools.build_meta"
