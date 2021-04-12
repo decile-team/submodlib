@@ -18,4 +18,6 @@ from .clustered import ClusteredFunction
 #from .conditionalGain import ConditionalGainFunction
 #from .conditionalMutualInformation import ConditionalMutualInformationFunction
 from .facilityLocationMutualInformation import FacilityLocationMutualInformationFunction
+from .facilityLocationVariantMutualInformation import FacilityLocationVariantMutualInformationFunction
+from .concaveOverModular import ConcaveOverModularFunction
 

@@ -18,3 +18,5 @@ from .functions import ClusteredFunction
 #from .functions import ConditionalGainFunction
 #from .functions import ConditionalMutualInformationFunction
 from .functions import FacilityLocationMutualInformationFunction
+from .functions import FacilityLocationVariantMutualInformationFunction
+from .functions import ConcaveOverModularFunction

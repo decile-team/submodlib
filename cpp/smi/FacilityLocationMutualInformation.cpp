@@ -52,6 +52,9 @@ double FacilityLocationMutualInformation::evaluate(std::unordered_set<ll> const 
 
 double FacilityLocationMutualInformation::evaluateWithMemoization(std::unordered_set<ll> const &X) { 
     double result = 0;
+    if (X.size() == 0) {
+        return 0;
+    }
     for (ll i = 0; i < n; i++) {
         result += std::min(similarityWithNearestInX[i], qMaxMod[i]);
     }
@@ -93,6 +96,9 @@ double FacilityLocationMutualInformation::marginalGainWithMemoization(std::unord
 }
 
 void FacilityLocationMutualInformation::updateMemoization(std::unordered_set<ll> const &X, ll item) {
+    if (X.find(item)!=X.end()) {
+		return;
+	}
     for (ll i = 0; i < n; i++) {
         similarityWithNearestInX[i] = std::max(similarityWithNearestInX[i], kernelImage[i][item]);
     }

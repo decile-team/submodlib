@@ -13,16 +13,19 @@ from submodlib import LogDeterminantFunction
 from submodlib import SetCoverFunction
 from submodlib import ProbabilisticSetCoverFunction
 from submodlib import FacilityLocationMutualInformationFunction
+from submodlib import FacilityLocationVariantMutualInformationFunction
+from submodlib import ConcaveOverModularFunction
 from submodlib.helper import create_kernel
 from submodlib_cpp import FeatureBased
+from submodlib_cpp import ConcaveOverModular
 
 allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "DisparityMin", "LogDeterminant"]
 #allKernelFunctions = ["LogDeterminant"]
-allKernelMIFunctions = ["FacilityLocationMutualInformation"]
+allKernelMIFunctions = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular"]
 clusteredModeFunctions = ["FacilityLocation"]
 optimizerTests = ["FacilityLocation", "GraphCut", "LogDeterminant"]
 #optimizerTests = ["LogDeterminant"]
-optimizerMITests = ["FacilityLocationMutualInformation"]
+optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular"]
 
 #########Available markers############
 # clustered_mode - for clustered mode related test cases
@@ -51,6 +54,7 @@ num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric 
 budget = 20
 num_concepts = 50
 num_queries = 10
+magnificationLambda = 2
 
 # num_internal_clusters = 3 #3
 # num_sparse_neighbors = 5 #10 #4
@@ -233,7 +237,11 @@ def object_dense_cpp_kernel(request, data):
 def object_mi_dense_cpp_kernel(request, data_queries):
     num_data, num_q, imageData, queryData, _ = data_queries
     if request.param == "FacilityLocationMutualInformation":
-        obj = FacilityLocationMutualInformationFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric)
+        obj = FacilityLocationMutualInformationFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric, magnificationLambda=magnificationLambda)
+    elif request.param == "FacilityLocationVariantMutualInformation":
+        obj = FacilityLocationVariantMutualInformationFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric, magnificationLambda=magnificationLambda)
+    elif request.param == "ConcaveOverModular":
+        obj = ConcaveOverModularFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric, magnificationLambda=magnificationLambda, mode=ConcaveOverModular.logarithmic)
     else:
         return None
     return obj
@@ -244,7 +252,11 @@ def object_mi_dense_py_kernel(request, data_queries):
     _, imageKernel = create_kernel(imageData, mode="dense", metric=metric)
     queryKernel = create_kernel(queryData, mode="dense", metric=metric, X_master=imageData)
     if request.param == "FacilityLocationMutualInformation":
-        obj = FacilityLocationMutualInformationFunction(n=num_data, num_queries=num_q, image_sijs=imageKernel, query_sijs=queryKernel)
+        obj = FacilityLocationMutualInformationFunction(n=num_data, num_queries=num_q, image_sijs=imageKernel, query_sijs=queryKernel, magnificationLambda=magnificationLambda)
+    elif request.param == "FacilityLocationVariantMutualInformation":
+        obj = FacilityLocationVariantMutualInformationFunction(n=num_data, num_queries=num_q, query_sijs=queryKernel, magnificationLambda=magnificationLambda)
+    elif request.param == "ConcaveOverModular":
+        obj = ConcaveOverModularFunction(n=num_data, num_queries=num_q, query_sijs=queryKernel, magnificationLambda=magnificationLambda, mode=ConcaveOverModular.logarithmic)
     else:
         return None
     return obj
