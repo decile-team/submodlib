@@ -15,17 +15,18 @@ from submodlib import ProbabilisticSetCoverFunction
 from submodlib import FacilityLocationMutualInformationFunction
 from submodlib import FacilityLocationVariantMutualInformationFunction
 from submodlib import ConcaveOverModularFunction
+from submodlib import GraphCutMutualInformationFunction
 from submodlib.helper import create_kernel
 from submodlib_cpp import FeatureBased
 from submodlib_cpp import ConcaveOverModular
 
 allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "DisparityMin", "LogDeterminant"]
 #allKernelFunctions = ["LogDeterminant"]
-allKernelMIFunctions = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular"]
+allKernelMIFunctions = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation"]
 clusteredModeFunctions = ["FacilityLocation"]
 optimizerTests = ["FacilityLocation", "GraphCut", "LogDeterminant"]
 #optimizerTests = ["LogDeterminant"]
-optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular"]
+optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation"]
 
 #########Available markers############
 # clustered_mode - for clustered mode related test cases
@@ -242,6 +243,8 @@ def object_mi_dense_cpp_kernel(request, data_queries):
         obj = FacilityLocationVariantMutualInformationFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric, magnificationLambda=magnificationLambda)
     elif request.param == "ConcaveOverModular":
         obj = ConcaveOverModularFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric, magnificationLambda=magnificationLambda, mode=ConcaveOverModular.logarithmic)
+    elif request.param == "GraphCutMutualInformation":
+        obj = GraphCutMutualInformationFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric)
     else:
         return None
     return obj
@@ -257,6 +260,8 @@ def object_mi_dense_py_kernel(request, data_queries):
         obj = FacilityLocationVariantMutualInformationFunction(n=num_data, num_queries=num_q, query_sijs=queryKernel, magnificationLambda=magnificationLambda)
     elif request.param == "ConcaveOverModular":
         obj = ConcaveOverModularFunction(n=num_data, num_queries=num_q, query_sijs=queryKernel, magnificationLambda=magnificationLambda, mode=ConcaveOverModular.logarithmic)
+    elif request.param == "GraphCutMutualInformation":
+        obj = GraphCutMutualInformationFunction(n=num_data, num_queries=num_q, query_sijs=queryKernel)
     else:
         return None
     return obj
@@ -1831,7 +1836,7 @@ class TestAll:
         evalSingleItem = object_mi_dense_cpp_kernel.evaluate(testSet)
         gain1 = evalSingleItem - evalEmpty
         gain2 = object_mi_dense_cpp_kernel.marginalGain(set(), elem)
-        assert gain1 == gain2, "Mismatch for gain on empty set"
+        assert math.isclose(gain1, gain2, rel_tol=1e-05), "Mismatch for gain on empty set"
 
     @pytest.mark.mi_regular
     @pytest.mark.parametrize("object_mi_dense_cpp_kernel", allKernelMIFunctions, indirect=['object_mi_dense_cpp_kernel'])
@@ -1898,7 +1903,7 @@ class TestAll:
         evalSingleItem = object_mi_dense_py_kernel.evaluate(testSet)
         gain1 = evalSingleItem - evalEmpty
         gain2 = object_mi_dense_py_kernel.marginalGain(set(), elem)
-        assert gain1 == gain2, "Mismatch for gain on empty set"
+        assert math.isclose(gain1,gain2,rel_tol=1e-05), "Mismatch for gain on empty set"
     
     @pytest.mark.mi_regular
     @pytest.mark.parametrize("object_mi_dense_py_kernel", allKernelMIFunctions, indirect=['object_mi_dense_py_kernel'])

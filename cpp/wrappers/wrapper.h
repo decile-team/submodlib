@@ -14,6 +14,7 @@ void cl_DisparityMin(py::module_ &);
 void cl_FacilityLocationMutualInformation(py::module_ &); 
 void cl_FacilityLocationVariantMutualInformation(py::module_ &); 
 void cl_ConcaveOverModular(py::module_ &); 
+void cl_GraphCutMutualInformation(py::module_ &); 
 void cl_sparse_utils(py::module &);
 void cl_Clustered(py::module &);
 //void cl_set(py::module &);

@@ -20,4 +20,5 @@ from .clustered import ClusteredFunction
 from .facilityLocationMutualInformation import FacilityLocationMutualInformationFunction
 from .facilityLocationVariantMutualInformation import FacilityLocationVariantMutualInformationFunction
 from .concaveOverModular import ConcaveOverModularFunction
+from .graphCutMutualInformation import GraphCutMutualInformationFunction
 
