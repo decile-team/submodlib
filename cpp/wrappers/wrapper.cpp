@@ -17,6 +17,7 @@ PYBIND11_MODULE(submodlib_cpp, m)
     cl_FacilityLocationVariantMutualInformation(m);
     cl_ConcaveOverModular(m);
     cl_GraphCutMutualInformation(m);
+    cl_GraphCutConditionalGain(m);
     cl_helper(m);
     cl_sparse_utils(m);
     cl_Clustered(m);

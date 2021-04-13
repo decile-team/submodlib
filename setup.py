@@ -28,6 +28,7 @@ ext_modules = [
         "cpp/smi/FacilityLocationVariantMutualInformation.cpp", "cpp/wrappers/wr_FacilityLocationVariantMutualInformation.cpp", 
         "cpp/smi/ConcaveOverModular.cpp", "cpp/wrappers/wr_ConcaveOverModular.cpp", 
         "cpp/smi/GraphCutMutualInformation.cpp", "cpp/wrappers/wr_GraphCutMutualInformation.cpp", 
+        "cpp/condgain/GraphCutConditionalGain.cpp", "cpp/wrappers/wr_GraphCutConditionalGain.cpp", 
         "cpp/utils/helper.cpp", "cpp/wrappers/wr_helper.cpp",
         "cpp/utils/sparse_utils.cpp", "cpp/wrappers/wr_sparse_utils.cpp",
         "cpp/optimizers/NaiveGreedyOptimizer.cpp", 

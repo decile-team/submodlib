@@ -21,4 +21,5 @@ from .facilityLocationMutualInformation import FacilityLocationMutualInformation
 from .facilityLocationVariantMutualInformation import FacilityLocationVariantMutualInformationFunction
 from .concaveOverModular import ConcaveOverModularFunction
 from .graphCutMutualInformation import GraphCutMutualInformationFunction
+from .graphCutConditionalGain import GraphCutConditionalGainFunction
 
