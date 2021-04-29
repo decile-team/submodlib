@@ -21,6 +21,10 @@ GraphCutMutualInformation::GraphCutMutualInformation(ll n_, int numQueries_, std
     evalX = 0;
 }
 
+// GraphCutMutualInformation* GraphCutMutualInformation::clone() {
+//     return NULL;
+// }
+
 double GraphCutMutualInformation::evaluate(std::unordered_set<ll> const &X) {
     double result = 0;
 

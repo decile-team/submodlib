@@ -42,7 +42,8 @@ class LogDeterminant : public SetFunction {
     LogDeterminant(ll n_, std::vector<std::vector<float>> const &denseKernel_, bool partial_, std::unordered_set<ll> const &ground_, double lambda_);
     // For sparse similarity matrix
     LogDeterminant(ll n_, std::vector<float> const &arr_val, std::vector<ll> const &arr_count, std::vector<ll> const &arr_col, double lambda_);
-
+    LogDeterminant(const LogDeterminant& f);
+    LogDeterminant* clone();
     double evaluate(std::unordered_set<ll> const &X);
 	double evaluateWithMemoization(std::unordered_set<ll> const &X);
 	double marginalGain(std::unordered_set<ll> const &X, ll item);

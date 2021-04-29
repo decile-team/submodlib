@@ -32,7 +32,6 @@ class DisparityMin : public SetFunction {
     DisparityMin(ll n_, std::vector<std::vector<float>> const &denseKernel_, bool partial_, std::unordered_set<ll> const &ground_);
     // For sparse similarity matrix
     DisparityMin(ll n_, std::vector<float> const &arr_val, std::vector<ll> const &arr_count, std::vector<ll> const &arr_col);
-
     double evaluate(std::unordered_set<ll> const &X);
 	double evaluateWithMemoization(std::unordered_set<ll> const &X);
 	double marginalGain(std::unordered_set<ll> const &X, ll item);
@@ -43,6 +42,7 @@ class DisparityMin : public SetFunction {
 	void cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda);
     void clearMemoization();
 	void setMemoization(std::unordered_set<ll> const &X);
+    // DisparityMin* clone();
 
     friend double get_min_dense(std::unordered_set<ll> const &dataset_ind, DisparityMin &obj);
     friend double get_min_sparse(std::unordered_set<ll> const &dataset_ind, DisparityMin &obj);

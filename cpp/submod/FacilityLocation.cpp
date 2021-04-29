@@ -56,6 +56,10 @@ FacilityLocation::FacilityLocation(ll n_, std::vector<std::vector<float>> const 
 	}
 }
 
+// FacilityLocation* FacilityLocation::clone() {
+// 	return NULL;
+// }
+
 //For sparse mode
 FacilityLocation::FacilityLocation(ll n_, std::vector<float> const &arr_val, std::vector<ll> const &arr_count, std::vector<ll> const &arr_col): n(n_), mode(sparse), partial(false), separateMaster(false) {
 	// std::cout << "FacilityLocation Sparse Constructor\n";

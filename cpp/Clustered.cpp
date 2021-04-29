@@ -93,6 +93,10 @@ Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unorder
     }
 }
 
+// Clustered* Clustered::clone() {
+//     return NULL;
+// }
+
 std::unordered_set<ll> translate_X(std::unordered_set<ll> const &X, Clustered const &obj, ll cluster_id) { //Before using X, its important to translate it to suitable form
     std::unordered_set<ll> X_res;
     //for (auto it = X.begin(); it != X.end(); ++it) {

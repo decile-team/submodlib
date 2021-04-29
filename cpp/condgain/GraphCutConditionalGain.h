@@ -31,5 +31,6 @@ class GraphCutConditionalGain : public SetFunction {
 	std::vector<std::pair<ll, double>> maximize(std::string, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose);
     void clearMemoization();
 	void setMemoization(std::unordered_set<ll> const &X);
+    // GraphCutConditionalGain* clone();
 };
 #endif

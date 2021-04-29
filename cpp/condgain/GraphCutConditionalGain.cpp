@@ -29,6 +29,10 @@ GraphCutConditionalGain::GraphCutConditionalGain(ll n_, int numPrivates_, std::v
     }
 }
 
+// GraphCutConditionalGain* GraphCutConditionalGain::clone() {
+//     return NULL;
+// }
+
 double GraphCutConditionalGain::evaluate(std::unordered_set<ll> const &X) {
     //std::cout << "GraphCutConditionalGain's evaluate called\n";
     double result = 0;

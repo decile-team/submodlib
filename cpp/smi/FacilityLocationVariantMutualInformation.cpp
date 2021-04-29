@@ -30,6 +30,10 @@ FacilityLocationVariantMutualInformation::FacilityLocationVariantMutualInformati
     similarityWithNearestInX = std::vector<float>(numQueries, 0);
 }
 
+// FacilityLocationVariantMutualInformation* FacilityLocationVariantMutualInformation::clone() {
+//     return NULL;
+// }
+
 double FacilityLocationVariantMutualInformation::evaluate(std::unordered_set<ll> const &X) {
     //std::cout << "FacilityLocationVariantMutualInformation's evaluate called\n";
     double result = 0;

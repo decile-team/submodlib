@@ -67,6 +67,10 @@ GraphCut::GraphCut(ll n_, std::vector<std::vector<float>> const &masterGroundKer
 	// std::cout << "}\n";
 }
 
+// GraphCut* GraphCut::clone() {
+// 	return NULL;
+// }
+
 //Constructor for dense mode with separateMaster
 GraphCut::GraphCut(ll n_, std::vector<std::vector<float>> const &masterGroundKernel_, std::vector<std::vector<float>> const &groundGroundKernel_, float lambda_): n(n_), mode(dense), masterGroundKernel(masterGroundKernel_), groundGroundKernel(groundGroundKernel_), partial(false), separateMaster(true), lambda(lambda_) {
 	

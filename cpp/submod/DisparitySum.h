@@ -43,6 +43,7 @@ class DisparitySum : public SetFunction {
 	void cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda);
     void clearMemoization();
 	void setMemoization(std::unordered_set<ll> const &X);
+    // DisparitySum* clone();
 
     friend double get_sum_dense(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj);
     friend double get_sum_sparse(std::unordered_set<ll> const &dataset_ind, DisparitySum &obj);

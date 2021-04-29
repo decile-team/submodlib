@@ -34,6 +34,10 @@ DisparitySum::DisparitySum(ll n_, std::vector<std::vector<float>> const &denseKe
 	}
 }
 
+// DisparitySum* DisparitySum::clone() {
+//     return NULL;
+// }
+
 // Constructor for sparse mode
 DisparitySum::DisparitySum(ll n_, std::vector<float> const &arr_val, std::vector<ll> const &arr_count, std::vector<ll> const &arr_col): n(n_), mode(sparse), partial(false) {
     if (arr_val.size() == 0 || arr_count.size() == 0 || arr_col.size() == 0) {

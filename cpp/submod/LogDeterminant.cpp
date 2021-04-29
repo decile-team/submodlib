@@ -72,6 +72,24 @@ LogDeterminant::LogDeterminant(
     // std::cout << "]\n";
 }
 
+LogDeterminant::LogDeterminant(const LogDeterminant& f)
+    : n(f.n),
+      mode(dense),
+      denseKernel(f.denseKernel),
+      partial(f.partial),
+      lambda(f.lambda) {
+    effectiveGroundSet = f.effectiveGroundSet;
+    numEffectiveGroundset = f.numEffectiveGroundset;
+    memoizedC = f.memoizedC;
+    memoizedD = f.memoizedD;
+    prevDetVal = f.prevDetVal;
+    prevItem = f.prevItem;
+}
+
+LogDeterminant* LogDeterminant::clone() {
+    return new LogDeterminant(*this);
+}
+
 // Constructor for sparse mode
 LogDeterminant::LogDeterminant(ll n_, std::vector<float> const &arr_val,
                                std::vector<ll> const &arr_count,
@@ -148,6 +166,11 @@ double LogDeterminant::marginalGain(std::unordered_set<ll> const &X, ll item) {
 
 double LogDeterminant::marginalGainWithMemoization(
     std::unordered_set<ll> const &X, ll item) {
+    // std::cout << "LogDet's marginalGainWithMemoization called with X={";
+    // for(auto temp: X) {
+    //     std::cout << temp << ", ";
+    // }
+    // std::cout << "} and item=" << item << "\n";
     //this assumes that prevItem was the previous best, for example, when called in context of maximization
     std::unordered_set<ll> effectiveX;
     double gain = 0;
@@ -179,10 +202,14 @@ double LogDeterminant::marginalGainWithMemoization(
             gain = log(memoizedD[itemIndex] * memoizedD[itemIndex] - e * e);
         } else {
             ll prevItemIndex = (partial)?originalToPartialIndexMap[prevItem]:prevItem;
+            // std::cout << "prevItemIndex = " << prevItemIndex << "\n";
             double e = (denseKernel[prevItem][item] -
                         dotProduct(memoizedC[prevItemIndex], memoizedC[itemIndex])) /
                        memoizedD[prevItemIndex];
+            // std::cout << "e = " << e << "\n";
+            // std::cout << "memoizedD[itemIndex] * memoizedD[itemIndex] = " << memoizedD[itemIndex] * memoizedD[itemIndex] << "\n";
             gain = log(memoizedD[itemIndex] * memoizedD[itemIndex] - e * e);
+            // std::cout << "gain = " << gain << "\n";
         }
     } else if (mode == sparse) {
         if (effectiveX.size() == 0) {
@@ -214,7 +241,7 @@ double LogDeterminant::marginalGainWithMemoization(
 void LogDeterminant::updateMemoization(std::unordered_set<ll> const &X,
                                        ll item) {
     //TODO: this assumes that prevItem was the previous best, for example when invoked in context of maximization
-    //std::cout << "LogDeterminant updateMemoization\n";
+    // std::cout << "LogDeterminant updateMemoization\n";
     std::unordered_set<ll> effectiveX;
 
     if (partial == true) {
@@ -270,6 +297,8 @@ void LogDeterminant::updateMemoization(std::unordered_set<ll> const &X,
                         memoizedD[prevItemIndex];
                     memoizedC[iIndex].push_back(e);
                 }
+                // std::cout << "e = " << e << "\n";
+                // std::cout << "memoizedD[iIndex] * memoizedD[iIndex] = " << memoizedD[iIndex] * memoizedD[iIndex] << "\n";
                 memoizedD[iIndex] = sqrt(memoizedD[iIndex] * memoizedD[iIndex] - e * e);
             }
 
@@ -349,6 +378,7 @@ void LogDeterminant::cluster_init(
 }
 
 void LogDeterminant::clearMemoization() {
+    // std::cout << "LogDet clearMemoization()\n";
     memoizedC.clear();
     memoizedC = std::vector<std::vector<double>>(numEffectiveGroundset, std::vector<double>());
     prevDetVal = 0;
@@ -386,6 +416,7 @@ void LogDeterminant::clearMemoization() {
 }
 
 void LogDeterminant::setMemoization(std::unordered_set<ll> const &X) {
+
     //TODO: this implementation is wrong. for updateMemoization to work correctly, the items should be added in context of greedy maximization and not arbitrarily
     // std::cout << "LogDeterminant setMemoization\n";
     clearMemoization();

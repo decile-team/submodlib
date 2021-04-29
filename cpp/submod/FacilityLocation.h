@@ -67,6 +67,7 @@ public:
 	void cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda);
 	void clearMemoization();
 	void setMemoization(std::unordered_set<ll> const &X);
+	// FacilityLocation* clone();
 
 	friend float get_max_sim_dense(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation &obj);
 	friend float get_max_sim_sparse(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation &obj);

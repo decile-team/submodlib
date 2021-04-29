@@ -1,20 +1,31 @@
 from sklearn.datasets import make_blobs
 import numpy as np
 import random
-from submodlib import FacilityLocationMutualInformationFunction
+# from submodlib import FacilityLocationMutualInformationFunction
+from submodlib import LogDeterminantMutualInformationFunction
 from submodlib.helper import create_kernel
 import matplotlib.pyplot as plt
 
-num_samples = 500
-num_clusters = 10
-num_features = 2
-cluster_std_dev = 1
+num_internal_clusters = 20 #3
+num_sparse_neighbors = 100 #10 #4
+num_random = 15 #2
+num_clusters = 3 #20
+cluster_std_dev = 1 #4
+num_samples = 10 #500
+num_set = 20 #3
+num_features = 2 #500
 metric = "euclidean"
-num_queries = 3
-budget = 3
+#num_sparse_neighbors_full = num_samples #because less than this doesn't work for DisparitySum
+num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
+budget = 4 #20
+num_concepts = 50
+num_queries = 2
+magnificationLambda = 2
+privacyHardness=2
+
 
 points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
-
+    
 pointsMinusQuery = list(map(tuple, points)) 
 
 queries = []
@@ -27,14 +38,8 @@ for c in range(num_queries): #select 10 query points
     query_features.append(tuple(points[q_ind]))
     pointsMinusQuery.remove(tuple(points[q_ind]))
 
-print("Data: ")
-print(type(pointsMinusQuery))
-print(pointsMinusQuery)
-
-print("Queries:")
-print(queries)
-print(type(query_features))
-print(query_features)
+imageData = np.array(pointsMinusQuery)
+queryData = np.array(query_features)
 
 groundxs = [x[0] for x in pointsMinusQuery]
 groundys = [x[1] for x in pointsMinusQuery]
@@ -42,20 +47,25 @@ groundys = [x[1] for x in pointsMinusQuery]
 queryxs = [x[0] for x in query_features]
 queryys = [x[1] for x in query_features]
 
+num_data = num_samples-num_queries
 
-obj1 = FacilityLocationMutualInformationFunction(n=(num_samples-num_queries), num_queries=num_queries, imageData=np.array(pointsMinusQuery), queryData=np.array(query_features), metric=metric)
+
+# obj1 = FacilityLocationMutualInformationFunction(n=(num_samples-num_queries), num_queries=num_queries, imageData=np.array(pointsMinusQuery), queryData=np.array(query_features), metric=metric)
+
+obj1 = LogDeterminantMutualInformationFunction(n=num_data, num_queries=num_queries, imageData=imageData, queryData=queryData, metric=metric, lambdaVal=1, magnificationLambda=magnificationLambda)
 
 print("Instantiated")
 
 greedyList = obj1.maximize(budget=budget,optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
 greedyXs = [groundxs[x[0]] for x in greedyList]
 greedyYs = [groundys[x[0]] for x in greedyList]
+print(greedyList)
 
-plt.scatter(groundxs, groundys, s=50, facecolors='none', edgecolors='black', label="Images")
-plt.scatter(queryxs, queryys, s=50, color='green', label="Queries")
-plt.scatter(greedyXs, greedyYs, s=50, color='blue', label="Greedy Set")
+#plt.scatter(groundxs, groundys, s=50, facecolors='none', edgecolors='black', label="Images")
+#plt.scatter(queryxs, queryys, s=50, color='green', label="Queries")
+#plt.scatter(greedyXs, greedyYs, s=50, color='blue', label="Greedy Set")
 
-plt.show()
+#plt.show()
 
 # _, imageKernel = create_kernel(pointsMinusQuery, mode="dense", metric=metric)
 # queryKernel = create_kernel(query_features, mode="dense", metric=metric, X_master=pointsMinusQuery)

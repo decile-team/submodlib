@@ -15,5 +15,6 @@ class SetFunction
     virtual void cluster_init(ll n_, std::vector<std::vector<float>>const &k_dense_, std::unordered_set<ll> const &ground_, bool partial, float lambda);
     virtual void setMemoization(std::unordered_set<ll> const &X);
     virtual void clearMemoization();
+    virtual SetFunction * clone();
 };
 #endif

@@ -14,3 +14,4 @@ std::vector<std::pair<ll, double>> SetFunction::maximize(std::string, ll budget,
 void SetFunction::cluster_init(ll n_, std::vector<std::vector<float>> const &k_dense_, std::unordered_set<ll> const &ground_, bool partial, float lambda){}
 void SetFunction::setMemoization(std::unordered_set<ll> const &X){}
 void SetFunction::clearMemoization(){}
+SetFunction * SetFunction::clone() {return NULL;}

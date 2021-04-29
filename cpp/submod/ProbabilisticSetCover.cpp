@@ -12,6 +12,10 @@ ProbabilisticSetCover::ProbabilisticSetCover(ll n_, std::vector<std::vector<floa
 	probOfConceptsCoveredByX = std::vector<double>(numConcepts, 1);
 }
 
+// ProbabilisticSetCover* ProbabilisticSetCover::clone() {
+// 	return NULL;
+// }
+
 double ProbabilisticSetCover::evaluate(std::unordered_set<ll> const &X) {
 	double result=0;
 

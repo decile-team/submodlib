@@ -179,3 +179,17 @@ std::unordered_set<ll> set_intersection(std::unordered_set<ll> const &a, std::un
 	}
 	return c;
 }
+
+std::unordered_set<ll> set_union(std::unordered_set<ll> const &a, std::unordered_set<ll> const &b) {
+	std::unordered_set<ll> c;
+	for (auto elem: b){
+			c.insert(elem);
+	}
+	//looping over the elements of the first set, hence better when first set is smaller
+	for (auto element : a) {
+		c.insert(element);
+	}
+	return c;
+}
+
+

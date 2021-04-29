@@ -21,6 +21,10 @@ ConcaveOverModular::ConcaveOverModular(ll n_, int numQueries_, std::vector<std::
     subsetSumForEachQuery = std::vector<double>(numQueries, 0);
 }
 
+// ConcaveOverModular* ConcaveOverModular::clone() {
+//     return NULL;
+// }
+
 double ConcaveOverModular::transform(double val) {
 	//std::cout << "Type = " << type << "\n";
 	switch(type) {

@@ -40,6 +40,7 @@ class Clustered : public SetFunction
     std::vector<std::pair<ll, double>> maximize(std::string, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose);
     void clearMemoization();
 	void setMemoization(std::unordered_set<ll> const &X);
+    // Clustered* clone();
 
     friend std::unordered_set<ll> translate_X(std::unordered_set<ll> const &X, Clustered const &obj, ll cluster_id);
 };

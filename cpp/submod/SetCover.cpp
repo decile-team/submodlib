@@ -11,6 +11,10 @@
 SetCover::SetCover(ll n_, std::vector<std::unordered_set<int>> const &coverSet_, int numConcepts_, std::vector<float> const& conceptWeights_): n(n_), coverSet(coverSet_), numConcepts(numConcepts_), conceptWeights(conceptWeights_)  {
 }
 
+// SetCover* SetCover::clone() {
+// 	return NULL;
+// }
+
 double SetCover::evaluate(std::unordered_set<ll> const &X) {
 	double result=0;
 

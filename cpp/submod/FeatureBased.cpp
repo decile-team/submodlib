@@ -20,6 +20,11 @@ FeatureBased::FeatureBased(ll n_, Type type_, std::vector<std::vector<std::pair<
 	sumOfFeaturesAcrossX.resize(numFeatures, 0);
 }
 
+// FeatureBased* FeatureBased::clone() {
+// 	return NULL;
+// }
+
+
 double FeatureBased::transform(double val) {
 	//std::cout << "Type = " << type << "\n";
 	switch(type) {
