@@ -72,24 +72,6 @@ LogDeterminant::LogDeterminant(
     // std::cout << "]\n";
 }
 
-LogDeterminant::LogDeterminant(const LogDeterminant& f)
-    : n(f.n),
-      mode(dense),
-      denseKernel(f.denseKernel),
-      partial(f.partial),
-      lambda(f.lambda) {
-    effectiveGroundSet = f.effectiveGroundSet;
-    numEffectiveGroundset = f.numEffectiveGroundset;
-    memoizedC = f.memoizedC;
-    memoizedD = f.memoizedD;
-    prevDetVal = f.prevDetVal;
-    prevItem = f.prevItem;
-}
-
-LogDeterminant* LogDeterminant::clone() {
-    return new LogDeterminant(*this);
-}
-
 // Constructor for sparse mode
 LogDeterminant::LogDeterminant(ll n_, std::vector<float> const &arr_val,
                                std::vector<ll> const &arr_count,
@@ -117,6 +99,19 @@ LogDeterminant::LogDeterminant(ll n_, std::vector<float> const &arr_val,
     // }
     // std::cout << "]\n";
     // std::cout << "Previous detVal = " << prevDetVal << "\n";
+}
+
+LogDeterminant::LogDeterminant(const LogDeterminant& f)
+    : n(f.n),
+      mode(f.mode),
+      denseKernel(f.denseKernel),
+      sparseKernel(f.sparseKernel),
+      partial(f.partial),
+      lambda(f.lambda), effectiveGroundSet(f.effectiveGroundSet), numEffectiveGroundset(f.numEffectiveGroundset), memoizedC(f.memoizedC), memoizedD(f.memoizedD), prevDetVal(f.prevDetVal), prevItem(f.prevItem), originalToPartialIndexMap(f.originalToPartialIndexMap) {
+}
+
+LogDeterminant* LogDeterminant::clone() {
+    return new LogDeterminant(*this);
 }
 
 double LogDeterminant::evaluate(std::unordered_set<ll> const &X) {

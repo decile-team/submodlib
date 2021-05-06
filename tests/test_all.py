@@ -18,17 +18,18 @@ from submodlib import ConcaveOverModularFunction
 from submodlib import GraphCutMutualInformationFunction
 from submodlib import LogDeterminantMutualInformationFunction
 from submodlib import GraphCutConditionalGainFunction
+from submodlib import FacilityLocationConditionalGainFunction
 from submodlib.helper import create_kernel
 from submodlib_cpp import FeatureBased
 from submodlib_cpp import ConcaveOverModular
 
 allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "DisparityMin", "LogDeterminant"]
 #allKernelFunctions = ["LogDeterminant"]
-allKernelMIFunctions = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation"]
+allKernelMIFunctions = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation", "FacilityLocationConditionalGain"]
 clusteredModeFunctions = ["FacilityLocation"]
 optimizerTests = ["FacilityLocation", "GraphCut", "LogDeterminant"]
 #optimizerTests = ["LogDeterminant"]
-optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation"]
+optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation", "FacilityLocationConditionalGain"]
 
 #########Available markers############
 # clustered_mode - for clustered mode related test cases
@@ -135,12 +136,9 @@ def data_queries():
         query_features.append(tuple(points[q_ind]))
         pointsMinusQuery.remove(tuple(points[q_ind]))
     
-    # get num_set data points belonging to cluster#1
+    # get a subset with num_set data points
     random.seed(1)
-    cluster1Indices = [index for index, val in enumerate(cluster_ids) if val == 1]
-    cluster1DataMinusQuery = np.setdiff1d(cluster1Indices, queries)
-    subset1 = random.sample(cluster1DataMinusQuery.tolist(), num_set)
-    set1 = set(subset1[:-1])
+    set1 = set(random.sample(range(num_samples-num_queries), num_set))
 
     imageData = np.array(pointsMinusQuery)
     queryData = np.array(query_features)
@@ -250,6 +248,8 @@ def object_mi_dense_cpp_kernel(request, data_queries):
         obj = GraphCutMutualInformationFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric)
     elif request.param == "GraphCutConditionalGain":
         obj = GraphCutConditionalGainFunction(n=num_data, num_privates=num_q, lambdaVal=1, imageData=imageData, privateData=queryData, metric=metric, privacyHardness=privacyHardness)
+    elif request.param == "FacilityLocationConditionalGain":
+        obj = FacilityLocationConditionalGainFunction(n=num_data, num_privates=num_q, imageData=imageData, privateData=queryData, metric=metric, privacyHardness=privacyHardness)
     elif request.param == "LogDeterminantMutualInformation":
         obj = LogDeterminantMutualInformationFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric, lambdaVal=1, magnificationLambda=magnificationLambda)
     else:
@@ -272,6 +272,8 @@ def object_mi_dense_py_kernel(request, data_queries):
         obj = GraphCutMutualInformationFunction(n=num_data, num_queries=num_q, query_sijs=queryKernel)
     elif request.param == "GraphCutConditionalGain":
         obj = GraphCutConditionalGainFunction(n=num_data, num_privates=num_q, lambdaVal=1, image_sijs=imageKernel, private_sijs=queryKernel, privacyHardness=privacyHardness)
+    elif request.param == "FacilityLocationConditionalGain":
+        obj = FacilityLocationConditionalGainFunction(n=num_data, num_privates=num_q, image_sijs=imageKernel, private_sijs=queryKernel, privacyHardness=privacyHardness)
     elif request.param == "LogDeterminantMutualInformation":
         obj = LogDeterminantMutualInformationFunction(n=num_data, num_queries=num_q, image_sijs=imageKernel, query_sijs=queryKernel, query_query_sijs=queryQueryKernel, lambdaVal=1, magnificationLambda=magnificationLambda)
     else:
@@ -483,9 +485,7 @@ class TestAll:
     @pytest.mark.parametrize("object_dense_cpp_kernel", allKernelFunctions, indirect=['object_dense_cpp_kernel'])
     def test_dense_cpp_gain_on_empty(self, data, object_dense_cpp_kernel):
         _, _, set1, _ = data
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_dense_cpp_kernel.evaluate(testSet)
         testSet.add(elem)
@@ -550,9 +550,7 @@ class TestAll:
     @pytest.mark.parametrize("object_dense_py_kernel", allKernelFunctions, indirect=['object_dense_py_kernel'])
     def test_dense_py_gain_on_empty(self, data, object_dense_py_kernel):
         _, _, set1, _ = data
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_dense_py_kernel.evaluate(testSet)
         testSet.add(elem)
@@ -618,9 +616,7 @@ class TestAll:
     @pytest.mark.parametrize("object_sparse_cpp_kernel", allKernelFunctions, indirect=['object_sparse_cpp_kernel'])
     def test_sparse_cpp_gain_on_empty(self, data, object_sparse_cpp_kernel):
         _, _, set1, _ = data
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_sparse_cpp_kernel.evaluate(testSet)
         testSet.add(elem)
@@ -685,9 +681,7 @@ class TestAll:
     @pytest.mark.parametrize("object_sparse_py_kernel", allKernelFunctions, indirect=['object_sparse_py_kernel'])
     def test_sparse_py_gain_on_empty(self, data, object_sparse_py_kernel):
         _, _, set1, _ = data
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_sparse_py_kernel.evaluate(testSet)
         testSet.add(elem)
@@ -752,9 +746,7 @@ class TestAll:
     @pytest.mark.clustered_mode
     def test_clustered_mode_birch_gain_on_empty(self, data, object_clustered_mode_birch):
         _, _, set1, _ = data
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_clustered_mode_birch.evaluate(testSet)
         testSet.add(elem)
@@ -819,9 +811,7 @@ class TestAll:
     @pytest.mark.clustered_mode
     def test_clustered_mode_user_gain_on_empty(self, data, object_clustered_mode_user):
         _, _, set1, _ = data
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_clustered_mode_user.evaluate(testSet)
         testSet.add(elem)
@@ -886,9 +876,7 @@ class TestAll:
     @pytest.mark.parametrize("object_clustered_birch_multi", allKernelFunctions, indirect=['object_clustered_birch_multi'])
     def test_clustered_birch_multi_gain_on_empty(self, data, object_clustered_birch_multi):
         _, _, set1, _ = data
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_clustered_birch_multi.evaluate(testSet)
         testSet.add(elem)
@@ -953,9 +941,7 @@ class TestAll:
     @pytest.mark.parametrize("object_clustered_user_multi", allKernelFunctions, indirect=['object_clustered_user_multi'])
     def test_clustered_user_multi_gain_on_empty(self, data, object_clustered_user_multi):
         _, _, set1, _ = data
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_clustered_user_multi.evaluate(testSet)
         testSet.add(elem)
@@ -1020,9 +1006,7 @@ class TestAll:
     @pytest.mark.parametrize("object_clustered_birch_single", allKernelFunctions, indirect=['object_clustered_birch_single'])
     def test_clustered_birch_single_gain_on_empty(self, data, object_clustered_birch_single):
         _, _, set1, _ = data
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elems = random.sample(set1, 1)
         testSet = set()
         evalEmpty = object_clustered_birch_single.evaluate(testSet)
         testSet.add(elem)
@@ -1096,9 +1080,7 @@ class TestAll:
     @pytest.mark.parametrize("object_clustered_user_single", allKernelFunctions, indirect=['object_clustered_user_single'])
     def test_clustered_user_single_gain_on_empty(self, data, object_clustered_user_single):
         _, _, set1, _ = data
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_clustered_user_single.evaluate(testSet)
         testSet.add(elem)
@@ -1455,9 +1437,7 @@ class TestAll:
     @pytest.mark.fb_regular
     def test_fb_log_gain_on_empty(self, data_features_log):
         object_fb, set1 = data_features_log
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_fb.evaluate(testSet)
         testSet.add(elem)
@@ -1532,9 +1512,7 @@ class TestAll:
     @pytest.mark.fb_regular
     def test_fb_sqrt_gain_on_empty(self, data_features_sqrt):
         object_fb, set1 = data_features_sqrt
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_fb.evaluate(testSet)
         testSet.add(elem)
@@ -1609,9 +1587,7 @@ class TestAll:
     @pytest.mark.fb_regular
     def test_fb_inverse_gain_on_empty(self, data_features_inverse):
         object_fb, set1 = data_features_inverse
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_fb.evaluate(testSet)
         testSet.add(elem)
@@ -1690,9 +1666,7 @@ class TestAll:
     @pytest.mark.sc_regular
     def test_sc_gain_on_empty(self, data_concepts):
         object_sc, set1 = data_concepts
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_sc.evaluate(testSet)
         testSet.add(elem)
@@ -1771,9 +1745,7 @@ class TestAll:
     @pytest.mark.psc_regular
     def test_psc_gain_on_empty(self, data_prob_concepts):
         object_psc, set1 = data_prob_concepts
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_psc.evaluate(testSet)
         testSet.add(elem)
@@ -1839,9 +1811,7 @@ class TestAll:
     @pytest.mark.parametrize("object_mi_dense_cpp_kernel", allKernelMIFunctions, indirect=['object_mi_dense_cpp_kernel'])
     def test_mi_dense_cpp_gain_on_empty(self, data_queries, object_mi_dense_cpp_kernel):
         _, _, _, _, set1 = data_queries
-        elems = random.sample(set1, num_random)
-        subset = set(elems[:-1])
-        elem = elems[-1]
+        elem = random.sample(set1, 1)[0]
         testSet = set()
         evalEmpty = object_mi_dense_cpp_kernel.evaluate(testSet)
         testSet.add(elem)

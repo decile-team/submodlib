@@ -125,6 +125,33 @@ FacilityLocation::FacilityLocation(ll n_, std::vector<std::unordered_set<ll>> co
 	// }
 }
 
+// FacilityLocation::FacilityLocation(const FacilityLocation& f)
+//     : n(f.n),
+// 	n_master(f.n_master),
+// 	mode(f.mode),
+//     denseKernel(f.denseKernel),
+//     partial(f.partial),
+// 	separateMaster(f.separateMaster),
+//     effectiveGroundSet(f.effectiveGroundSet),
+// 	masterSet(f.masterSet),
+// 	numEffectiveGroundset(f.numEffectiveGroundset),
+// 	originalToPartialIndexMap(f.originalToPartialIndexMap),
+// 	sparseKernel(f.sparseKernel),
+// 	num_clusters(f.num_clusters),
+// 	clusters(f.clusters),
+// 	clusterIDs(f.clusterIDs),
+// 	clusterKernels(f.clusterKernels),
+// 	clusterIndexMap(f.clusterIndexMap),
+// 	similarityWithNearestInEffectiveX(f.similarityWithNearestInEffectiveX),
+// 	relevantX(f.relevantX),
+// 	clusteredSimilarityWithNearestInRelevantX(f.clusteredSimilarityWithNearestInRelevantX) {
+
+// 	}
+
+// FacilityLocation* FacilityLocation::clone() {
+//     return new FacilityLocation(*this);
+// }
+
 //helper friend function
 // float get_max_sim_dense(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation &obj) {
 // 	if(dataset_ind.size()==0) {

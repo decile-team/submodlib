@@ -20,6 +20,7 @@ void cl_GraphCutMutualInformation(py::module_ &);
 void cl_LogDeterminantMutualInformation(py::module_ &); 
 
 void cl_GraphCutConditionalGain(py::module_ &); 
+void cl_FacilityLocationConditionalGain(py::module_ &); 
 
 void cl_sparse_utils(py::module &);
 

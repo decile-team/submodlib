@@ -21,6 +21,7 @@ PYBIND11_MODULE(submodlib_cpp, m)
     cl_LogDeterminantMutualInformation(m);
 
     cl_GraphCutConditionalGain(m);
+    cl_FacilityLocationConditionalGain(m);
 
     cl_helper(m);
     cl_sparse_utils(m);

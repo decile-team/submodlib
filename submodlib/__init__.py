@@ -20,3 +20,4 @@ from .functions import GraphCutMutualInformationFunction
 from .functions import LogDeterminantMutualInformationFunction
 
 from .functions import GraphCutConditionalGainFunction
+from .functions import FacilityLocationConditionalGainFunction

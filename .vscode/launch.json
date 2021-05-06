@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "debugStdLib": true
+            "justMyCode": false
         },
         {
             "name": "Python: Current File (External Terminal)",
@@ -18,7 +18,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "externalTerminal",
-            "debugStdLib": true
+            "justMyCode": false
         },
         {
             "name": "(gdb) Attach",

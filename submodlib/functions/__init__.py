@@ -19,4 +19,5 @@ from .graphCutMutualInformation import GraphCutMutualInformationFunction
 from .logDeterminantMutualInformation import LogDeterminantMutualInformationFunction
 
 from .graphCutConditionalGain import GraphCutConditionalGainFunction
+from .facilityLocationConditionalGain import FacilityLocationConditionalGainFunction
 
