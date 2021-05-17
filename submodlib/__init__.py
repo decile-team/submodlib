@@ -18,8 +18,11 @@ from .functions import FacilityLocationVariantMutualInformationFunction
 from .functions import ConcaveOverModularFunction
 from .functions import GraphCutMutualInformationFunction
 from .functions import LogDeterminantMutualInformationFunction
+from .functions import ProbabilisticSetCoverMutualInformationFunction
+from .functions import SetCoverMutualInformationFunction
 
 from .functions import GraphCutConditionalGainFunction
 from .functions import FacilityLocationConditionalGainFunction
 from .functions import LogDeterminantConditionalGainFunction
 from .functions import ProbabilisticSetCoverConditionalGainFunction
+from .functions import SetCoverConditionalGainFunction

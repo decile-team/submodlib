@@ -19,11 +19,14 @@ PYBIND11_MODULE(submodlib_cpp, m)
     cl_ConcaveOverModular(m);
     cl_GraphCutMutualInformation(m);
     cl_LogDeterminantMutualInformation(m);
+    cl_ProbabilisticSetCoverMutualInformation(m);
+    cl_SetCoverMutualInformation(m);
 
     cl_GraphCutConditionalGain(m);
     cl_FacilityLocationConditionalGain(m);
     cl_LogDeterminantConditionalGain(m);
     cl_ProbabilisticSetCoverConditionalGain(m);
+    cl_SetCoverConditionalGain(m);
 
     cl_helper(m);
     cl_sparse_utils(m);

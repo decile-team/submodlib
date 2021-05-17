@@ -21,6 +21,9 @@ from submodlib import GraphCutConditionalGainFunction
 from submodlib import FacilityLocationConditionalGainFunction
 from submodlib import LogDeterminantConditionalGainFunction
 from submodlib import ProbabilisticSetCoverConditionalGainFunction
+from submodlib import ProbabilisticSetCoverMutualInformationFunction
+from submodlib import SetCoverMutualInformationFunction
+from submodlib import SetCoverConditionalGainFunction
 from submodlib.helper import create_kernel
 from submodlib_cpp import FeatureBased
 from submodlib_cpp import ConcaveOverModular
@@ -35,7 +38,8 @@ optimizerTests = ["FacilityLocation", "GraphCut", "LogDeterminant"]
 
 #optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation", "FacilityLocationConditionalGain", "LogDeterminantConditionalGain"]
 optimizerMITests = ["LogDeterminantConditionalGain"]
-probSCMIFunctions = ["ProbabilisticSetCoverConditionalGain"]
+probSCMIFunctions = ["ProbabilisticSetCoverConditionalGain", "ProbabilisticSetCoverMutualInformation"]
+SCMIFunctions = ["SetCoverMutualInformation", "SetCoverConditionalGain"]
 
 #########Available markers############
 # clustered_mode - for clustered mode related test cases
@@ -51,6 +55,8 @@ probSCMIFunctions = ["ProbabilisticSetCoverConditionalGain"]
 # mi_opt_regular - regular optimizer tests for functions listed in optimizerMITests list
 # psc_mi_opt - for optimizer tests of PSC MI and CG functions
 # psc_mi_regular - for regular tests of PSC MI and CG functions
+# sc_mi_opt - for optimizer tests of SC MI and CG functions
+# sc_mi_regular - for regular tests of SC MI and CG functions
 
 num_internal_clusters = 20 #3
 num_sparse_neighbors = 100 #10 #4
@@ -239,7 +245,24 @@ def data_mi_prob_concepts(request):
     if request.param == "ProbabilisticSetCoverConditionalGain":
         obj = ProbabilisticSetCoverConditionalGainFunction(n=num_samples, probs=probs, num_concepts=num_concepts, concept_weights=concept_weights, private_concepts=privates)
     elif request.param == "ProbabilisticSetCoverMutualInformation":
-        pass
+        obj = ProbabilisticSetCoverMutualInformationFunction(n=num_samples, probs=probs, num_concepts=num_concepts, concept_weights=concept_weights, query_concepts=privates)
+    subset1 = random.sample(list(range(num_samples)), num_set)
+    set1 = set(subset1[:-1])
+    return (obj, set1)
+
+@pytest.fixture
+def data_mi_concepts(request):
+    cover_set = []
+    np.random.seed(1)
+    random.seed(1)
+    concept_weights = np.random.rand(num_concepts).tolist()
+    for i in range(num_samples):
+        cover_set.append(set(random.sample(list(range(num_concepts)), random.randint(0,num_concepts))))
+    queries = set(random.sample(range(num_concepts),num_queries))
+    if request.param == "SetCoverMutualInformation":
+        obj = SetCoverMutualInformationFunction(n=num_samples, cover_set=cover_set, num_concepts=num_concepts, concept_weights=concept_weights, query_concepts = queries)
+    elif request.param == "SetCoverConditionalGain":
+        obj = SetCoverConditionalGainFunction(n=num_samples, cover_set=cover_set, num_concepts=num_concepts, concept_weights=concept_weights, private_concepts = queries)
     subset1 = random.sample(list(range(num_samples)), num_set)
     set1 = set(subset1[:-1])
     return (obj, set1)
@@ -1738,6 +1761,97 @@ class TestAll:
         simpleGain = object_sc.marginalGain(subset, elem)
         fastGain = object_sc.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+    
+    ######## Optimizers test for SetCoverMI #####################
+    @pytest.mark.sc_mi_opt
+    @pytest.mark.parametrize("data_mi_concepts", SCMIFunctions, indirect=['data_mi_concepts'])
+    def test_sc_mi_optimizer_naive_lazy(self, data_mi_concepts):
+        object_scmi, _ = data_mi_concepts
+        greedyListNaive = object_scmi.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_scmi.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        naiveGains = [x[1] for x in greedyListNaive]
+        lazyGains = [x[1] for x in greedyListLazy]
+        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+    
+    @pytest.mark.sc_mi_opt
+    @pytest.mark.parametrize("data_mi_concepts", SCMIFunctions, indirect=['data_mi_concepts'])
+    def test_sc_mi_optimizer_stochastic_lazierThanLazy(self, data_mi_concepts):
+        object_scmi, _ = data_mi_concepts
+        greedyListStochastic = object_scmi.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazierThanLazy = object_scmi.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        stochasticGains = [x[1] for x in greedyListStochastic]
+        lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
+        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+
+    ############ 6 regular tests for SetCover MI Function #######################
+    @pytest.mark.sc_mi_regular
+    @pytest.mark.parametrize("data_mi_concepts", SCMIFunctions, indirect=['data_mi_concepts'])
+    def test_sc_mi_eval_groundset(self, data_mi_concepts):
+        object_scmi, _ = data_mi_concepts
+        groundSet = object_scmi.getEffectiveGroundSet()
+        eval = object_scmi.evaluate(groundSet)
+        assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+
+    @pytest.mark.sc_mi_regular
+    @pytest.mark.parametrize("data_mi_concepts", SCMIFunctions, indirect=['data_mi_concepts'])
+    def test_sc_mi_eval_emptyset(self, data_mi_concepts):
+        object_scmi, _ = data_mi_concepts
+        eval = object_scmi.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.sc_mi_regular
+    @pytest.mark.parametrize("data_mi_concepts", SCMIFunctions, indirect=['data_mi_concepts'])
+    def test_sc_mi_gain_on_empty(self, data_mi_concepts):
+        object_scmi, set1 = data_mi_concepts
+        elem = random.sample(set1, 1)[0]
+        testSet = set()
+        evalEmpty = object_scmi.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_scmi.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_scmi.marginalGain(set(), elem)
+        assert math.isclose(gain1, gain2, rel_tol=1e-05), "Mismatch for gain on empty set"
+        #assert gain1 == gain2, "Mismatch for gain on empty set"
+
+    @pytest.mark.sc_mi_regular
+    @pytest.mark.parametrize("data_mi_concepts", SCMIFunctions, indirect=['data_mi_concepts'])
+    def test_sc_mi_eval_evalfast(self, data_mi_concepts):
+        object_scmi, set1 = data_mi_concepts
+        subset = set()
+        for elem in set1:
+            object_scmi.updateMemoization(subset, elem)
+            subset.add(elem)
+        simpleEval = object_scmi.evaluate(subset)
+        fastEval = object_scmi.evaluateWithMemoization(subset)
+        #assert math.isclose(simpleEval, fastEval, rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+
+    @pytest.mark.sc_mi_regular
+    @pytest.mark.parametrize("data_mi_concepts", SCMIFunctions, indirect=['data_mi_concepts'])
+    def test_sc_mi_set_memoization(self, data_mi_concepts):
+        object_scmi, set1 = data_mi_concepts
+        object_scmi.setMemoization(set1)
+        simpleEval = object_scmi.evaluate(set1)
+        fastEval = object_scmi.evaluateWithMemoization(set1)
+        #assert math.isclose(simpleEval, fastEval, rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+
+    @pytest.mark.sc_mi_regular
+    @pytest.mark.parametrize("data_mi_concepts", SCMIFunctions, indirect=['data_mi_concepts'])
+    def test_sc_mi_gain(self, data_mi_concepts):
+        object_scmi, set1 = data_mi_concepts
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        object_scmi.setMemoization(subset)
+        firstEval = object_scmi.evaluateWithMemoization(subset)
+        subset.add(elem)
+        naiveGain = object_scmi.evaluate(subset) - firstEval
+        subset.remove(elem)
+        simpleGain = object_scmi.marginalGain(subset, elem)
+        fastGain = object_scmi.marginalGainWithMemoization(subset, elem)
+        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+        #assert naiveGain == simpleGain and simpleGain == fastGain, "Mismatch between naive, simple and fast margins"
     
     ######## Optimizers test for ProbabilisticSetCover #####################
     @pytest.mark.psc_opt

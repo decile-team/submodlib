@@ -18,11 +18,14 @@ void cl_FacilityLocationVariantMutualInformation(py::module_ &);
 void cl_ConcaveOverModular(py::module_ &); 
 void cl_GraphCutMutualInformation(py::module_ &); 
 void cl_LogDeterminantMutualInformation(py::module_ &); 
+void cl_ProbabilisticSetCoverMutualInformation(py::module_ &); 
+void cl_SetCoverMutualInformation(py::module_ &); 
 
 void cl_GraphCutConditionalGain(py::module_ &); 
 void cl_FacilityLocationConditionalGain(py::module_ &); 
 void cl_LogDeterminantConditionalGain(py::module_ &); 
-void cl_ProbabilisticSetCoverConditionalGain(py::module_ &); 
+void cl_ProbabilisticSetCoverConditionalGain(py::module_ &);
+void cl_SetCoverConditionalGain(py::module_ &);
 
 void cl_sparse_utils(py::module &);
 
