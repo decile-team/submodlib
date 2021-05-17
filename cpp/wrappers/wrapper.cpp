@@ -22,6 +22,8 @@ PYBIND11_MODULE(submodlib_cpp, m)
 
     cl_GraphCutConditionalGain(m);
     cl_FacilityLocationConditionalGain(m);
+    cl_LogDeterminantConditionalGain(m);
+    cl_ProbabilisticSetCoverConditionalGain(m);
 
     cl_helper(m);
     cl_sparse_utils(m);

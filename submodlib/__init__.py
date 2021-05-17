@@ -21,3 +21,5 @@ from .functions import LogDeterminantMutualInformationFunction
 
 from .functions import GraphCutConditionalGainFunction
 from .functions import FacilityLocationConditionalGainFunction
+from .functions import LogDeterminantConditionalGainFunction
+from .functions import ProbabilisticSetCoverConditionalGainFunction

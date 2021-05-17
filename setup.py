@@ -38,6 +38,8 @@ ext_modules = [
         "cpp/condgain/GraphCutConditionalGain.cpp", "cpp/wrappers/wr_GraphCutConditionalGain.cpp", 
         "cpp/condgain/ConditionalGain.cpp", 
         "cpp/condgain/FacilityLocationConditionalGain.cpp", "cpp/wrappers/wr_FacilityLocationConditionalGain.cpp", 
+        "cpp/condgain/LogDeterminantConditionalGain.cpp", "cpp/wrappers/wr_LogDeterminantConditionalGain.cpp", 
+        "cpp/condgain/ProbabilisticSetCoverConditionalGain.cpp", "cpp/wrappers/wr_ProbabilisticSetCoverConditionalGain.cpp", 
         "cpp/smi/MutualInformation.cpp", 
         "cpp/smi/LogDeterminantMutualInformation.cpp", "cpp/wrappers/wr_LogDeterminantMutualInformation.cpp", 
         "cpp/Clustered.cpp", "cpp/wrappers/wr_Clustered.cpp"],

@@ -55,7 +55,7 @@ print("image_data=", imageData)
 print("privateData=", queryData)
 print("set1=", set1)
 
-obj1 = FacilityLocationConditionalGainFunction(n=num_data, num_privates=num_queries, imageData=imageData, privateData=queryData, metric=metric, privacyHardness=privacyHardness)
+obj1 = LogDeterminantConditionalGainFunction(n=num_data, num_privates=num_queries, imageData=imageData, privateData=queryData, metric=metric, privacyHardness=privacyHardness)
 
 print("Instantiated")
 

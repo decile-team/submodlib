@@ -20,4 +20,6 @@ markers = [
     "regular: marks regular tests for functions listed in allKernelFunctions list",
     "mi_regular: marks regular tests for functions listed in allKernelMIFunctions list",
     "mi_opt_regular: marks regular optimizer tests for functions listed in optimizerMITests list",
+    "psc_mi_regular: for regular tests of PSC MI and CG functions",
+    "psc_mi_opt: for optimizer tests of PSC MI and CG functions",
 ]

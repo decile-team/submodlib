@@ -20,4 +20,6 @@ from .logDeterminantMutualInformation import LogDeterminantMutualInformationFunc
 
 from .graphCutConditionalGain import GraphCutConditionalGainFunction
 from .facilityLocationConditionalGain import FacilityLocationConditionalGainFunction
+from .logDeterminantConditionalGain import LogDeterminantConditionalGainFunction
+from .probabilisticSetCoverConditionalGain import ProbabilisticSetCoverConditionalGainFunction
 
