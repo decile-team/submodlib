@@ -56,9 +56,8 @@ public:
 	//For clustered mode
 	FacilityLocation(ll n_, std::vector<std::unordered_set<ll>> const &clusters_, std::vector<std::vector<std::vector<float>>> const &clusterKernels_, std::vector<ll> const &clusterIndexMap_);
 
-	// FacilityLocation(const FacilityLocation& f);
-    // FacilityLocation* clone();
-
+	FacilityLocation(const FacilityLocation& f);
+    FacilityLocation* clone();
 
 	double evaluate(std::unordered_set<ll> const &X);
 	double evaluateWithMemoization(std::unordered_set<ll> const &X);

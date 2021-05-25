@@ -26,3 +26,5 @@ from .logDeterminantConditionalGain import LogDeterminantConditionalGainFunction
 from .probabilisticSetCoverConditionalGain import ProbabilisticSetCoverConditionalGainFunction
 from .setCoverConditionalGain import SetCoverConditionalGainFunction
 
+from .facilityLocationConditionalMutualInformation import FacilityLocationConditionalMutualInformationFunction
+

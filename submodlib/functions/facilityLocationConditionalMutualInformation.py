@@ -1,16 +1,16 @@
-# facilityLocationConditionalGain.py
+# facilityLocationConditionalMutualInformation.py
 # Author: Vishal Kaushal <vishal.kaushal@gmail.com>
 import numpy as np
 import scipy
 from .setFunction import SetFunction
 import submodlib_cpp as subcp
-from submodlib_cpp import FacilityLocationConditionalGain 
+from submodlib_cpp import FacilityLocationConditionalMutualInformation 
 from submodlib.helper import create_kernel
 
-class FacilityLocationConditionalGainFunction(SetFunction):
-	"""Implementation of the FacilityLocationConditionalGain function.
+class FacilityLocationConditionalMutualInformationFunction(SetFunction):
+	"""Implementation of the FacilityLocationConditionalMutualInformation function.
 
-	FacilityLocationConditionalGain models diversity by computing the sum of pairwise distances of all the elements in a subset. It is defined as
+	FacilityLocationConditionalMutualInformation models diversity by computing the sum of pairwise distances of all the elements in a subset. It is defined as
 
 	.. math::
 			f(X) = \\sum_{i, j \\in X} (1 - s_{ij})
@@ -35,18 +35,23 @@ class FacilityLocationConditionalGainFunction(SetFunction):
 	
 	"""
 
-	def __init__(self, n, num_privates, image_sijs=None, private_sijs=None, imageData=None, privateData=None, metric="cosine", privacyHardness=1):
+	def __init__(self, n, num_queries, num_privates, image_sijs=None, query_sijs=None, private_sijs=None, imageData=None, queryData=None, privateData=None, metric="cosine", magnificationLambda=1, privacyHardness=1):
 		self.n = n
+		self.num_queries = num_queries
 		self.num_privates = num_privates
 		self.metric = metric
+		self.magnificationLambda=magnificationLambda
 		self.privacyHardness=privacyHardness
 		self.image_sijs = image_sijs
+		self.query_sijs = query_sijs
 		self.private_sijs = private_sijs
 		self.imageData = imageData
+		self.queryData = queryData
 		self.privateData = privateData
 		
 		self.cpp_obj = None
 		self.cpp_image_sijs = None
+		self.cpp_query_sijs = None
 		self.cpp_private_sijs = None
 		self.cpp_content = None
 		self.effective_ground = None
@@ -54,28 +59,37 @@ class FacilityLocationConditionalGainFunction(SetFunction):
 		if self.n <= 0:
 			raise Exception("ERROR: Number of elements in ground set must be positive")
 
+		if self.num_queries < 0:
+			raise Exception("ERROR: Number of queries must be >= 0")
+
 		if self.num_privates < 0:
 			raise Exception("ERROR: Number of private data points must be >= 0")
 
 		if self.metric not in ['euclidean', 'cosine']:
 			raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
 
-		if (type(self.image_sijs) != type(None)) and (type(self.private_sijs) != type(None)): # User has provided both kernels
+		if (type(self.image_sijs) != type(None)) and (type(self.query_sijs) != type(None)) and (type(self.private_sijs) != type(None)): # User has provided all three kernels
 			if type(self.image_sijs) != np.ndarray:
 				raise Exception("Invalid image kernel type provided, must be ndarray")
+			if type(self.query_sijs) != np.ndarray:
+				raise Exception("Invalid query kernel type provided, must be ndarray")
 			if type(self.private_sijs) != np.ndarray:
 				raise Exception("Invalid private kernel type provided, must be ndarray")
 			if np.shape(self.image_sijs)[0]!=self.n or np.shape(self.image_sijs)[1]!=self.n:
 				raise Exception("ERROR: Image Kernel should be n X n")
+			if np.shape(self.query_sijs)[0]!=self.n or np.shape(self.query_sijs)[1]!=self.num_queries:
+				raise Exception("ERROR: Query Kernel should be n X num_queries")
 			if np.shape(self.private_sijs)[0]!=self.n or np.shape(self.private_sijs)[1]!=self.num_privates:
-				raise Exception("ERROR: Private Kernel should be n X num_privates")
-			if (type(self.imageData) != type(None)) or (type(self.privateData) != type(None)):
-				print("WARNING: similarity kernels found. Provided image and query data matrices will be ignored.")
+				raise Exception("ERROR: Query Kernel should be n X num_privates")
+			if (type(self.imageData) != type(None)) or (type(self.queryData) != type(None)) or (type(self.privateData) != type(None)):
+				print("WARNING: similarity kernels found. Provided image and query and private data matrices will be ignored.")
 		else: #similarity kernels have not been provided
-			if (type(self.imageData) == type(None)) or (type(self.privateData) == type(None)):
+			if (type(self.imageData) == type(None)) or (type(self.queryData) == type(None)) or (type(self.privateData) == type(None)):
 				raise Exception("Since kernels are not provided, data matrices are a must")
 			if np.shape(self.imageData)[0]!=self.n:
 				raise Exception("ERROR: Inconsistentcy between n and no of examples in the given image data matrix")
+			if np.shape(self.queryData)[0]!=self.num_queries:
+				raise Exception("ERROR: Inconsistentcy between num_queries and no of examples in the given query data matrix")
 			if np.shape(self.privateData)[0]!=self.num_privates:
 				raise Exception("ERROR: Inconsistentcy between num_privates and no of examples in the given query data matrix")
 			
@@ -87,6 +101,9 @@ class FacilityLocationConditionalGainFunction(SetFunction):
 			col = list(self.cpp_content[2].astype(int))
 			self.image_sijs = np.zeros((self.n,self.n))
 			self.image_sijs[row,col] = val
+		
+		    #construct queryKernel
+			self.query_sijs = np.array(subcp.create_kernel_NS(self.queryData.tolist(),self.imageData.tolist(), self.metric))
 		
 		    #construct privateKernel
 			self.private_sijs = np.array(subcp.create_kernel_NS(self.privateData.tolist(),self.imageData.tolist(), self.metric))
@@ -100,6 +117,14 @@ class FacilityLocationConditionalGainFunction(SetFunction):
 			l.append(self.cpp_image_sijs)
 			self.cpp_image_sijs=l
 		
+		self.cpp_query_sijs = self.query_sijs.tolist() #break numpy ndarray to native list of list datastructure
+		
+		if type(self.cpp_query_sijs[0])==int or type(self.cpp_query_sijs[0])==float: #Its critical that we pass a list of list to pybind11
+																			#This condition ensures the same in case of a 1D numpy array (for 1x1 sim matrix)
+			l=[]
+			l.append(self.cpp_query_sijs)
+			self.cpp_query_sijs=l
+		
 		self.cpp_private_sijs = self.private_sijs.tolist() #break numpy ndarray to native list of list datastructure
 		
 		if type(self.cpp_private_sijs[0])==int or type(self.cpp_private_sijs[0])==float: #Its critical that we pass a list of list to pybind11
@@ -108,21 +133,21 @@ class FacilityLocationConditionalGainFunction(SetFunction):
 			l.append(self.cpp_private_sijs)
 			self.cpp_private_sijs=l
 		
-		self.cpp_obj = FacilityLocationConditionalGain(self.n, self.num_privates, self.cpp_image_sijs, self.cpp_private_sijs, self.privacyHardness)
+		self.cpp_obj = FacilityLocationConditionalMutualInformation(self.n, self.num_queries, self.num_privates, self.cpp_image_sijs, self.cpp_query_sijs, self.cpp_private_sijs, self.magnificationLambda, self.privacyHardness)
 		self.effective_ground = set(range(n))
 
 	def evaluate(self, X):
-		"""Computes the FacilityLocationConditionalGain score of a set
+		"""Computes the FacilityLocationConditionalMutualInformation score of a set
 
 		Parameters
 		----------
 		X : set
-			The set whose FacilityLocationConditionalGain score needs to be computed
+			The set whose FacilityLocationConditionalMutualInformation score needs to be computed
 		
 		Returns
 		-------
 		float
-			The FacilityLocationConditionalGain function evaluation on the given set
+			The FacilityLocationConditionalMutualInformation function evaluation on the given set
 
 		"""
 		if type(X)!=set:
@@ -136,7 +161,7 @@ class FacilityLocationConditionalGainFunction(SetFunction):
 		return self.cpp_obj.evaluate(X)
 
 	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon = 0.1, verbose=False):
-		"""Find the optimal subset with maximum FacilityLocationConditionalGain score for a given budget
+		"""Find the optimal subset with maximum FacilityLocationConditionalMutualInformation score for a given budget
 
 		Parameters
 		----------
@@ -163,7 +188,7 @@ class FacilityLocationConditionalGainFunction(SetFunction):
 		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose)
 	
 	def marginalGain(self, X, element):
-		"""Find the marginal gain in FacilityLocationConditionalGain score when a single item (element) is added to a set (X)
+		"""Find the marginal gain in FacilityLocationConditionalMutualInformation score when a single item (element) is added to a set (X)
 
 		Parameters
 		----------
@@ -197,7 +222,7 @@ class FacilityLocationConditionalGainFunction(SetFunction):
 		return self.cpp_obj.marginalGain(X, element)
 
 	def marginalGainWithMemoization(self, X, element):
-		"""Efficiently find the marginal gain in FacilityLocationConditionalGain score when a single item (element) is added to a set (X) assuming that memoized statistics for it are already computed
+		"""Efficiently find the marginal gain in FacilityLocationConditionalMutualInformation score when a single item (element) is added to a set (X) assuming that memoized statistics for it are already computed
 
 		Parameters
 		----------
@@ -230,17 +255,17 @@ class FacilityLocationConditionalGainFunction(SetFunction):
 		return self.cpp_obj.marginalGainWithMemoization(X, element)
 
 	def evaluateWithMemoization(self, X):
-		"""Efficiently compute the FacilityLocationConditionalGain score of a set assuming that memoized statistics for it are already computed
+		"""Efficiently compute the FacilityLocationConditionalMutualInformation score of a set assuming that memoized statistics for it are already computed
 
 		Parameters
 		----------
 		X : set
-			The set whose FacilityLocationConditionalGain score needs to be computed
+			The set whose FacilityLocationConditionalMutualInformation score needs to be computed
 		
 		Returns
 		-------
 		float
-			The FacilityLocationConditionalGain function evaluation on the given set
+			The FacilityLocationConditionalMutualInformation function evaluation on the given set
 
 		"""
 		if type(X)!=set:
@@ -306,7 +331,7 @@ class FacilityLocationConditionalGainFunction(SetFunction):
 		self.cpp_obj.setMemoization(X)
 	
 	def getEffectiveGroundSet(self):
-		"""Get the effective ground set of this FacilityLocationConditionalGain object. This is equal to the ground set when instantiated with partial=False and is equal to the ground_sub when instantiated with partial=True
+		"""Get the effective ground set of this FacilityLocationConditionalMutualInformation object. This is equal to the ground set when instantiated with partial=False and is equal to the ground_sub when instantiated with partial=True
 
 		"""
 		return self.cpp_obj.getEffectiveGroundSet()

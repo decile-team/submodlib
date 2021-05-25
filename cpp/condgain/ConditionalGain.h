@@ -11,12 +11,14 @@ class ConditionalGain : public SetFunction {
    protected:
     SetFunction& f;
     double val_fP;
-    SetFunction *fAUP;
+    //SetFunction *fAUP;
     std::unordered_set<ll> privateSet;
     std::unordered_set<ll> unionPreComputeSet;
 
    public:
     ConditionalGain(SetFunction& f_, std::unordered_set<ll> privateSet_);
+    ConditionalGain(const ConditionalGain& f);
+    ConditionalGain* clone();
 
     double evaluate(std::unordered_set<ll> const &X);
     double evaluateWithMemoization(std::unordered_set<ll> const &X);

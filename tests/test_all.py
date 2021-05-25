@@ -24,6 +24,7 @@ from submodlib import ProbabilisticSetCoverConditionalGainFunction
 from submodlib import ProbabilisticSetCoverMutualInformationFunction
 from submodlib import SetCoverMutualInformationFunction
 from submodlib import SetCoverConditionalGainFunction
+from submodlib import FacilityLocationConditionalMutualInformationFunction
 from submodlib.helper import create_kernel
 from submodlib_cpp import FeatureBased
 from submodlib_cpp import ConcaveOverModular
@@ -33,12 +34,20 @@ allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "Disparity
 
 #allKernelMIFunctions = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation", "FacilityLocationConditionalGain", "LogDeterminantConditionalGain"]
 allKernelMIFunctions = ["LogDeterminantConditionalGain"]
+
+allKernelCMIFunctions = ["FacilityLocationConditionalMutualInformation"]
+
 clusteredModeFunctions = ["FacilityLocation"]
+
 optimizerTests = ["FacilityLocation", "GraphCut", "LogDeterminant"]
 
 #optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation", "FacilityLocationConditionalGain", "LogDeterminantConditionalGain"]
 optimizerMITests = ["LogDeterminantConditionalGain"]
+
+optimizerCMITests = ["FacilityLocationConditionalMutualInformation"]
+
 probSCMIFunctions = ["ProbabilisticSetCoverConditionalGain", "ProbabilisticSetCoverMutualInformation"]
+
 SCMIFunctions = ["SetCoverMutualInformation", "SetCoverConditionalGain"]
 
 #########Available markers############
@@ -57,6 +66,8 @@ SCMIFunctions = ["SetCoverMutualInformation", "SetCoverConditionalGain"]
 # psc_mi_regular - for regular tests of PSC MI and CG functions
 # sc_mi_opt - for optimizer tests of SC MI and CG functions
 # sc_mi_regular - for regular tests of SC MI and CG functions
+# cmi_regular - for regular tests for CMI functions
+# cmi_opt_regular - for optimizer tests for CMI functions
 
 num_internal_clusters = 20 #3
 num_sparse_neighbors = 100 #10 #4
@@ -73,6 +84,7 @@ num_concepts = 50
 num_queries = 10
 magnificationLambda = 2
 privacyHardness = 2
+num_privates=5
 
 # num_internal_clusters = 3 #3
 # num_sparse_neighbors = 5 #10 #4
@@ -159,6 +171,41 @@ def data_queries():
     queryData = np.array(query_features)
 
     return (num_samples-num_queries, num_queries, imageData, queryData, set1)
+
+@pytest.fixture
+def data_queries_privates():
+    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
+    
+    pointsMinusQueryPrivate = list(map(tuple, points)) 
+
+    queries = []
+    query_features = []
+    privates = []
+    private_features = []
+    random_clusters = random.sample(range(num_clusters), num_queries + num_privates)
+    for c in range(num_queries + num_privates): 
+        if c < num_queries:
+            crand = random_clusters[c]
+            q_ind = cluster_ids.tolist().index(crand) #find the ind of first point that belongs to cluster crand
+            queries.append(q_ind)
+            query_features.append(tuple(points[q_ind]))
+            pointsMinusQueryPrivate.remove(tuple(points[q_ind]))
+        else:
+            crand = random_clusters[c]
+            p_ind = cluster_ids.tolist().index(crand) #find the ind of first point that belongs to cluster crand
+            privates.append(p_ind)
+            private_features.append(tuple(points[p_ind]))
+            pointsMinusQueryPrivate.remove(tuple(points[p_ind]))
+        
+    # get a subset with num_set data points
+    random.seed(1)
+    set1 = set(random.sample(range(num_samples-num_queries), num_set))
+
+    imageData = np.array(pointsMinusQueryPrivate)
+    queryData = np.array(query_features)
+    privateData = np.array(private_features)
+
+    return (num_samples-num_queries-num_privates, num_queries, num_privates, imageData, queryData, privateData, set1)
     
 
 @pytest.fixture
@@ -308,6 +355,15 @@ def object_mi_dense_cpp_kernel(request, data_queries):
     return obj
 
 @pytest.fixture
+def object_cmi_dense_cpp_kernel(request, data_queries_privates):
+    num_data, num_q, num_p, imageData, queryData, privateData, _ = data_queries_privates
+    if request.param == "FacilityLocationConditionalMutualInformation":
+        obj = FacilityLocationConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, imageData=imageData, queryData=queryData, privateData=privateData, metric=metric, magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
+    else:
+        return None
+    return obj
+
+@pytest.fixture
 def object_mi_dense_py_kernel(request, data_queries):
     num_data, num_q, imageData, queryData, _ = data_queries
     _, imageKernel = create_kernel(imageData, mode="dense", metric=metric)
@@ -329,6 +385,18 @@ def object_mi_dense_py_kernel(request, data_queries):
         obj = LogDeterminantMutualInformationFunction(n=num_data, num_queries=num_q, image_sijs=imageKernel, query_sijs=queryKernel, query_query_sijs=queryQueryKernel, lambdaVal=1, magnificationLambda=magnificationLambda)
     elif request.param == "LogDeterminantConditionalGain":
         obj = LogDeterminantConditionalGainFunction(n=num_data, num_privates=num_q, image_sijs=imageKernel, private_sijs=queryKernel, private_private_sijs=queryQueryKernel, lambdaVal=1, privacyHardness=privacyHardness)
+    else:
+        return None
+    return obj
+
+@pytest.fixture
+def object_cmi_dense_py_kernel(request, data_queries_privates):
+    num_data, num_q, num_p, imageData, queryData, privateData, _ = data_queries_privates
+    _, imageKernel = create_kernel(imageData, mode="dense", metric=metric)
+    queryKernel = create_kernel(queryData, mode="dense", metric=metric, X_master=imageData)
+    privateKernel = create_kernel(privateData, mode="dense", metric=metric, X_master=imageData)
+    if request.param == "FacilityLocationConditionalMutualInformation":
+        obj = FacilityLocationConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, image_sijs=imageKernel, query_sijs=queryKernel, private_sijs=privateKernel,magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
     else:
         return None
     return obj
@@ -2173,4 +2241,150 @@ class TestAll:
     def test_mi_stochastic_lazierThanLazy(self, object_mi_dense_cpp_kernel):
         greedyListStochastic = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazierThanLazy = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+
+    ############ 6 tests for CMI dense cpp kernel #######################
+    @pytest.mark.cmi_regular
+    @pytest.mark.parametrize("object_cmi_dense_cpp_kernel", allKernelCMIFunctions, indirect=['object_cmi_dense_cpp_kernel'])
+    def test_cmi_dense_cpp_eval_groundset(self, object_cmi_dense_cpp_kernel):
+        groundSet = object_cmi_dense_cpp_kernel.getEffectiveGroundSet()
+        eval = object_cmi_dense_cpp_kernel.evaluate(groundSet)
+        assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+
+    @pytest.mark.cmi_regular
+    @pytest.mark.parametrize("object_cmi_dense_cpp_kernel", allKernelCMIFunctions, indirect=['object_cmi_dense_cpp_kernel'])
+    def test_cmi_dense_cpp_eval_emptyset(self, object_cmi_dense_cpp_kernel):
+        eval = object_cmi_dense_cpp_kernel.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.cmi_regular
+    @pytest.mark.parametrize("object_cmi_dense_cpp_kernel", allKernelCMIFunctions, indirect=['object_cmi_dense_cpp_kernel'])
+    def test_cmi_dense_cpp_gain_on_empty(self, data_queries_privates, object_cmi_dense_cpp_kernel):
+        _, _, _, _, _, _, set1 = data_queries_privates
+        elem = random.sample(set1, 1)[0]
+        testSet = set()
+        evalEmpty = object_cmi_dense_cpp_kernel.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_cmi_dense_cpp_kernel.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_cmi_dense_cpp_kernel.marginalGain(set(), elem)
+        assert math.isclose(gain1, gain2, rel_tol=1e-05), "Mismatch for gain on empty set"
+
+    @pytest.mark.cmi_regular
+    @pytest.mark.parametrize("object_cmi_dense_cpp_kernel", allKernelCMIFunctions, indirect=['object_cmi_dense_cpp_kernel'])
+    def test_cmi_dense_cpp_eval_evalfast(self, data_queries_privates, object_cmi_dense_cpp_kernel):
+        _, _, _, _, _, _, set1 = data_queries_privates
+        subset = set()
+        for elem in set1:
+            object_cmi_dense_cpp_kernel.updateMemoization(subset, elem)
+            subset.add(elem)
+        simpleEval = object_cmi_dense_cpp_kernel.evaluate(subset)
+        fastEval = object_cmi_dense_cpp_kernel.evaluateWithMemoization(subset)
+        assert math.isclose(simpleEval, fastEval, rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+
+    @pytest.mark.cmi_regular
+    @pytest.mark.parametrize("object_cmi_dense_cpp_kernel", allKernelCMIFunctions, indirect=['object_cmi_dense_cpp_kernel'])
+    def test_cmi_dense_cpp_set_memoization(self, data_queries_privates, object_cmi_dense_cpp_kernel):
+        _, _, _, _, _, _, set1 = data_queries_privates
+        object_cmi_dense_cpp_kernel.setMemoization(set1)
+        simpleEval = object_cmi_dense_cpp_kernel.evaluate(set1)
+        fastEval = object_cmi_dense_cpp_kernel.evaluateWithMemoization(set1)
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+
+    @pytest.mark.cmi_regular
+    @pytest.mark.parametrize("object_cmi_dense_cpp_kernel", allKernelCMIFunctions, indirect=['object_cmi_dense_cpp_kernel'])
+    def test_cmi_dense_cpp_gain(self, data_queries_privates, object_cmi_dense_cpp_kernel):
+        _, _, _, _, _, _, set1 = data_queries_privates
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        object_cmi_dense_cpp_kernel.setMemoization(subset)
+        firstEval = object_cmi_dense_cpp_kernel.evaluateWithMemoization(subset)
+        subset.add(elem)
+        naiveGain = object_cmi_dense_cpp_kernel.evaluate(subset) - firstEval
+        subset.remove(elem)
+        simpleGain = object_cmi_dense_cpp_kernel.marginalGain(subset, elem)
+        fastGain = object_cmi_dense_cpp_kernel.marginalGainWithMemoization(subset, elem)
+        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+
+    ############ 6 tests for dense python kernel #######################
+
+    @pytest.mark.cmi_regular
+    @pytest.mark.parametrize("object_cmi_dense_py_kernel", allKernelCMIFunctions, indirect=['object_cmi_dense_py_kernel'])
+    def test_cmi_dense_py_eval_groundset(self, object_cmi_dense_py_kernel):
+        groundSet = object_cmi_dense_py_kernel.getEffectiveGroundSet()
+        eval = object_cmi_dense_py_kernel.evaluate(groundSet)
+        assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+    
+    @pytest.mark.cmi_regular
+    @pytest.mark.parametrize("object_cmi_dense_py_kernel", allKernelCMIFunctions, indirect=['object_cmi_dense_py_kernel'])
+    def test_cmi_dense_py_eval_emptyset(self, object_cmi_dense_py_kernel):
+        eval = object_cmi_dense_py_kernel.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.cmi_regular
+    @pytest.mark.parametrize("object_cmi_dense_py_kernel", allKernelCMIFunctions, indirect=['object_cmi_dense_py_kernel'])
+    def test_cmi_dense_py_gain_on_empty(self, data_queries_privates, object_cmi_dense_py_kernel):
+        _, _, _, _, _, _, set1 = data_queries_privates
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        testSet = set()
+        evalEmpty = object_cmi_dense_py_kernel.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_cmi_dense_py_kernel.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_cmi_dense_py_kernel.marginalGain(set(), elem)
+        assert math.isclose(gain1,gain2,rel_tol=1e-05), "Mismatch for gain on empty set"
+    
+    @pytest.mark.cmi_regular
+    @pytest.mark.parametrize("object_cmi_dense_py_kernel", allKernelCMIFunctions, indirect=['object_cmi_dense_py_kernel'])
+    def test_cmi_dense_py_eval_evalfast(self, data_queries_privates, object_cmi_dense_py_kernel):
+        _, _, _, _, _, _, set1 = data_queries_privates
+        subset = set()
+        for elem in set1:
+            object_cmi_dense_py_kernel.updateMemoization(subset, elem)
+            subset.add(elem)
+        simpleEval = object_cmi_dense_py_kernel.evaluate(subset)
+        fastEval = object_cmi_dense_py_kernel.evaluateWithMemoization(subset)
+        assert math.isclose(simpleEval, fastEval,rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+
+    @pytest.mark.cmi_regular
+    @pytest.mark.parametrize("object_cmi_dense_py_kernel", allKernelCMIFunctions, indirect=['object_cmi_dense_py_kernel'])
+    def test_cmi_dense_py_set_memoization(self, data_queries_privates, object_cmi_dense_py_kernel):
+        _, _, _, _, _, _, set1 = data_queries_privates
+        object_cmi_dense_py_kernel.setMemoization(set1)
+        simpleEval = object_cmi_dense_py_kernel.evaluate(set1)
+        fastEval = object_cmi_dense_py_kernel.evaluateWithMemoization(set1)
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+
+    @pytest.mark.cmi_regular
+    @pytest.mark.parametrize("object_cmi_dense_py_kernel", allKernelCMIFunctions, indirect=['object_cmi_dense_py_kernel'])
+    def test_cmi_dense_py_gain(self, data_queries_privates, object_cmi_dense_py_kernel):
+        _, _, _, _, _, _, set1 = data_queries_privates
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        object_cmi_dense_py_kernel.setMemoization(subset)
+        firstEval = object_cmi_dense_py_kernel.evaluateWithMemoization(subset)
+        subset.add(elem)
+        naiveGain = object_cmi_dense_py_kernel.evaluate(subset) - firstEval
+        subset.remove(elem)
+        simpleGain = object_cmi_dense_py_kernel.marginalGain(subset, elem)
+        fastGain = object_cmi_dense_py_kernel.marginalGainWithMemoization(subset, elem)
+        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+
+    ######## Tests for CMI optimizers ################
+    @pytest.mark.cmi_opt_regular
+    @pytest.mark.parametrize("object_cmi_dense_cpp_kernel", optimizerCMITests, indirect=['object_cmi_dense_cpp_kernel'])
+    def test_cmi_naive_lazy(self, object_cmi_dense_cpp_kernel):
+        greedyListNaive = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        assert greedyListNaive == greedyListLazy, "Mismatch between naiveGreedy and lazyGreedy"
+    
+    @pytest.mark.cmi_opt_regular
+    @pytest.mark.parametrize("object_cmi_dense_cpp_kernel", optimizerCMITests, indirect=['object_cmi_dense_cpp_kernel'])
+    def test_cmi_stochastic_lazierThanLazy(self, object_cmi_dense_cpp_kernel):
+        greedyListStochastic = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazierThanLazy = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"

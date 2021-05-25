@@ -23,9 +23,12 @@ ConditionalGain::ConditionalGain(SetFunction& f_, std::unordered_set<ll> private
     f.setMemoization(privateSet);
 }
 
-// ConditionalGain* ConditionalGain::clone() {
-//     return NULL;
-// }
+ConditionalGain::ConditionalGain(const ConditionalGain& input_f): privateSet(input_f.privateSet), val_fP(input_f.val_fP), unionPreComputeSet(input_f.unionPreComputeSet), f(*(input_f.f.clone())) {
+}
+
+ConditionalGain* ConditionalGain::clone() {
+    return new ConditionalGain(*this);
+}
 
 double ConditionalGain::evaluate(std::unordered_set<ll> const &X) {
     if (X.size() == 0) {
