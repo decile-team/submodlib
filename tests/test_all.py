@@ -32,23 +32,30 @@ from submodlib.helper import create_kernel
 from submodlib_cpp import FeatureBased
 from submodlib_cpp import ConcaveOverModular
 
-allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "DisparityMin", "LogDeterminant"]
-#allKernelFunctions = ["LogDeterminant"]
+#allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "DisparityMin", "LogDeterminant"]
+#allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "DisparityMin"]
+allKernelFunctions = ["LogDeterminant"]
 
 #allKernelMIFunctions = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation", "FacilityLocationConditionalGain", "LogDeterminantConditionalGain"]
-allKernelMIFunctions = ["LogDeterminantConditionalGain"]
+#allKernelMIFunctions = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "FacilityLocationConditionalGain"]
+allKernelMIFunctions = ["LogDeterminantMutualInformation", "LogDeterminantConditionalGain"]
 
 #allKernelCMIFunctions = ["FacilityLocationConditionalMutualInformation", "LogDeterminantConditionalMutualInformation"]
+#allKernelCMIFunctions = ["FacilityLocationConditionalMutualInformation"]
 allKernelCMIFunctions = ["LogDeterminantConditionalMutualInformation"]
 
 clusteredModeFunctions = ["FacilityLocation"]
 
-optimizerTests = ["FacilityLocation", "GraphCut", "LogDeterminant"]
+#optimizerTests = ["FacilityLocation", "GraphCut", "LogDeterminant"]
+#optimizerTests = ["FacilityLocation", "GraphCut"]
+optimizerTests = ["LogDeterminant"]
 
 #optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation", "FacilityLocationConditionalGain", "LogDeterminantConditionalGain"]
-optimizerMITests = ["LogDeterminantConditionalGain"]
+#optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "FacilityLocationConditionalGain"]
+optimizerMITests = ["LogDeterminantMutualInformation", "LogDeterminantConditionalGain"]
 
 #optimizerCMITests = ["FacilityLocationConditionalMutualInformation", "LogDeterminantConditionalMutualInformation"]
+#optimizerCMITests = ["FacilityLocationConditionalMutualInformation"]
 optimizerCMITests = ["LogDeterminantConditionalMutualInformation"]
 
 probSCMIFunctions = ["ProbabilisticSetCoverConditionalGain", "ProbabilisticSetCoverMutualInformation"]
