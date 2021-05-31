@@ -1,7 +1,7 @@
-#ifndef SETCOVERCG_H
-#define SETCOVERCG_H
+#ifndef PSCCMI_H
+#define PSCCMI_H
 
-#include "../submod/SetCover.h"
+#include "../submod/ProbabilisticSetCover.h"
 #include"../optimizers/NaiveGreedyOptimizer.h"
 #include"../optimizers/LazyGreedyOptimizer.h"
 #include"../optimizers/StochasticGreedyOptimizer.h"
@@ -9,19 +9,19 @@
 #include"../SetFunction.h"
 #include <unordered_set>
 
-class SetCoverConditionalGain :public SetFunction
+class ProbabilisticSetCoverConditionalMutualInformation :public SetFunction
 {
 protected:
     int numConcepts;
 	ll n; //size of ground set
+	std::unordered_set<int> Q; //set of concept indices in query set
 	std::unordered_set<int> P; //set of concept indices in private set
-    std::vector<std::unordered_set<int>> coverSet;
+    std::vector<std::vector<float>> groundSetConceptProbabilities;
 	std::vector<float> conceptWeights;
-	std::vector<std::unordered_set<int>> coverSetMinusP;
-	SetCover* scMinusP;
-
+	std::vector<float> conceptWeightsQAndP;
+	ProbabilisticSetCover* pscQAndP;
 public:
-	SetCoverConditionalGain(ll n_, std::vector<std::unordered_set<int>> const &coverSet_, int numConcepts_, std::vector<float> const& conceptWeights_, std::unordered_set<int> const & P_);
+	ProbabilisticSetCoverConditionalMutualInformation(ll n_, int numConcepts_,std::vector<std::vector<float>> const &groundSetConceptProbabilities_,  std::vector<float> const& conceptWeights_, std::unordered_set<int> const & Q_, std::unordered_set<int> const & P_);
 	double evaluate(std::unordered_set<ll> const &X);
 	double evaluateWithMemoization(std::unordered_set<ll> const &X);
 	double marginalGain(std::unordered_set<ll> const &X, ll item);
@@ -31,6 +31,6 @@ public:
 	std::vector<std::pair<ll, double>> maximize(std::string, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose);
 	void clearMemoization();
 	void setMemoization(std::unordered_set<ll> const &X);
-	// SetCoverConditionalGain* clone();
+	// ProbabilisticSetCoverConditionalMutualInformation* clone();
 };
 #endif

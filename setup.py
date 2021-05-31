@@ -47,6 +47,8 @@ ext_modules = [
         "cpp/condgain/SetCoverConditionalGain.cpp", "cpp/wrappers/wr_SetCoverConditionalGain.cpp", 
         "cpp/cmi/FacilityLocationConditionalMutualInformation.cpp", "cpp/wrappers/wr_FacilityLocationConditionalMutualInformation.cpp", 
         "cpp/cmi/LogDeterminantConditionalMutualInformation.cpp", "cpp/wrappers/wr_LogDeterminantConditionalMutualInformation.cpp", 
+        "cpp/cmi/SetCoverConditionalMutualInformation.cpp", "cpp/wrappers/wr_SetCoverConditionalMutualInformation.cpp", 
+        "cpp/cmi/ProbabilisticSetCoverConditionalMutualInformation.cpp", "cpp/wrappers/wr_ProbabilisticSetCoverConditionalMutualInformation.cpp", 
         "cpp/Clustered.cpp", "cpp/wrappers/wr_Clustered.cpp"],
         # Example: passing in the version to the compiled code
         #sorted(glob("cpp/submod/*.cpp")),

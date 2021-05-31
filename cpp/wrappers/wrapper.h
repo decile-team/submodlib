@@ -29,6 +29,8 @@ void cl_SetCoverConditionalGain(py::module_ &);
 
 void cl_FacilityLocationConditionalMutualInformation(py::module_ &);
 void cl_LogDeterminantConditionalMutualInformation(py::module_ &);
+void cl_SetCoverConditionalMutualInformation(py::module_ &);
+void cl_ProbabilisticSetCoverConditionalMutualInformation(py::module_ &);
 
 void cl_sparse_utils(py::module &);
 

@@ -1,5 +1,5 @@
-#ifndef SETCOVERCG_H
-#define SETCOVERCG_H
+#ifndef SETCOVERCMI_H
+#define SETCOVERCMI_H
 
 #include "../submod/SetCover.h"
 #include"../optimizers/NaiveGreedyOptimizer.h"
@@ -9,19 +9,20 @@
 #include"../SetFunction.h"
 #include <unordered_set>
 
-class SetCoverConditionalGain :public SetFunction
+class SetCoverConditionalMutualInformation :public SetFunction
 {
 protected:
     int numConcepts;
 	ll n; //size of ground set
+	std::unordered_set<int> Q; //set of concept indices in query set
 	std::unordered_set<int> P; //set of concept indices in private set
     std::vector<std::unordered_set<int>> coverSet;
 	std::vector<float> conceptWeights;
-	std::vector<std::unordered_set<int>> coverSetMinusP;
-	SetCover* scMinusP;
+	std::vector<std::unordered_set<int>> coverSetQMinusP;
+	SetCover* scQMinusP;
 
 public:
-	SetCoverConditionalGain(ll n_, std::vector<std::unordered_set<int>> const &coverSet_, int numConcepts_, std::vector<float> const& conceptWeights_, std::unordered_set<int> const & P_);
+	SetCoverConditionalMutualInformation(ll n_, std::vector<std::unordered_set<int>> const &coverSet_, int numConcepts_, std::vector<float> const& conceptWeights_, std::unordered_set<int> const & Q_, std::unordered_set<int> const & P_);
 	double evaluate(std::unordered_set<ll> const &X);
 	double evaluateWithMemoization(std::unordered_set<ll> const &X);
 	double marginalGain(std::unordered_set<ll> const &X, ll item);
@@ -31,6 +32,6 @@ public:
 	std::vector<std::pair<ll, double>> maximize(std::string, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose);
 	void clearMemoization();
 	void setMemoization(std::unordered_set<ll> const &X);
-	// SetCoverConditionalGain* clone();
+	// SetCoverConditionalMutualInformation* clone();
 };
 #endif

@@ -29,3 +29,5 @@ from .functions import SetCoverConditionalGainFunction
 
 from .functions import FacilityLocationConditionalMutualInformationFunction
 from .functions import LogDeterminantConditionalMutualInformationFunction
+from .functions import SetCoverConditionalMutualInformationFunction
+from .functions import ProbabilisticSetCoverConditionalMutualInformationFunction

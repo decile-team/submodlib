@@ -26,6 +26,8 @@ from submodlib import SetCoverMutualInformationFunction
 from submodlib import SetCoverConditionalGainFunction
 from submodlib import FacilityLocationConditionalMutualInformationFunction
 from submodlib import LogDeterminantConditionalMutualInformationFunction
+from submodlib import SetCoverConditionalMutualInformationFunction
+from submodlib import ProbabilisticSetCoverConditionalMutualInformationFunction
 from submodlib.helper import create_kernel
 from submodlib_cpp import FeatureBased
 from submodlib_cpp import ConcaveOverModular
@@ -53,6 +55,7 @@ probSCMIFunctions = ["ProbabilisticSetCoverConditionalGain", "ProbabilisticSetCo
 
 SCMIFunctions = ["SetCoverMutualInformation", "SetCoverConditionalGain"]
 
+
 #########Available markers############
 # clustered_mode - for clustered mode related test cases
 # fb_opt - for optimizer tests of FB functions
@@ -71,6 +74,10 @@ SCMIFunctions = ["SetCoverMutualInformation", "SetCoverConditionalGain"]
 # sc_mi_regular - for regular tests of SC MI and CG functions
 # cmi_regular - for regular tests for CMI functions
 # cmi_opt_regular - for optimizer tests for CMI functions
+# sc_cmi_regular - for regular tests of SC CMI
+# sc_cmi_opt - for optimizer tests of SC CMI
+# psc_cmi_regular - for regular tests of PSC CMI
+# psc_cmi_opt - for optimizer tests of PSC CMI
 
 num_internal_clusters = 20 #3
 num_sparse_neighbors = 100 #10 #4
@@ -313,6 +320,40 @@ def data_mi_concepts(request):
         obj = SetCoverMutualInformationFunction(n=num_samples, cover_set=cover_set, num_concepts=num_concepts, concept_weights=concept_weights, query_concepts = queries)
     elif request.param == "SetCoverConditionalGain":
         obj = SetCoverConditionalGainFunction(n=num_samples, cover_set=cover_set, num_concepts=num_concepts, concept_weights=concept_weights, private_concepts = queries)
+    subset1 = random.sample(list(range(num_samples)), num_set)
+    set1 = set(subset1[:-1])
+    return (obj, set1)
+
+@pytest.fixture
+def data_cmi_concepts():
+    cover_set = []
+    np.random.seed(1)
+    random.seed(1)
+    concept_weights = np.random.rand(num_concepts).tolist()
+    for i in range(num_samples):
+        cover_set.append(set(random.sample(list(range(num_concepts)), random.randint(0,num_concepts))))
+    queries = set(random.sample(range(num_concepts),num_queries))
+    set_concepts = set(range(num_concepts))
+    set_concepts_minus_queries = set_concepts - queries
+    privates = set(random.sample(set_concepts_minus_queries,num_privates))
+    obj = SetCoverConditionalMutualInformationFunction(n=num_samples, cover_set=cover_set, num_concepts=num_concepts, concept_weights=concept_weights, query_concepts = queries, private_concepts=privates)
+    subset1 = random.sample(list(range(num_samples)), num_set)
+    set1 = set(subset1[:-1])
+    return (obj, set1)
+
+@pytest.fixture
+def data_cmi_prob_concepts():
+    probs = []
+    np.random.seed(1)
+    random.seed(1)
+    concept_weights = np.random.rand(num_concepts).tolist()
+    for i in range(num_samples):
+        probs.append(np.random.rand(num_concepts).tolist())
+    queries = set(random.sample(range(num_concepts),num_queries))
+    set_concepts = set(range(num_concepts))
+    set_concepts_minus_queries = set_concepts - queries
+    privates = set(random.sample(set_concepts_minus_queries,num_privates))
+    obj = ProbabilisticSetCoverConditionalMutualInformationFunction(n=num_samples, probs=probs, num_concepts=num_concepts, concept_weights=concept_weights, query_concepts=queries, private_concepts=privates)
     subset1 = random.sample(list(range(num_samples)), num_set)
     set1 = set(subset1[:-1])
     return (obj, set1)
@@ -2398,3 +2439,170 @@ class TestAll:
         greedyListStochastic = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazierThanLazy = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+    
+
+    ######## Optimizers test for SetCoverCMI #####################
+    @pytest.mark.sc_cmi_opt
+    def test_sc_cmi_optimizer_naive_lazy(self, data_cmi_concepts):
+        object_sccmi, _ = data_cmi_concepts
+        greedyListNaive = object_sccmi.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_sccmi.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        naiveGains = [x[1] for x in greedyListNaive]
+        lazyGains = [x[1] for x in greedyListLazy]
+        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+    
+    @pytest.mark.sc_cmi_opt
+    def test_sc_cmi_optimizer_stochastic_lazierThanLazy(self, data_cmi_concepts):
+        object_sccmi, _ = data_cmi_concepts
+        greedyListStochastic = object_sccmi.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazierThanLazy = object_sccmi.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        stochasticGains = [x[1] for x in greedyListStochastic]
+        lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
+        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+
+    ############ 6 regular tests for SetCover CMI Function #######################
+    @pytest.mark.sc_cmi_regular
+    def test_sc_cmi_eval_groundset(self, data_cmi_concepts):
+        object_sccmi, _ = data_cmi_concepts
+        groundSet = object_sccmi.getEffectiveGroundSet()
+        eval = object_sccmi.evaluate(groundSet)
+        assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+
+    @pytest.mark.sc_cmi_regular
+    def test_sc_cmi_eval_emptyset(self, data_cmi_concepts):
+        object_sccmi, _ = data_cmi_concepts
+        eval = object_sccmi.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.sc_cmi_regular
+    def test_sc_cmi_gain_on_empty(self, data_cmi_concepts):
+        object_sccmi, set1 = data_cmi_concepts
+        elem = random.sample(set1, 1)[0]
+        testSet = set()
+        evalEmpty = object_sccmi.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_sccmi.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_sccmi.marginalGain(set(), elem)
+        assert math.isclose(gain1, gain2, rel_tol=1e-05), "Mismatch for gain on empty set"
+        #assert gain1 == gain2, "Mismatch for gain on empty set"
+
+    @pytest.mark.sc_cmi_regular
+    def test_sc_cmi_eval_evalfast(self, data_cmi_concepts):
+        object_sccmi, set1 = data_cmi_concepts
+        subset = set()
+        for elem in set1:
+            object_sccmi.updateMemoization(subset, elem)
+            subset.add(elem)
+        simpleEval = object_sccmi.evaluate(subset)
+        fastEval = object_sccmi.evaluateWithMemoization(subset)
+        #assert math.isclose(simpleEval, fastEval, rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+
+    @pytest.mark.sc_cmi_regular
+    def test_sc_cmi_set_memoization(self, data_cmi_concepts):
+        object_sccmi, set1 = data_cmi_concepts
+        object_sccmi.setMemoization(set1)
+        simpleEval = object_sccmi.evaluate(set1)
+        fastEval = object_sccmi.evaluateWithMemoization(set1)
+        #assert math.isclose(simpleEval, fastEval, rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+
+    @pytest.mark.sc_cmi_regular
+    def test_sc_cmi_gain(self, data_cmi_concepts):
+        object_sccmi, set1 = data_cmi_concepts
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        object_sccmi.setMemoization(subset)
+        firstEval = object_sccmi.evaluateWithMemoization(subset)
+        subset.add(elem)
+        naiveGain = object_sccmi.evaluate(subset) - firstEval
+        subset.remove(elem)
+        simpleGain = object_sccmi.marginalGain(subset, elem)
+        fastGain = object_sccmi.marginalGainWithMemoization(subset, elem)
+        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+        #assert naiveGain == simpleGain and simpleGain == fastGain, "Mismatch between naive, simple and fast margins"
+    
+    ######## Optimizers test for ProbabilisticSetCoverCMI #####################
+    @pytest.mark.psc_cmi_opt
+    def test_psc_cmi_optimizer_naive_lazy(self, data_cmi_prob_concepts):
+        object_psccmi, _ = data_cmi_prob_concepts
+        greedyListNaive = object_psccmi.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_psccmi.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        naiveGains = [x[1] for x in greedyListNaive]
+        lazyGains = [x[1] for x in greedyListLazy]
+        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+    
+    @pytest.mark.psc_cmi_opt
+    def test_psc_cmi_optimizer_stochastic_lazierThanLazy(self, data_cmi_prob_concepts):
+        object_psccmi, _ = data_cmi_prob_concepts
+        greedyListStochastic = object_psccmi.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazierThanLazy = object_psccmi.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        stochasticGains = [x[1] for x in greedyListStochastic]
+        lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
+        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+
+    ############ 6 regular tests for ProbabilisticSetCover CMI Function #######################
+    @pytest.mark.psc_cmi_regular
+    def test_psc_cmi_eval_groundset(self, data_cmi_prob_concepts):
+        object_psccmi, _ = data_cmi_prob_concepts
+        groundSet = object_psccmi.getEffectiveGroundSet()
+        eval = object_psccmi.evaluate(groundSet)
+        assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+
+    @pytest.mark.psc_cmi_regular
+    def test_psc_cmi_eval_emptyset(self, data_cmi_prob_concepts):
+        object_psccmi, _ = data_cmi_prob_concepts
+        eval = object_psccmi.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.psc_cmi_regular
+    def test_psc_cmi_gain_on_empty(self, data_cmi_prob_concepts):
+        object_psccmi, set1 = data_cmi_prob_concepts
+        elem = random.sample(set1, 1)[0]
+        testSet = set()
+        evalEmpty = object_psccmi.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_psccmi.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_psccmi.marginalGain(set(), elem)
+        assert math.isclose(gain1, gain2, rel_tol=1e-05), "Mismatch for gain on empty set"
+        #assert gain1 == gain2, "Mismatch for gain on empty set"
+
+    @pytest.mark.psc_cmi_regular
+    def test_psc_cmi_eval_evalfast(self, data_cmi_prob_concepts):
+        object_psccmi, set1 = data_cmi_prob_concepts
+        subset = set()
+        for elem in set1:
+            object_psccmi.updateMemoization(subset, elem)
+            subset.add(elem)
+        simpleEval = object_psccmi.evaluate(subset)
+        fastEval = object_psccmi.evaluateWithMemoization(subset)
+        #assert math.isclose(simpleEval, fastEval, rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+
+    @pytest.mark.psc_cmi_regular
+    def test_psc_cmi_set_memoization(self, data_cmi_prob_concepts):
+        object_psccmi, set1 = data_cmi_prob_concepts
+        object_psccmi.setMemoization(set1)
+        simpleEval = object_psccmi.evaluate(set1)
+        fastEval = object_psccmi.evaluateWithMemoization(set1)
+        #assert math.isclose(simpleEval, fastEval, rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+
+    @pytest.mark.psc_cmi_regular
+    def test_psc_cmi_gain(self, data_cmi_prob_concepts):
+        object_psccmi, set1 = data_cmi_prob_concepts
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        object_psccmi.setMemoization(subset)
+        firstEval = object_psccmi.evaluateWithMemoization(subset)
+        subset.add(elem)
+        naiveGain = object_psccmi.evaluate(subset) - firstEval
+        subset.remove(elem)
+        simpleGain = object_psccmi.marginalGain(subset, elem)
+        fastGain = object_psccmi.marginalGainWithMemoization(subset, elem)
+        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+        #assert naiveGain == simpleGain and simpleGain == fastGain, "Mismatch between naive, simple and fast margins"
