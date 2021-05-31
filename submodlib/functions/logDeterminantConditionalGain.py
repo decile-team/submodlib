@@ -68,9 +68,9 @@ class LogDeterminantConditionalGainFunction(SetFunction):
 			if type(self.image_sijs) != np.ndarray:
 				raise Exception("Invalid image kernel type provided, must be ndarray")
 			if type(self.private_sijs) != np.ndarray:
-				raise Exception("Invalid query kernel type provided, must be ndarray")
+				raise Exception("Invalid private kernel type provided, must be ndarray")
 			if type(self.private_private_sijs) != np.ndarray:
-				raise Exception("Invalid query-query kernel type provided, must be ndarray")
+				raise Exception("Invalid private-private kernel type provided, must be ndarray")
 			if np.shape(self.image_sijs)[0]!=self.n or np.shape(self.image_sijs)[1]!=self.n:
 				raise Exception("ERROR: Image Kernel should be n X n")
 			if np.shape(self.private_sijs)[0]!=self.n or np.shape(self.private_sijs)[1]!=self.num_privates:

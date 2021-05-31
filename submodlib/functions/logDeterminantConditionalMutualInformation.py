@@ -1,16 +1,16 @@
-# logDeterminantMutualInformation.py
+# logDeterminantConditionalMutualInformation.py
 # Author: Vishal Kaushal <vishal.kaushal@gmail.com>
 import numpy as np
 import scipy
 from .setFunction import SetFunction
 import submodlib_cpp as subcp
-from submodlib_cpp import LogDeterminantMutualInformation 
+from submodlib_cpp import LogDeterminantConditionalMutualInformation 
 from submodlib.helper import create_kernel
 
-class LogDeterminantMutualInformationFunction(SetFunction):
-	"""Implementation of the LogDeterminantMutualInformation function.
+class LogDeterminantConditionalMutualInformationFunction(SetFunction):
+	"""Implementation of the LogDeterminantConditionalMutualInformation function.
 
-	LogDeterminantMutualInformation models diversity by computing the sum of pairwise distances of all the elements in a subset. It is defined as
+	LogDeterminantConditionalMutualInformation models diversity by computing the sum of pairwise distances of all the elements in a subset. It is defined as
 
 	.. math::
 			f(X) = \\sum_{i, j \\in X} (1 - s_{ij})
@@ -35,24 +35,34 @@ class LogDeterminantMutualInformationFunction(SetFunction):
 	
 	"""
 
-	def __init__(self, n, num_queries, lambdaVal, image_sijs=None, query_sijs=None, query_query_sijs=None, imageData=None, queryData=None, metric="cosine", magnificationLambda=1):
+	def __init__(self, n, num_queries, num_privates, lambdaVal, image_sijs=None, query_sijs=None, query_query_sijs=None, private_sijs=None, private_private_sijs=None, query_private_sijs=None, imageData=None, queryData=None, privateData=None, metric="cosine", magnificationLambda=1, privacyHardness=1):
 		self.n = n
 		self.num_queries = num_queries
+		self.num_privates = num_privates
 		self.lambdaVal=lambdaVal
 		self.metric = metric
 		self.magnificationLambda=magnificationLambda
+		self.privacyHardness=privacyHardness
 		self.image_sijs = image_sijs
 		self.query_sijs = query_sijs
 		self.query_query_sijs = query_query_sijs
+		self.private_sijs = private_sijs
+		self.private_private_sijs = private_private_sijs
+		self.query_private_sijs = query_private_sijs
 		self.imageData = imageData
 		self.queryData = queryData
+		self.privateData = privateData
 		
 		self.cpp_obj = None
 		self.cpp_image_sijs = None
 		self.cpp_query_sijs = None
 		self.cpp_query_query_sijs = None
+		self.cpp_private_sijs = None
+		self.cpp_private_private_sijs = None
+		self.cpp_query_private_sijs = None
 		self.cpp_content = None
 		self.cpp_content2 = None
+		self.cpp_content3 = None
 		self.effective_ground = None
 
 		if self.n <= 0:
@@ -60,32 +70,49 @@ class LogDeterminantMutualInformationFunction(SetFunction):
 
 		if self.num_queries < 0:
 			raise Exception("ERROR: Number of queries must be >= 0")
+		
+		if self.num_privates < 0:
+			raise Exception("ERROR: Number of queries must be >= 0")
 
 		if self.metric not in ['euclidean', 'cosine']:
 			raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
 
-		if (type(self.image_sijs) != type(None)) and (type(self.query_sijs) != type(None)) and (type(self.query_query_sijs) != type(None)): # User has provided all three kernels
+		if (type(self.image_sijs) != type(None)) and (type(self.query_sijs) != type(None)) and (type(self.query_query_sijs) != type(None)) and (type(self.private_sijs) != type(None)) and (type(self.private_private_sijs) != type(None)) and (type(self.query_private_sijs) != type(None)): # User has provided all required kernels
 			if type(self.image_sijs) != np.ndarray:
 				raise Exception("Invalid image kernel type provided, must be ndarray")
 			if type(self.query_sijs) != np.ndarray:
 				raise Exception("Invalid query kernel type provided, must be ndarray")
 			if type(self.query_query_sijs) != np.ndarray:
 				raise Exception("Invalid query-query kernel type provided, must be ndarray")
+			if type(self.private_sijs) != np.ndarray:
+				raise Exception("Invalid private kernel type provided, must be ndarray")
+			if type(self.private_private_sijs) != np.ndarray:
+				raise Exception("Invalid private-private kernel type provided, must be ndarray")
+			if type(self.query_private_sijs) != np.ndarray:
+				raise Exception("Invalid query-private kernel type provided, must be ndarray")
 			if np.shape(self.image_sijs)[0]!=self.n or np.shape(self.image_sijs)[1]!=self.n:
 				raise Exception("ERROR: Image Kernel should be n X n")
 			if np.shape(self.query_sijs)[0]!=self.n or np.shape(self.query_sijs)[1]!=self.num_queries:
 				raise Exception("ERROR: Query Kernel should be n X num_queries")
 			if np.shape(self.query_query_sijs)[0]!=self.num_queries or np.shape(self.query_query_sijs)[1]!=self.num_queries:
 				raise Exception("ERROR: Query-query Kernel should be num_queries X num_queries")
-			if (type(self.imageData) != type(None)) or (type(self.queryData) != type(None)):
-				print("WARNING: similarity kernels found. Provided image and query data matrices will be ignored.")
+			if np.shape(self.private_sijs)[0]!=self.n or np.shape(self.private_sijs)[1]!=self.num_privates:
+				raise Exception("ERROR: Private Kernel should be n X num_privates")
+			if np.shape(self.private_private_sijs)[0]!=self.num_privates or np.shape(self.private_private_sijs)[1]!=self.num_privates:
+				raise Exception("ERROR: Private-private Kernel should be num_privates X num_privates")
+			if np.shape(self.query_private_sijs)[0]!=self.num_queries or np.shape(self.query_private_sijs)[1]!=self.num_privates:
+				raise Exception("ERROR: Query-private Kernel should be num_queries X num_privates")
+			if (type(self.imageData) != type(None)) or (type(self.queryData) != type(None)) or (type(self.privateData) != type(None)):
+				print("WARNING: similarity kernels found. Provided image, query and private data matrices will be ignored.")
 		else: #similarity kernels have not been provided
-			if (type(self.imageData) == type(None)) or (type(self.queryData) == type(None)):
+			if (type(self.imageData) == type(None)) or (type(self.queryData) == type(None)) or (type(self.privateData) == type(None)):
 				raise Exception("Since kernels are not provided, data matrices are a must")
 			if np.shape(self.imageData)[0]!=self.n:
 				raise Exception("ERROR: Inconsistentcy between n and no of examples in the given image data matrix")
 			if np.shape(self.queryData)[0]!=self.num_queries:
 				raise Exception("ERROR: Inconsistentcy between num_queries and no of examples in the given query data matrix")
+			if np.shape(self.privateData)[0]!=self.num_privates:
+				raise Exception("ERROR: Inconsistentcy between num_privates and no of examples in the given private data matrix")
 			
 			#construct imageKernel
 			self.num_neighbors = self.n #Using all data as num_neighbors in case of dense mode
@@ -107,6 +134,21 @@ class LogDeterminantMutualInformationFunction(SetFunction):
 			col2 = list(self.cpp_content2[2].astype(int))
 			self.query_query_sijs = np.zeros((self.num_queries,self.num_queries))
 			self.query_query_sijs[row2,col2] = val2
+
+			#construct privateKernel
+			self.private_sijs = np.array(subcp.create_kernel_NS(self.privateData.tolist(),self.imageData.tolist(), self.metric))
+
+			#construct privatePrivateKernel
+			self.num_neighbors3 = self.num_privates #Using all data as num_neighbors in case of dense mode
+			self.cpp_content3 = np.array(subcp.create_kernel(self.privateData.tolist(), self.metric, self.num_neighbors3))
+			val3 = self.cpp_content3[0]
+			row3 = list(self.cpp_content3[1].astype(int))
+			col3 = list(self.cpp_content3[2].astype(int))
+			self.private_private_sijs = np.zeros((self.num_privates,self.num_privates))
+			self.private_private_sijs[row3,col3] = val3
+
+			#construct queryPrivateKernel
+			self.query_private_sijs = np.array(subcp.create_kernel_NS(self.privateData.tolist(),self.queryData.tolist(), self.metric))
 		
 		#Breaking similarity matrix to simpler native data structures for implicit pybind11 binding
 		self.cpp_image_sijs = self.image_sijs.tolist() #break numpy ndarray to native list of list datastructure
@@ -125,7 +167,6 @@ class LogDeterminantMutualInformationFunction(SetFunction):
 			l.append(self.cpp_query_sijs)
 			self.cpp_query_sijs=l
 		
-		#Breaking similarity matrix to simpler native data structures for implicit pybind11 binding
 		self.cpp_query_query_sijs = self.query_query_sijs.tolist() #break numpy ndarray to native list of list datastructure
 		
 		if type(self.cpp_query_query_sijs[0])==int or type(self.cpp_query_query_sijs[0])==float: #Its critical that we pass a list of list to pybind11
@@ -133,22 +174,46 @@ class LogDeterminantMutualInformationFunction(SetFunction):
 			l=[]
 			l.append(self.cpp_query_query_sijs)
 			self.cpp_query_query_sijs=l
+		
+		self.cpp_private_sijs = self.private_sijs.tolist() #break numpy ndarray to native list of list datastructure
+		
+		if type(self.cpp_private_sijs[0])==int or type(self.cpp_private_sijs[0])==float: #Its critical that we pass a list of list to pybind11
+																			#This condition ensures the same in case of a 1D numpy array (for 1x1 sim matrix)
+			l=[]
+			l.append(self.cpp_private_sijs)
+			self.cpp_private_sijs=l
+		
+		self.cpp_private_private_sijs = self.private_private_sijs.tolist() #break numpy ndarray to native list of list datastructure
+		
+		if type(self.cpp_private_private_sijs[0])==int or type(self.cpp_private_private_sijs[0])==float: #Its critical that we pass a list of list to pybind11
+																			#This condition ensures the same in case of a 1D numpy array (for 1x1 sim matrix)
+			l=[]
+			l.append(self.cpp_private_private_sijs)
+			self.cpp_private_private_sijs=l
+		
+		self.cpp_query_private_sijs = self.query_private_sijs.tolist() #break numpy ndarray to native list of list datastructure
+		
+		if type(self.cpp_query_private_sijs[0])==int or type(self.cpp_query_private_sijs[0])==float: #Its critical that we pass a list of list to pybind11
+																			#This condition ensures the same in case of a 1D numpy array (for 1x1 sim matrix)
+			l=[]
+			l.append(self.cpp_query_private_sijs)
+			self.cpp_query_private_sijs=l
 
-		self.cpp_obj = LogDeterminantMutualInformation(self.n, self.num_queries, self.cpp_image_sijs, self.cpp_query_sijs, self.cpp_query_query_sijs, self.lambdaVal, self.magnificationLambda)
+		self.cpp_obj = LogDeterminantConditionalMutualInformation(self.n, self.num_queries, self.num_privates, self.cpp_image_sijs, self.cpp_query_sijs, self.cpp_query_query_sijs, self.cpp_private_sijs, self.cpp_private_private_sijs,self.cpp_query_private_sijs, self.lambdaVal, self.magnificationLambda, self.privacyHardness)
 		self.effective_ground = set(range(n))
 
 	def evaluate(self, X):
-		"""Computes the LogDeterminantMutualInformation score of a set
+		"""Computes the LogDeterminantConditionalMutualInformation score of a set
 
 		Parameters
 		----------
 		X : set
-			The set whose LogDeterminantMutualInformation score needs to be computed
+			The set whose LogDeterminantConditionalMutualInformation score needs to be computed
 		
 		Returns
 		-------
 		float
-			The LogDeterminantMutualInformation function evaluation on the given set
+			The LogDeterminantConditionalMutualInformation function evaluation on the given set
 
 		"""
 		if type(X)!=set:
@@ -162,7 +227,7 @@ class LogDeterminantMutualInformationFunction(SetFunction):
 		return self.cpp_obj.evaluate(X)
 
 	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon = 0.1, verbose=False):
-		"""Find the optimal subset with maximum LogDeterminantMutualInformation score for a given budget
+		"""Find the optimal subset with maximum LogDeterminantConditionalMutualInformation score for a given budget
 
 		Parameters
 		----------
@@ -189,7 +254,7 @@ class LogDeterminantMutualInformationFunction(SetFunction):
 		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose)
 	
 	def marginalGain(self, X, element):
-		"""Find the marginal gain in LogDeterminantMutualInformation score when a single item (element) is added to a set (X)
+		"""Find the marginal gain in LogDeterminantConditionalMutualInformation score when a single item (element) is added to a set (X)
 
 		Parameters
 		----------
@@ -223,7 +288,7 @@ class LogDeterminantMutualInformationFunction(SetFunction):
 		return self.cpp_obj.marginalGain(X, element)
 
 	def marginalGainWithMemoization(self, X, element):
-		"""Efficiently find the marginal gain in LogDeterminantMutualInformation score when a single item (element) is added to a set (X) assuming that memoized statistics for it are already computed
+		"""Efficiently find the marginal gain in LogDeterminantConditionalMutualInformation score when a single item (element) is added to a set (X) assuming that memoized statistics for it are already computed
 
 		Parameters
 		----------
@@ -256,17 +321,17 @@ class LogDeterminantMutualInformationFunction(SetFunction):
 		return self.cpp_obj.marginalGainWithMemoization(X, element)
 
 	def evaluateWithMemoization(self, X):
-		"""Efficiently compute the LogDeterminantMutualInformation score of a set assuming that memoized statistics for it are already computed
+		"""Efficiently compute the LogDeterminantConditionalMutualInformation score of a set assuming that memoized statistics for it are already computed
 
 		Parameters
 		----------
 		X : set
-			The set whose LogDeterminantMutualInformation score needs to be computed
+			The set whose LogDeterminantConditionalMutualInformation score needs to be computed
 		
 		Returns
 		-------
 		float
-			The LogDeterminantMutualInformation function evaluation on the given set
+			The LogDeterminantConditionalMutualInformation function evaluation on the given set
 
 		"""
 		if type(X)!=set:
@@ -332,7 +397,7 @@ class LogDeterminantMutualInformationFunction(SetFunction):
 		self.cpp_obj.setMemoization(X)
 	
 	def getEffectiveGroundSet(self):
-		"""Get the effective ground set of this LogDeterminantMutualInformation object. This is equal to the ground set when instantiated with partial=False and is equal to the ground_sub when instantiated with partial=True
+		"""Get the effective ground set of this LogDeterminantConditionalMutualInformation object. This is equal to the ground set when instantiated with partial=False and is equal to the ground_sub when instantiated with partial=True
 
 		"""
 		return self.cpp_obj.getEffectiveGroundSet()

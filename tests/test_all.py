@@ -25,6 +25,7 @@ from submodlib import ProbabilisticSetCoverMutualInformationFunction
 from submodlib import SetCoverMutualInformationFunction
 from submodlib import SetCoverConditionalGainFunction
 from submodlib import FacilityLocationConditionalMutualInformationFunction
+from submodlib import LogDeterminantConditionalMutualInformationFunction
 from submodlib.helper import create_kernel
 from submodlib_cpp import FeatureBased
 from submodlib_cpp import ConcaveOverModular
@@ -35,7 +36,8 @@ allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "Disparity
 #allKernelMIFunctions = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation", "FacilityLocationConditionalGain", "LogDeterminantConditionalGain"]
 allKernelMIFunctions = ["LogDeterminantConditionalGain"]
 
-allKernelCMIFunctions = ["FacilityLocationConditionalMutualInformation"]
+#allKernelCMIFunctions = ["FacilityLocationConditionalMutualInformation", "LogDeterminantConditionalMutualInformation"]
+allKernelCMIFunctions = ["LogDeterminantConditionalMutualInformation"]
 
 clusteredModeFunctions = ["FacilityLocation"]
 
@@ -44,7 +46,8 @@ optimizerTests = ["FacilityLocation", "GraphCut", "LogDeterminant"]
 #optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation", "FacilityLocationConditionalGain", "LogDeterminantConditionalGain"]
 optimizerMITests = ["LogDeterminantConditionalGain"]
 
-optimizerCMITests = ["FacilityLocationConditionalMutualInformation"]
+#optimizerCMITests = ["FacilityLocationConditionalMutualInformation", "LogDeterminantConditionalMutualInformation"]
+optimizerCMITests = ["LogDeterminantConditionalMutualInformation"]
 
 probSCMIFunctions = ["ProbabilisticSetCoverConditionalGain", "ProbabilisticSetCoverMutualInformation"]
 
@@ -82,8 +85,8 @@ num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric 
 budget = 20
 num_concepts = 50
 num_queries = 10
-magnificationLambda = 2
-privacyHardness = 2
+magnificationLambda = 1
+privacyHardness = 1
 num_privates=5
 
 # num_internal_clusters = 3 #3
@@ -359,6 +362,8 @@ def object_cmi_dense_cpp_kernel(request, data_queries_privates):
     num_data, num_q, num_p, imageData, queryData, privateData, _ = data_queries_privates
     if request.param == "FacilityLocationConditionalMutualInformation":
         obj = FacilityLocationConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, imageData=imageData, queryData=queryData, privateData=privateData, metric=metric, magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
+    elif request.param == "LogDeterminantConditionalMutualInformation":
+        obj = LogDeterminantConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, imageData=imageData, queryData=queryData, privateData=privateData, metric=metric, lambdaVal=1, magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
     else:
         return None
     return obj
@@ -395,8 +400,13 @@ def object_cmi_dense_py_kernel(request, data_queries_privates):
     _, imageKernel = create_kernel(imageData, mode="dense", metric=metric)
     queryKernel = create_kernel(queryData, mode="dense", metric=metric, X_master=imageData)
     privateKernel = create_kernel(privateData, mode="dense", metric=metric, X_master=imageData)
+    _, queryQueryKernel = create_kernel(queryData, mode="dense", metric=metric)
+    _, privatePrivateKernel = create_kernel(privateData, mode="dense", metric=metric)
+    queryPrivateKernel = create_kernel(privateData, mode="dense", metric=metric, X_master=queryData)
     if request.param == "FacilityLocationConditionalMutualInformation":
         obj = FacilityLocationConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, image_sijs=imageKernel, query_sijs=queryKernel, private_sijs=privateKernel,magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
+    elif request.param == "LogDeterminantConditionalMutualInformation":
+        obj = LogDeterminantConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, image_sijs=imageKernel, query_sijs=queryKernel, query_query_sijs=queryQueryKernel, private_sijs=privateKernel, private_private_sijs=privatePrivateKernel, query_private_sijs=queryPrivateKernel, lambdaVal=1, magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
     else:
         return None
     return obj
