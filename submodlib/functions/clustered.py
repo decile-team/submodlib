@@ -17,24 +17,26 @@ class ClusteredFunction(SetFunction):
 	where :math:`f_{C_i}` operates only on cluster :math:`C_i` as sub-groundset and interprets :math:`X` as :math:`X \cap C_i`
 	
 	.. note::
-			When the clusters are labels, this becomes supervised subset selection.
+			When the clusters are labels, ClusteredFunction is useful to achieve supervised subset selection.
 
 	Parameters
 	----------
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set.
 	f_name : string
-		Name of particular set function whose clustered implementation is desired 
-	data : numpy ndarray
-		Data matrix which will be used for computing the similarity kernel (and for computing the clusters if clustering is not provided)
+		Name of particular set function whose clustered implementation is desired. 
+	data : ndarray
+		Data matrix which will be used for computing the similarity kernel (and for computing the clusters if clustering is not provided).
 	mode : string
-		Can be "single" (to create a single dense large similarity kernel) or "multi" (to create one small dense kernel per cluster)
+		Governs the internal implementation details. Can be "single" (to create a single dense large similarity kernel) or "multi" (to create one small dense kernel per cluster). If "single", internally the "partial" versions of the functions are used to get the functions for each cluster. If "multi", the functions for each cluster are instantiated separately with each cluster corresponding to a different. groundset. 
 	cluster_lab : list, optional
-		Its a list that contains cluster labels for each data point. If not provided, clustering is done internally using sklearn's BIRCH using provided data
+		List that contains cluster labels for each data point. If not provided, clustering is done internally using sklearn's BIRCH using provided data matrix.
 	num_clusters : int, optional
 		Number of clusters. Mandatory if cluster_lab is provided. If cluster_lab is not provided, clustering is done internally. In this case if num_clusters is not provided, an optimal number of clusters is created. 
 	metric : string, optional
-		similarity metric to be used while computing similarity kernel for each cluster or a dense kernel. Can be "euclidean" or "cosine". By default, it is "cosine"
+		Similarity metric to be used while computing similarity kernel for each cluster (in "multi" mode) or a single dense kernel (in "single" mode). Can be "euclidean" or "cosine". By default, it is "cosine".
+	lambdaVal : float, optional
+		Additional parameter that needs to be passed on to the set function if required. For example, may be used by GraphCut and LogDeterminant functions. Default is 1.
 		
 	"""
 
@@ -117,193 +119,3 @@ class ClusteredFunction(SetFunction):
 			# print("self.lambdaVal: ", self.lambdaVal)
 			self.cpp_obj = Clustered(self.n, self.f_name, self.clusters, self.cluster_sijs, self.cluster_map, lambdaVal)
 		self.effective_ground=self.cpp_obj.getEffectiveGroundSet()
-
-	def evaluate(self, X):
-		"""Computes the Clustered Function score of a set
-
-		Parameters
-		----------
-		X : set
-			The set whose Clustered Function score needs to be computed
-		
-		Returns
-		-------
-		float
-			The Clustered Function evaluation on the given set
-
-		"""
-
-		if type(X)!=set:
-			raise Exception("ERROR: X should be a set")
-
-		if X.issubset(self.effective_ground)==False:
-			raise Exception("ERROR: X should be a subset of effective ground set")
-		return self.cpp_obj.evaluate(X)
-
-	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon=0.1, verbose=False):
-		"""Find the optimal subset with maximum Clustered Function score for a given budget
-
-		Parameters
-		----------
-		budget : int
-			Desired size of the optimal set
-		optimizer : string
-			The optimizer that should be used to compute the optimal set. Can be 'NaiveGreedy', 'LazyGreedy', 'LazierThanLazyGreedy'
-		stopIfZeroGain : bool
-			Set to True if budget should be filled with items adding zero gain. If False, size of optimal set can be potentially less than the budget
-		stopIfNegativeGain : bool
-			Set to True if maximization should terminate as soon as the best gain in an iteration is negative. This can potentially lead to optimal set of size less than the budget
-		verbose : bool
-			Set to True to trace the execution of the maximization algorithm
-
-		Returns
-		-------
-		set
-			The optimal set of size budget
-
-		"""
-
-		if budget >= self.n:
-			raise Exception("Budget must be less than groundset size")
-		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose)
-	
-	def marginalGain(self, X, element):
-		"""Find the marginal gain in Clustered Function score when a single item (element) is added to a set (X)
-
-		Parameters
-		----------
-		X : set
-			Set on which the marginal gain of adding an element has to be calculated. It must be a subset of the effective ground set.
-		element : int
-			Element for which the marginal gain is to be calculated. It must be from the effective ground set.
-
-		Returns
-		-------
-		float
-			Marginal gain of adding element to X
-
-		"""
-
-		if type(X)!=set:
-			raise Exception("ERROR: X should be a set")
-
-		if type(element)!=int:
-			raise Exception("ERROR: element should be an int")
-
-		if X.issubset(self.effective_ground)==False:
-			raise Exception("ERROR: X is not a subset of effective ground set")
-
-		if element not in self.effective_ground:
-			raise Exception("Error: element must be in the effective ground set")
-
-		return self.cpp_obj.marginalGain(X, element)
-	
-	def marginalGainWithMemoization(self, X, element):
-		"""Efficiently find the marginal gain in Clustered Function score when a single item (element) is added to a set (X) assuming that memoized statistics for it are already computed
-
-		Parameters
-		----------
-		X : set
-			Set on which the marginal gain of adding an element has to be calculated. It must be a subset of the effective ground set and its memoized statistics should have already been computed
-		element : int
-			Element for which the marginal gain is to be calculated. It must be from the effective ground set.
-
-		Returns
-		-------
-		float
-			Marginal gain of adding element to X
-
-		"""
-		if type(X)!=set:
-			raise Exception("ERROR: X should be a set")
-
-		if type(element)!=int:
-			raise Exception("ERROR: element should be an int")
-
-		if X.issubset(self.effective_ground)==False:
-			raise Exception("ERROR: X is not a subset of effective ground set")
-
-		if element not in self.effective_ground:
-			raise Exception("Error: element must be in the effective ground set")
-
-		return self.cpp_obj.marginalGainWithMemoization(X, element)
-
-	def evaluateWithMemoization(self, X):
-		"""Efficiently compute the Clustered Function score of a set assuming that memoized statistics for it are already computed
-
-		Parameters
-		----------
-		X : set
-			The set whose Clustered Function score needs to be computed
-		
-		Returns
-		-------
-		float
-			The Clustered Function function evaluation on the given set
-
-		"""
-		if type(X)!=set:
-			raise Exception("ERROR: X should be a set")
-
-		if X.issubset(self.effective_ground)==False:
-			raise Exception("ERROR: X should be a subset of effective ground set")
-
-		return self.cpp_obj.evaluateWithMemoization(X)
-
-	def updateMemoization(self, X, element):
-		"""Update the memoized statistics of X due to adding element to X. Assumes that memoized statistics are already computed for X
-
-		Parameters
-		----------
-		X : set
-			Set whose memoized statistics must already be computed and to which the element needs to be added for the sake of updating the memoized statistics
-		element : int
-			Element that is being added to X leading to update of memoized statistics. It must be from effective ground set.
-
-		"""
-		if type(X)!=set:
-			raise Exception("ERROR: X should be a set")
-
-		if type(element)!=int:
-			raise Exception("ERROR: element should be an int")
-
-		if X.issubset(self.effective_ground)==False:
-			raise Exception("ERROR: X is not a subset of effective ground set")
-
-		if element not in self.effective_ground:
-			raise Exception("Error: element must be in the effective ground set")
-
-		if element in X:
-			return
-
-		self.cpp_obj.updateMemoization(X, element)
-	
-	def clearMemoization(self):
-		"""Clear the computed memoized statistics, if any
-
-		"""
-		self.cpp_obj.clearMemoization()
-	
-	def setMemoization(self, X):
-		"""Compute and store the memoized statistics for subset X 
-
-		Parameters
-		----------
-		X : set
-			The set for which memoized statistics need to be computed and set
-		
-		"""
-
-		if type(X)!=set:
-			raise Exception("ERROR: X should be a set")
-
-		if X.issubset(self.effective_ground)==False:
-			raise Exception("ERROR: X should be a subset of effective ground set")
-
-		self.cpp_obj.setMemoization(X)
-	
-	def getEffectiveGroundSet(self):
-		"""Get the effective ground set of this Clustered Function object. This is equal to the ground set when instantiated with partial=False and is equal to the ground_sub when instantiated with partial=True
-
-		"""
-		return self.effective_ground

@@ -13,7 +13,7 @@ class ConditionalMutualInformationFunction(SetFunction):
 	.. math::
 			I_f(A; B | C) &= f(A | C) + f(B | C) - f(A \\cup B | C) \\\\&= f(A \\cup C) + f(B \\cup C) - f(A \\cup B \\cup C) - f(C)
 
-	Properties of conditional mutual information are studied at length in :cite:`iyer2020submodular`.
+	Properties of conditional mutual information are studied at length in :cite:`iyer2021submodular`.
 
 	One possible application is joint query-focused and privacy preserving summarization. Given a query set :math:`Q` and a private set :math:`P`, we would like to select a subset :math:`A \\subseteq V` which has a high similarity with respect to a query set :math:`Q`, while simultaneously being different from the private set :math:`P`. A natural way to do this is by maximizing the above conditional submodular mutual information such that :math:`B=Q` and :math:`C=P`.
 
@@ -35,59 +35,4 @@ class ConditionalMutualInformationFunction(SetFunction):
 	"""
 
 	def __init__(self, f, b, c):
-		pass
-
-	def evaluate(self, X):
-		"""Computes the score of a set
-
-		Parameters
-		----------
-		X : set
-			The set whose score needs to be computed
-		
-		Returns
-		-------
-		float
-			The function evaluation on the given set
-
-		"""
-
-		pass
-
-	def maximize(self, budget, optimizer):
-		"""Find the optimal subset with maximum score
-
-		Parameters
-		----------
-		budget : int
-			Desired size of the optimal set
-		optimizer : optimizers.Optimizer
-			The optimizer that should be used to compute the optimal set
-
-		Returns
-		-------
-		set
-			The optimal set of size budget
-
-		"""
-
-		pass
-	
-	def marginalGain(self, X, element):
-		"""Find the marginal gain of adding an item to a set
-
-		Parameters
-		----------
-		X : set
-			Set on which the marginal gain of adding an element has to be calculated
-		element : int
-			Element for which the marginal gain is to be calculated
-
-		Returns
-		-------
-		float
-			Marginal gain of adding element to X
-
-		"""
-
 		pass

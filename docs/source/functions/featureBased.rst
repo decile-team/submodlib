@@ -1,6 +1,6 @@
 .. _functions.feature-based:
 
-Feature based
+Feature Based
 ==============
 
 .. automodule:: submodlib.functions.featureBased

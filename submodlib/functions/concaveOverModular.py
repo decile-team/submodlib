@@ -8,12 +8,22 @@ from submodlib_cpp import ConcaveOverModular
 from submodlib.helper import create_kernel
 
 class ConcaveOverModularFunction(SetFunction):
-	"""Implementation of the ConcaveOverModular function.
+	"""Implementation of the ConcaveOverModular (COM) function.
 
-	ConcaveOverModular models diversity by computing the sum of pairwise distances of all the elements in a subset. It is defined as
+	In a :class:`~submodlib.functions.submodularMutualInformation.SubmodularMutualInformationFunction`, although :math:`f` is defined on :math:`\\Omega`, the discrete optimization problem will only be defined on subsets :math:`\mathcal{A} \\subseteq \\mathcal{V}`. Hence we do not need :math:`f` to be submodular everywhere on :math:`\\Omega`, instead it can be *restricted submodular*. When a MutualInformation function is defined using a restricted submodular function :math:`f`, we call it Generalized Submodular Mutual Information function (GMI). Concave Over Modular is a GMI function :cite:`kaushal2021prism` and is defined as:
 
+	This is a reference to :ref:`functions.conditional-gain` function.
+	This is a reference to :any:`functions.conditional-gain` function.
+	
 	.. math::
-			f(X) = \\sum_{i, j \\in X} (1 - s_{ij})
+			I_{f_{\\eta}}(\\mathcal{A}; \\mathcal{Q}) = \\eta \\sum_{i \\in \\mathcal{A}} \\psi(\\sum_{j \\in \\mathcal{Q}}s_{ij}) + \\sum_{j \\in \\mathcal{Q}} \\psi(\\sum_{i \\in \mathcal{A}} s_{ij})
+	
+	where :math:`\\eta` models query-relevance and diversity trade-off, :math:`\\psi` is a concave function and kernel matrix :math:`S` satisfies :math:`s_{ij} = 1(i == j)` for :math:`i, j \\in \\mathcal{V}` or :math:`i, j \\in \\mathcal{V}^{\\prime}`.
+	
+	In terms of its modelling capabilities, while GCMI lies at one end of the spectrum favoring query-relevance and FL1MI lies at the other end favoring diversity and query coverage, COM lies somewhere in between.
+
+	.. note::
+			GLISTER :cite:`killamsetty2020glister` has an interesting connection with COM (see :cite:`kaushal2021prism`). Also, the joint diversity and query-relevance term in :cite:`lin2011class` is an instance of COM (with square-root as the concave function).
 
 	Parameters
 	----------
@@ -21,17 +31,26 @@ class ConcaveOverModularFunction(SetFunction):
 	n : int
 		Number of elements in the ground set
 	
-	sijs : list, optional
-		Similarity matrix to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed based on the following additional parameters
-
-	data : list, optional
-		Data matrix which will be used for computing the similarity matrix
-
-	metric : str, optional
-		Similarity metric to be used for computing the similarity matrix
+	num_queries : int
+		Number of query points in the target
 	
-	n_neighbors : int, optional
-		While constructing similarity matrix, number of nearest neighbors whose similarity values will be kept resulting in a sparse similarity matrix for computation speed up (at the cost of accuracy)
+	query_sijs : ndarray, optional
+		Similarity kernel between the ground set and the queries. Dimensionality: n X num_queries. When not provided, it is computed using imageData, queryData and metric.
+
+	imageData : list, optional
+		List of size n containing the ground set data elements. imageData[i] should contain the features of element i. It is optional (and is ignored if provided) if query_sijs has been provided.
+
+	queryData : list, optional
+		List of size num_queries containing the query elements. queryData[i] should contain the features of query i. It is optional (and is ignored if provided) if query_sijs has been provided.
+
+	metric : string, optional
+		Similarity metric to be used for computing the similarity kernel. Default is "cosine". 
+	
+	magnificationLambda : float, optional
+		The value of the query-relevance vs diversity trade-off. Default is 1.
+
+	mode : ConcaveOverModular.Type, optional
+		The concave function to be used. Can be ConcaveOverModular.logarithmic, ConcaveOverModular.squareRoot, ConcaveOverModular.inverse. Default is ConcaveOverModular.logarithmic.
 	
 	"""
 
@@ -87,203 +106,3 @@ class ConcaveOverModularFunction(SetFunction):
 
 		self.cpp_obj = ConcaveOverModular(self.n, self.num_queries, self.cpp_query_sijs, self.magnificationLambda, self.mode)
 		self.effective_ground = set(range(n))
-
-	def evaluate(self, X):
-		"""Computes the ConcaveOverModular score of a set
-
-		Parameters
-		----------
-		X : set
-			The set whose ConcaveOverModular score needs to be computed
-		
-		Returns
-		-------
-		float
-			The ConcaveOverModular function evaluation on the given set
-
-		"""
-		if type(X)!=set:
-			raise Exception("ERROR: X should be a set")
-
-		if X.issubset(self.effective_ground)==False:
-			raise Exception("ERROR: X should be a subset of effective ground set")
-
-		if len(X) == 0:
-			return 0
-		return self.cpp_obj.evaluate(X)
-
-	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon = 0.1, verbose=False):
-		"""Find the optimal subset with maximum ConcaveOverModular score for a given budget
-
-		Parameters
-		----------
-		budget : int
-			Desired size of the optimal set
-		optimizer : string
-			The optimizer that should be used to compute the optimal set. Can be 'NaiveGreedy', 'LazyGreedy', 'LazierThanLazyGreedy'
-		stopIfZeroGain : bool
-			Set to True if budget should be filled with items adding zero gain. If False, size of optimal set can be potentially less than the budget
-		stopIfNegativeGain : bool
-			Set to True if maximization should terminate as soon as the best gain in an iteration is negative. This can potentially lead to optimal set of size less than the budget
-		verbose : bool
-			Set to True to trace the execution of the maximization algorithm
-
-		Returns
-		-------
-		set
-			The optimal set of size budget
-
-		"""
-
-		if budget >= len(self.effective_ground):
-			raise Exception(f"Budget {budget} must be less than effective ground set size {len(self.effective_ground)}")
-		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose)
-	
-	def marginalGain(self, X, element):
-		"""Find the marginal gain in ConcaveOverModular score when a single item (element) is added to a set (X)
-
-		Parameters
-		----------
-		X : set
-			Set on which the marginal gain of adding an element has to be calculated. It must be a subset of the effective ground set.
-		element : int
-			Element for which the marginal gain is to be calculated. It must be from the effective ground set.
-
-		Returns
-		-------
-		float
-			Marginal gain of adding element to X
-
-		"""
-
-		if type(X)!=set:
-			raise Exception("ERROR: X should be a set")
-
-		if type(element)!=int:
-			raise Exception("ERROR: element should be an int")
-
-		if X.issubset(self.effective_ground)==False:
-			raise Exception("ERROR: X is not a subset of effective ground set")
-
-		if element not in self.effective_ground:
-			raise Exception("Error: element must be in the effective ground set")
-
-		if element in X:
-			return 0
-
-		return self.cpp_obj.marginalGain(X, element)
-
-	def marginalGainWithMemoization(self, X, element):
-		"""Efficiently find the marginal gain in ConcaveOverModular score when a single item (element) is added to a set (X) assuming that memoized statistics for it are already computed
-
-		Parameters
-		----------
-		X : set
-			Set on which the marginal gain of adding an element has to be calculated. It must be a subset of the effective ground set and its memoized statistics should have already been computed
-		element : int
-			Element for which the marginal gain is to be calculated. It must be from the effective ground set.
-
-		Returns
-		-------
-		float
-			Marginal gain of adding element to X
-
-		"""
-		if type(X)!=set:
-			raise Exception("ERROR: X should be a set")
-
-		if type(element)!=int:
-			raise Exception("ERROR: element should be an int")
-
-		if X.issubset(self.effective_ground)==False:
-			raise Exception("ERROR: X is not a subset of effective ground set")
-
-		if element not in self.effective_ground:
-			raise Exception("Error: element must be in the effective ground set")
-
-		if element in X:
-			return 0
-
-		return self.cpp_obj.marginalGainWithMemoization(X, element)
-
-	def evaluateWithMemoization(self, X):
-		"""Efficiently compute the ConcaveOverModular score of a set assuming that memoized statistics for it are already computed
-
-		Parameters
-		----------
-		X : set
-			The set whose ConcaveOverModular score needs to be computed
-		
-		Returns
-		-------
-		float
-			The ConcaveOverModular function evaluation on the given set
-
-		"""
-		if type(X)!=set:
-			raise Exception("ERROR: X should be a set")
-
-		if X.issubset(self.effective_ground)==False:
-			raise Exception("ERROR: X should be a subset of effective ground set")
-
-		if len(X) == 0:
-			return 0
-
-		return self.cpp_obj.evaluateWithMemoization(X)
-
-	def updateMemoization(self, X, element):
-		"""Update the memoized statistics of X due to adding element to X. Assumes that memoized statistics are already computed for X
-
-		Parameters
-		----------
-		X : set
-			Set whose memoized statistics must already be computed and to which the element needs to be added for the sake of updating the memoized statistics
-		element : int
-			Element that is being added to X leading to update of memoized statistics. It must be from effective ground set.
-
-		"""
-		if type(X)!=set:
-			raise Exception("ERROR: X should be a set")
-
-		if type(element)!=int:
-			raise Exception("ERROR: element should be an int")
-
-		if X.issubset(self.effective_ground)==False:
-			raise Exception("ERROR: X is not a subset of effective ground set")
-
-		if element not in self.effective_ground:
-			raise Exception("Error: element must be in the effective ground set")
-
-		if element in X:
-			return
-
-		self.cpp_obj.updateMemoization(X, element)
-	
-	def clearMemoization(self):
-		"""Clear the computed memoized statistics, if any
-
-		"""
-		self.cpp_obj.clearMemoization()
-	
-	def setMemoization(self, X):
-		"""Compute and store the memoized statistics for subset X 
-
-		Parameters
-		----------
-		X : set
-			The set for which memoized statistics need to be computed and set
-		
-		"""
-		if type(X)!=set:
-			raise Exception("ERROR: X should be a set")
-
-		if X.issubset(self.effective_ground)==False:
-			raise Exception("ERROR: X should be a subset of effective ground set")
-
-		self.cpp_obj.setMemoization(X)
-	
-	def getEffectiveGroundSet(self):
-		"""Get the effective ground set of this ConcaveOverModular object. This is equal to the ground set when instantiated with partial=False and is equal to the ground_sub when instantiated with partial=True
-
-		"""
-		return self.cpp_obj.getEffectiveGroundSet()
