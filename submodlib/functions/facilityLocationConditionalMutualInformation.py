@@ -5,33 +5,57 @@ import scipy
 from .setFunction import SetFunction
 import submodlib_cpp as subcp
 from submodlib_cpp import FacilityLocationConditionalMutualInformation 
-from submodlib.helper import create_kernel
+#from submodlib.helper import create_kernel
 
 class FacilityLocationConditionalMutualInformationFunction(SetFunction):
-	"""Implementation of the FacilityLocationConditionalMutualInformation function.
+	"""Implementation of the Facility Location Conditional Mutual Information (FLCMI) function.
 
-	FacilityLocationConditionalMutualInformation models diversity by computing the sum of pairwise distances of all the elements in a subset. It is defined as
+	Given a :ref:`functions.conditional-mutual-information` function, Facility Location Conditional Mutual Information function is its instantiation using a :class:`~submodlib.functions.facilityLocation.FacilityLocationFunction`. Mathematically, it takes the following form:
 
 	.. math::
-			f(X) = \\sum_{i, j \\in X} (1 - s_{ij})
-
+			I_f(A; Q | P) = \sum\limits_{i \in \Vcal} \max(\min(\max\limits_{j \in A} s_{ij}, \eta \max\limits_{j \in Q} s_{ij}) - \nu \max\limits_{j \in P} s_{ij}, 0)
+	
+	.. note::
+			FLCMI tends to favor query-coverage and diversity in contrast to query-relevance and privacy-irrelevance.
+	
 	Parameters
 	----------
 
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set. Must be > 0.
 	
-	sijs : list, optional
-		Similarity matrix to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed based on the following additional parameters
+	num_queries : int
+		Number of query points in the target.
+	
+	num_privates : int
+		Number of private instances in the target.
+	
+	image_sijs : numpy.ndarray, optional
+		Similarity kernel between the elements of the ground set. Shape: n X n. When not provided, it is computed using imageData.
+	
+	query_sijs : numpy.ndarray, optional
+		Similarity kernel between the ground set and the queries. Shape: n X num_queries. When not provided, it is computed using imageData, queryData and metric.
+	
+	private_sijs : numpy.ndarray, optional
+		Similarity kernel between the ground set and the private instances. Shape: n X num_privates. When not provided, it is computed using imageData and privateData.
 
-	data : list, optional
-		Data matrix which will be used for computing the similarity matrix
+	imageData : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. imageData[i] should contain the num-features dimensional features of element i. Mandatory, if either if image_sijs or private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
+	
+	queryData : numpy.ndarray, optional
+		Matrix of shape num_queries X num_features containing the query elements. queryData[i] should contain the num-features dimensional features of query i. It is optional (and is ignored if provided) if query_sijs has been provided.
+
+	privateData : numpy.ndarray, optional
+		Matrix of shape num_privates X num_features containing the private instances. privateData[i] should contain the num-features dimensional features of private instance i. Must be provided if private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
 
 	metric : str, optional
-		Similarity metric to be used for computing the similarity matrix
+		Similarity metric to be used for computing the similarity kernels. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
 	
-	n_neighbors : int, optional
-		While constructing similarity matrix, number of nearest neighbors whose similarity values will be kept resulting in a sparse similarity matrix for computation speed up (at the cost of accuracy)
+	magnificationLambda : float, optional
+		The value of the query-relevance vs diversity trade-off. Increasing :math:`\eta` tends to increase query-relevance while reducing query-coverage and diversity. Default is 1.
+
+	privacyHardness : float, optional
+		Parameter that governs the hardness of the privacy constraint. Default is 1.
 	
 	"""
 
@@ -135,5 +159,3 @@ class FacilityLocationConditionalMutualInformationFunction(SetFunction):
 		
 		self.cpp_obj = FacilityLocationConditionalMutualInformation(self.n, self.num_queries, self.num_privates, self.cpp_image_sijs, self.cpp_query_sijs, self.cpp_private_sijs, self.magnificationLambda, self.privacyHardness)
 		self.effective_ground = set(range(n))
-
-	

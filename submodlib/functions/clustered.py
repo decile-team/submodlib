@@ -9,34 +9,37 @@ from submodlib_cpp import Clustered
 class ClusteredFunction(SetFunction):
 	"""Implementation of the Clustered function.
 
-	Given a function and a clustering, clustered function internally creates a mixture of functions each defined over a cluster. It is defined as
+	Given a set-function :math:`f` and a clustering, clustered function internally creates a mixture of functions each defined over a cluster. It is thus defined as
 	
 	.. math::
 			f(X) = \\sum_i f_{C_i}(X)
 
-	where :math:`f_{C_i}` operates only on cluster :math:`C_i` as sub-groundset and interprets :math:`X` as :math:`X \cap C_i`
+	where :math:`f_{C_i}` operates only on cluster :math:`C_i` as sub-groundset and interprets :math:`X` as :math:`X \cap C_i`.
 	
 	.. note::
 			When the clusters are labels, ClusteredFunction is useful to achieve supervised subset selection.
+	
+	.. note::
+			Some functions in this toolkit provide a "clustered" mode operation, achieving the same effect as invoking ClusteredFunction on those functions.
 
 	Parameters
 	----------
 	n : int
-		Number of elements in the ground set.
-	f_name : string
-		Name of particular set function whose clustered implementation is desired. 
-	data : ndarray
-		Data matrix which will be used for computing the similarity kernel (and for computing the clusters if clustering is not provided).
-	mode : string
-		Governs the internal implementation details. Can be "single" (to create a single dense large similarity kernel) or "multi" (to create one small dense kernel per cluster). If "single", internally the "partial" versions of the functions are used to get the functions for each cluster. If "multi", the functions for each cluster are instantiated separately with each cluster corresponding to a different. groundset. 
+		Number of elements in the ground set. Must be > 0.
+	f_name : str
+		Name of particular set function whose clustered implementation is desired.
+	data : numpy.ndarray
+		Data matrix of shape n X num_features containing the ground set data elements. data[i] should contain the num-features dimensional features of element i. This is used for computing the similarity kernel (and for computing the clusters if clustering is not provided). 
+	mode : str
+		Governs the internal implementation details. Can be "single" (to create a single dense large similarity kernel) or "multi" (to create one small dense kernel per cluster). If "single", internally the "partial" versions of the functions are used to get the functions for each cluster. If "multi", the functions for each cluster are instantiated separately with each cluster corresponding to a different groundset. 
 	cluster_lab : list, optional
-		List that contains cluster labels for each data point. If not provided, clustering is done internally using sklearn's BIRCH using provided data matrix.
+		List of size n, containing the cluster labels for each data point. If not provided, clustering is done internally using sklearn's `BIRCH <https://scikit-learn.org/stable/modules/generated/sklearn.cluster.Birch.html>`_ using provided data matrix.
 	num_clusters : int, optional
-		Number of clusters. Mandatory if cluster_lab is provided. If cluster_lab is not provided, clustering is done internally. In this case if num_clusters is not provided, an optimal number of clusters is created. 
-	metric : string, optional
-		Similarity metric to be used while computing similarity kernel for each cluster (in "multi" mode) or a single dense kernel (in "single" mode). Can be "euclidean" or "cosine". By default, it is "cosine".
+		Number of clusters. Mandatory if cluster_lab is provided. If cluster_lab is not provided, clustering is done internally. In this case if num_clusters is not provided, an optimal number of clusters is created based on the supplied data. 
+	metric : str, optional
+		Similarity metric to be used while computing similarity kernel for each cluster (in "multi" mode) or a single dense kernel (in "single" mode). Can be "euclidean" or "cosine". Default value is "cosine".
 	lambdaVal : float, optional
-		Additional parameter that needs to be passed on to the set function if required. For example, may be used by GraphCut and LogDeterminant functions. Default is 1.
+		Additional parameter that needs to be passed on to the set function if required. For example, the additional parameter of :class:`~submodlib.functions.graphCut.GraphCutFunction` and :class:`~submodlib.functions.logDeterminant.LogDeterminantFunction`. Default is 1.
 		
 	"""
 

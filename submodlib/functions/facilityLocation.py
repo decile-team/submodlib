@@ -10,7 +10,7 @@ from submodlib.helper import create_kernel, create_cluster_kernels
 #from memory_profiler import profile
 
 class FacilityLocationFunction(SetFunction):
-	"""Implementation of the Facility-Location submodular function.
+	"""Implementation of the Facility Location submodular function (FL).
 
 	Facility-Location function :cite:`mirchandani1990discrete` attempts to model representation, as in it tries to find a representative subset of items, akin to centroids and medoids in clustering. The Facility-Location function is closely related to k-medoid clustering. While diversity *only* looks at the elements in the chosen subset, representativeness also worries about their similarity with the remaining elements in the superset. Denote :math:`s_{ij}` as the similarity between images/datapoints :math:`i` and :math:`j`. We can then define 
 
@@ -38,47 +38,42 @@ class FacilityLocationFunction(SetFunction):
 	----------
 
 	n : int
-		Number of elements in the ground set, must be > 0
+		Number of elements in the ground set, must be > 0.
 
-	mode: str
-		It specifies whether the Facility Location should operate in dense mode (using dense similarity kernel) or sparse mode (using sparse similarity kernel) or clustered mode (evaluating over clusters)
+	mode : string
+		Can be "dense", "sparse" or "clustered". It specifies whether the Disparity-Min function should operate in dense mode (using a dense similarity kernel) or sparse mode (using a sparse similarity kernel) or clustered mode (evaluating over clusters).
 	
 	separate_master: bool, optional
-		Specifies whether a set different from ground set should be used as master set (whose representation is desired)
+		Specifies whether a set different from ground set should be used as master set (whose representation is desired).
 	
 	n_master : int, optional
-		Number of elements in the master set if separate_master=True
+		Number of elements in the master set if separate_master=True.
 	
-	sijs : numpy ndarray or scipy sparse matrix, optional
-		Similarity kernel (dense or sparse) to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed internally in C++ based on the following additional parameters
+	sijs : numpy.ndarray or scipy.sparse.csr.csr_matrix, optional
+		When separate_master=False, this is the similarity kernel (dense or sparse) between the elements of the ground set, to be used for getting :math:`s_{ij}` entries as defined above. Shape of dense kernel in this case must be n X n. When separate_master=True, mode must be "dense" and this is the dense similarity kernel between the master set and the ground set. Shape in this case must be n_master X n. When sijs is not provided, it is computed internally in C++ based on the following additional parameters.
 
-	data : numpy ndarray, optional
-		Ground set data matrix (used to compute the dense/sparse similarity kernel when a similarity kernel is not provided)
+	data : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. data[i] should contain the num-features dimensional features of element i. Used to compute the similarity kernel. It is optional (and is ignored if provided) if sijs has been provided.
 
-	data_master : numpy ndarray, optional
-		Master set data matrix (used to compute the dense similarity kernel) if separate_master=True and when a similarity kernel is not provided
+	data_master : numpy.ndarray, optional
+		Master set data matrix (used to compute the dense similarity kernel) if separate_master=True and when a similarity kernel is not provided.
 
 	num_clusters : int, optional
-		Number of clusters in the ground set. Used only if mode = "clustered". Must be provided if cluster_labels is provided. If cluster_labels is not provided, clusters will be created using sklearn's BIRCH method. In this case if num_clusters is not provided, BIRCH will produce an optimum number of clusters
+		Number of clusters in the ground set. Used only if mode = "clustered". Must be provided if cluster_labels is provided. If cluster_labels is not provided, clusters will be created using sklearn's BIRCH method. In this case if num_clusters is not provided, BIRCH will produce an optimum number of clusters.
 
 	cluster_labels : list, optional
-		List that contains cluster label for each item in the groundset. If mode=clustered and cluster_labels is not provided, clustering is done internally using sklearn's BIRCH.
+		List of size n that contains cluster label for each item in the groundset. If mode=clustered and cluster_labels is not provided, clustering is done internally using sklearn's BIRCH.
 
 	metric : str, optional
-		Similarity metric to be used for computing the similarity kernel. Can be "cosine" for cosine similarity and "euclidean" for similarity based on euclidean distance. Default is "cosine"
+		Similarity metric to be used for computing the similarity kernel. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine".
 	
 	num_neighbors : int, optional
-		When mode is sparse and a sparse similarity kernel is not provided, num_neighbors specifies number of neighbors to be considered while constructing a sparse similarity kernel
-
-	partial: bool, optional
-		if True, FL will operate on a restricted subset of ground set. By default, 'partial' is False. This is used only from within :class:`submodlib.ClusteredFunction <ClusteredFunction>`
-
-	ground_sub: set, optional
-		Specifies the restricted subset of ground set that will be used when partial is True. 
+		Number of neighbors applicable for the sparse similarity kernel. Must not be provided if mode is "dense". Must be provided if either a sparse kernel is provided or is to be computed.
 
 	"""
+
 	#@profile
-	def __init__(self, n, mode, separate_master=None, n_master=None, sijs=None, data=None, data_master=None, num_clusters=None, cluster_labels=None, metric="cosine", num_neighbors=None, partial=None, ground_sub=None):
+	def __init__(self, n, mode, separate_master=None, n_master=None, sijs=None, data=None, data_master=None, num_clusters=None, cluster_labels=None, metric="cosine", num_neighbors=None):
 		self.n = n
 		self.n_master = n_master
 		self.mode = mode
@@ -87,8 +82,8 @@ class FacilityLocationFunction(SetFunction):
 		self.data = data
 		self.data_master=data_master
 		self.num_neighbors = num_neighbors
-		self.partial = partial
-		self.ground_sub = ground_sub
+		#self.partial = partial
+		#self.ground_sub = ground_sub
 		self.separate_master=separate_master
 		self.clusters=None
 		self.cluster_sijs=None
@@ -97,22 +92,22 @@ class FacilityLocationFunction(SetFunction):
 		self.num_clusters=num_clusters
 		self.cpp_obj = None
 		self.cpp_sijs = None
-		self.cpp_ground_sub = ground_sub
+		self.cpp_ground_sub = None
 		self.cpp_content = None
 		self.effective_ground = None
 
 		if self.n <= 0:
 			raise Exception("ERROR: Number of elements in ground set must be positive")
 
-		if self.partial==True:
-			if type(self.ground_sub) == type(None) or len(self.ground_sub) == 0:
-				raise Exception("ERROR: Restricted subset of ground set not specified or empty for partial mode")
-			if self.mode == "clustered" or mode == "sparse":
-				raise Exception("clustered or sparse mode not supported if partial = True")
-			if not all(ele >= 0 and ele <= self.n-1 for ele in self.ground_sub):
-				raise Exception("Restricted subset of ground set contains invalid values")
-			if self.separate_master == True:
-				raise Exception("Partial not supported if separate_master = True")
+		# if self.partial==True:
+		# 	if type(self.ground_sub) == type(None) or len(self.ground_sub) == 0:
+		# 		raise Exception("ERROR: Restricted subset of ground set not specified or empty for partial mode")
+		# 	if self.mode == "clustered" or mode == "sparse":
+		# 		raise Exception("clustered or sparse mode not supported if partial = True")
+		# 	if not all(ele >= 0 and ele <= self.n-1 for ele in self.ground_sub):
+		# 		raise Exception("Restricted subset of ground set contains invalid values")
+		# 	if self.separate_master == True:
+		# 		raise Exception("Partial not supported if separate_master = True")
 		
 		if self.mode not in ['dense', 'sparse', 'clustered']:
 			raise Exception("ERROR: Incorrect mode. Must be one of 'dense', 'sparse' or 'clustered'")
@@ -200,14 +195,14 @@ class FacilityLocationFunction(SetFunction):
 			else:
 				raise Exception("ERROR: Neither ground set data matrix nor similarity kernel provided")
 		
-		if self.partial==None:
-			self.partial = False
+		# if self.partial==None:
+		# 	self.partial = False
 		
 		if separate_master==None:
 			self.separate_master = False
 		
-		if self.partial==False: 
-			self.cpp_ground_sub = {-1} #Provide a dummy set for pybind11 binding to be successful
+		# if self.partial==False: 
+		self.cpp_ground_sub = {-1} #Provide a dummy set for pybind11 binding to be successful
 		
 		#Breaking similarity matrix to simpler native data structures for implicit pybind11 binding
 		if self.mode=="dense":
@@ -219,7 +214,7 @@ class FacilityLocationFunction(SetFunction):
 				l.append(self.cpp_sijs)
 				self.cpp_sijs=l
 
-			self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs, self.partial, self.cpp_ground_sub, self.separate_master)
+			self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs, False, self.cpp_ground_sub, self.separate_master)
 		
 		if self.mode=="sparse": #break scipy sparse matrix to native component lists (for csr implementation)
 			self.cpp_sijs = {}

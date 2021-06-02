@@ -14,6 +14,7 @@ submodlib is an efficient and scalable library for submodular optimization which
    :hidden:
    :caption: General Functions
 
+   functions/submodularFunctions.rst
    functions/facilityLocation.rst
    functions/disparityMin.rst
    functions/logDeterminant.rst

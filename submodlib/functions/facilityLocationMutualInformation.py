@@ -5,34 +5,46 @@ import scipy
 from .setFunction import SetFunction
 import submodlib_cpp as subcp
 from submodlib_cpp import FacilityLocationMutualInformation 
-from submodlib.helper import create_kernel
+#from submodlib.helper import create_kernel
 
 class FacilityLocationMutualInformationFunction(SetFunction):
-	"""Implementation of the FacilityLocationMutualInformation function.
+	"""Implementation of the Facility Location Mutual Information (FLMI or FL1MI) function.
 
-	FacilityLocationMutualInformation models diversity by computing the sum of pairwise distances of all the elements in a subset. It is defined as
+	Given a :ref:`functions.submodular-mutual-information` function, Facility Location Mutual Information function is its instantiation using a :class:`~submodlib.functions.facilityLocation.FacilityLocationFunction`. Mathematically, it takes the following form:
 
 	.. math::
-			f(X) = \\sum_{i, j \\in X} (1 - s_{ij})
-
+			I_f(A; Q) = \sum\limits_{i \in \Vcal}\min(\max\limits_{j \in A}s_{ij}, \eta \max\limits_{j \in Q}s_{ij})
+	
+	.. note::
+			FL1MI tends to get *saturated*. That is, once the query is satisfied, it doesn't see any gain in picking another query-relevant data point. Also, while GCMI lies at one end of the spectrum favoring query-relevance, FLMI lies at the other end favoring diversity and query coverage over query-relevance.
+	
 	Parameters
 	----------
 
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set. Must be > 0.
 	
-	sijs : list, optional
-		Similarity matrix to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed based on the following additional parameters
-
-	data : list, optional
-		Data matrix which will be used for computing the similarity matrix
+	num_queries : int
+		Number of query points in the target.
+	
+	image_sijs : numpy.ndarray, optional
+		Similarity kernel between the elements of the ground set. Shape: n X n. When not provided, it is computed using imageData.
+	
+	query_sijs : numpy.ndarray, optional
+		Similarity kernel between the ground set and the queries. Shape: n X num_queries. When not provided, it is computed using imageData, queryData and metric.
+	
+	imageData : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. imageData[i] should contain the num-features dimensional features of element i. Mandatory, if either if image_sijs or private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
+	
+	queryData : numpy.ndarray, optional
+		Matrix of shape num_queries X num_features containing the query elements. queryData[i] should contain the num-features dimensional features of query i. It is optional (and is ignored if provided) if query_sijs has been provided.
 
 	metric : str, optional
-		Similarity metric to be used for computing the similarity matrix
+		Similarity metric to be used for computing the similarity kernels. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
 	
-	n_neighbors : int, optional
-		While constructing similarity matrix, number of nearest neighbors whose similarity values will be kept resulting in a sparse similarity matrix for computation speed up (at the cost of accuracy)
-	
+	magnificationLambda : float, optional
+		The value of the query-relevance vs diversity trade-off. Increasing :math:`\eta` tends to increase query-relevance while reducing query-coverage and diversity. Default is 1.
+
 	"""
 
 	def __init__(self, n, num_queries, image_sijs=None, query_sijs=None, imageData=None, queryData=None, metric="cosine", magnificationLambda=1):
@@ -109,5 +121,3 @@ class FacilityLocationMutualInformationFunction(SetFunction):
 
 		self.cpp_obj = FacilityLocationMutualInformation(self.n, self.num_queries, self.cpp_image_sijs, self.cpp_query_sijs, self.magnificationLambda)
 		self.effective_ground = set(range(n))
-
-	

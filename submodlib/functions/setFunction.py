@@ -181,13 +181,13 @@ class SetFunction():
 		self.cpp_obj.updateMemoization(X, element)
 	
 	def clearMemoization(self):
-		"""Clear the computed memoized statistics, if any
+		"""Clear the computed memoized statistics, if any.
 
 		"""
 		self.cpp_obj.clearMemoization()
 	
 	def setMemoization(self, X):
-		"""Compute and store the memoized statistics for subset *X* 
+		"""Compute and store the memoized statistics for subset *X*.
 
 		Parameters
 		----------

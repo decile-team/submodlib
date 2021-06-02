@@ -6,19 +6,19 @@ from scipy import sparse
 from .setFunction import SetFunction
 import submodlib_cpp as subcp
 from submodlib_cpp import DisparityMin 
-from submodlib.helper import create_kernel, create_cluster_kernels
+#from submodlib.helper import create_kernel, create_cluster_kernels
 
 
 class DisparityMinFunction(SetFunction):
-	"""Implementation of the Disparity-Min function.
+	"""Implementation of the Disparity-Min (DispMin) function.
 	
 	Diversity based functions attempt to obtain a diverse set of keypoints. The goal is to have minimum similarity across elements in the chosen subset by maximizing minimum pairwise distance between elements. There is a subtle difference between the notion of diversity and the notion of representativeness. While diversity *only* looks at the elements in the chosen subset, representativeness also worries about their similarity with the remaining elements in the superset. Denote :math:`d_{ij}` as a distance measure between images/data points :math:`i` and :math:`j`. Disparity-Min for a subset :math:`X` is defined as: 
 	
 	.. math::
-			f(X) = \\min_{i, j \\in X, i \\neq j} d_{ij}
+			f(X) = \\min_{i, j \\in X, i \\neq j} (1 - s_{ij})
 
 	It is easy to see that maximizing this function involves obtaining a subset with maximal minimum pairwise distance, thereby ensuring a diverse subset of datapoints (snippets or keyframes) in the summary.
-
+    
 	.. note::
 			This function is not submodular, but can be efficiently optimized via a greedy algorithm :cite:`dasgupta2013summarization`.
 
@@ -26,19 +26,22 @@ class DisparityMinFunction(SetFunction):
 	----------
 
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set. Must be > 0.
 	
-	dijs : list, optional
-		Distance matrix to be used for getting :math:`d_{ij}` entries as defined above. When not provided, it is computed based on the following additional parameters
+	mode : str
+		Can be "dense" or "sparse". It specifies whether the Disparity-Min function should operate in dense mode (using a dense similarity kernel) or sparse mode (using a sparse similarity kernel).
+	
+	sijs : numpy.ndarray or scipy.sparse.csr.csr_matrix, optional
+		Similarity kernel (dense or sparse) between the elements of the ground set, to be used for getting :math:`s_{ij}` entries as defined above. Shape of dense kernel must be n X n. When not provided, it is computed internally in C++ based on the following additional parameters.
 
-	data : list, optional
-		Data matrix which will be used for computing the distance matrix
+	data : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. data[i] should contain the num-features dimensional features of element i. Used to compute the similarity kernel. It is optional (and is ignored if provided) if sijs has been provided.
 
 	metric : str, optional
-		Distance metric to be used for computing the distance matrix
+		Similarity metric to be used for computing the similarity kernel. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine".
 	
-	n_neighbors : int, optional
-		While constructing distance matrix, number of nearest neighbors whose distance values will be kept resulting in a sparse distance matrix for computation speed up (at the cost of accuracy)
+	num_neighbors : int, optional
+		Number of neighbors applicable for the sparse similarity kernel. Must not be provided if mode is "dense". Must be provided if either a sparse kernel is provided or is to be computed.
 
 	"""
 
@@ -57,8 +60,8 @@ class DisparityMinFunction(SetFunction):
 		if self.n <= 0:
 			raise Exception("ERROR: Number of elements in ground set must be positive")
 
-		if self.mode not in ['dense', 'sparse', 'clustered']:
-			raise Exception("ERROR: Incorrect mode. Must be one of 'dense', 'sparse' or 'clustered'")
+		if self.mode not in ['dense', 'sparse']:
+			raise Exception("ERROR: Incorrect mode. Must be one of 'dense' or 'sparse'")
 		
 		if self.metric not in ['euclidean', 'cosine']:
 			raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")

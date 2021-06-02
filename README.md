@@ -62,6 +62,10 @@ We discuss the representational power and modeling capabilities of different fun
 * Bi Directional Greedy
 * Sieve Greedy
 
+# Acknowledgements 
+
+This work is supported by the Ekal Fellowship (www.ekal.org).
+
 
 
 

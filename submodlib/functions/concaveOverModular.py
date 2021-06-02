@@ -5,15 +5,12 @@ import scipy
 from .setFunction import SetFunction
 import submodlib_cpp as subcp
 from submodlib_cpp import ConcaveOverModular 
-from submodlib.helper import create_kernel
+#from submodlib.helper import create_kernel
 
 class ConcaveOverModularFunction(SetFunction):
-	"""Implementation of the ConcaveOverModular (COM) function.
+	"""Implementation of the Concave Over Modular (COM) function.
 
-	In a :class:`~submodlib.functions.submodularMutualInformation.SubmodularMutualInformationFunction`, although :math:`f` is defined on :math:`\\Omega`, the discrete optimization problem will only be defined on subsets :math:`\mathcal{A} \\subseteq \\mathcal{V}`. Hence we do not need :math:`f` to be submodular everywhere on :math:`\\Omega`, instead it can be *restricted submodular*. When a MutualInformation function is defined using a restricted submodular function :math:`f`, we call it Generalized Submodular Mutual Information function (GMI). Concave Over Modular is a GMI function :cite:`kaushal2021prism` and is defined as:
-
-	This is a reference to :ref:`functions.conditional-gain` function.
-	This is a reference to :any:`functions.conditional-gain` function.
+	In a :ref:`functions.submodular-mutual-information` function, although :math:`f` is defined on :math:`\\Omega`, the discrete optimization problem will only be defined on subsets :math:`\mathcal{A} \\subseteq \\mathcal{V}`. Hence we do not need :math:`f` to be submodular everywhere on :math:`\\Omega`. Instead it can be *restricted submodular*. When a :ref:`functions.submodular-mutual-information` function is defined using a restricted submodular function :math:`f`, we call it Generalized Submodular Mutual Information function (GMI). Concave Over Modular is a GMI function :cite:`kaushal2021prism` and is defined as:
 	
 	.. math::
 			I_{f_{\\eta}}(\\mathcal{A}; \\mathcal{Q}) = \\eta \\sum_{i \\in \\mathcal{A}} \\psi(\\sum_{j \\in \\mathcal{Q}}s_{ij}) + \\sum_{j \\in \\mathcal{Q}} \\psi(\\sum_{i \\in \mathcal{A}} s_{ij})
@@ -29,25 +26,25 @@ class ConcaveOverModularFunction(SetFunction):
 	----------
 
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set. Must be > 0.
 	
 	num_queries : int
-		Number of query points in the target
+		Number of query points in the target.
 	
-	query_sijs : ndarray, optional
-		Similarity kernel between the ground set and the queries. Dimensionality: n X num_queries. When not provided, it is computed using imageData, queryData and metric.
+	query_sijs : numpy.ndarray, optional
+		Similarity kernel between the ground set and the queries. Shape: n X num_queries. When not provided, it is computed using imageData, queryData and metric.
 
-	imageData : list, optional
-		List of size n containing the ground set data elements. imageData[i] should contain the features of element i. It is optional (and is ignored if provided) if query_sijs has been provided.
+	imageData : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. imageData[i] should contain the num-features dimensional features of element i. It is optional (and is ignored if provided) if query_sijs has been provided.
 
-	queryData : list, optional
-		List of size num_queries containing the query elements. queryData[i] should contain the features of query i. It is optional (and is ignored if provided) if query_sijs has been provided.
+	queryData : numpy.ndarray, optional
+		Matrix of shape num_queries X num_features containing the query elements. queryData[i] should contain the num-features dimensional features of query i. It is optional (and is ignored if provided) if query_sijs has been provided.
 
-	metric : string, optional
-		Similarity metric to be used for computing the similarity kernel. Default is "cosine". 
+    metric : str, optional
+		Similarity metric to be used for computing the similarity kernel between the ground set and the query set. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
 	
 	magnificationLambda : float, optional
-		The value of the query-relevance vs diversity trade-off. Default is 1.
+		The value of the query-relevance vs diversity trade-off. Increasing :math:`\eta` tends to increase query-relevance while reducing query-coverage and diversity. Default is 1.
 
 	mode : ConcaveOverModular.Type, optional
 		The concave function to be used. Can be ConcaveOverModular.logarithmic, ConcaveOverModular.squareRoot, ConcaveOverModular.inverse. Default is ConcaveOverModular.logarithmic.
