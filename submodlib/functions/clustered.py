@@ -14,7 +14,7 @@ class ClusteredFunction(SetFunction):
 	.. math::
 			f(X) = \\sum_i f_{C_i}(X)
 
-	where :math:`f_{C_i}` operates only on cluster :math:`C_i` as sub-groundset and interprets :math:`X` as :math:`X \cap C_i`.
+	where :math:`f_{C_i}` operates only on cluster :math:`C_i` as sub-groundset and interprets :math:`X` as :math:`X \\cap C_i`.
 	
 	.. note::
 			When the clusters are labels, ClusteredFunction is useful to achieve supervised subset selection.

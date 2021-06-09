@@ -7,34 +7,36 @@ from submodlib_cpp import FeatureBased
 from sklearn.preprocessing import MinMaxScaler
 
 class FeatureBasedFunction(SetFunction):
-	"""Implementation of the Feature-Based function.
+	"""Implementation of the Feature-Based (FB) function.
 
-	Feature based functions are essentially sums of concave over modular functions defined as
+	Feature based functions are essentially sums of concave over modular functions defined as:
 	
 	.. math::
 			f(X) = \\sum_{f \\in F} w_f g(m_f(X))
 	
-	where :math:`g` is a concave function, :math:`{m_f}_{f \\in F}` are a set of feature scores, and :math:`f \\in F` are features.
+	where :math:`g` is a concave function, :math:`{m_f}` are a set of feature scores, and :math:`f \\in F` are features. In case of images, features could be, for example, the features extracted from the second last layer of a ConvNet. 
+
+	Feature Based functions model the notion of coverage over features.
 
 	Parameters
 	----------
 	n : int
-		Number of elements in the ground set
-
-	type : str
-		Concave function to be used - sqrt, log, min, pow
+		Number of elements in the ground set. Must be > 0.
 	
 	features : list
-		Feature vectors for the elements in the ground set
+		Feature vectors for the elements in the ground set. List of size n.
 	
-	weights : list
-		Weights of features
+	numFeatures : int
+		Dimensionality of the feature vectors of each ground set element.
+
+	sparse : bool
+		Indicates whether *features* contain sparse feature vectors. If True, *features* is expected to be a list of list of tuples where each sparse feature vector is represented by a list of tuples (i, j), i being the index of the non-ero feature value and j being the feature value. If False, the supplied *features* are converted into sparse representation internally.
 	
-	thresh : float
-		Threshold to be used for min function
-	
-	pow : int
-		Exponent to be used for power function
+	featureWeights : list
+		Weights of features. List of size numFeatures.
+
+	mode : FeatureBased.Type, optional
+		The concave function to be used. Can be FeatureBased.logarithmic, FeatureBased.squareRoot, FeatureBased.inverse. Default is FeatureBased.logarithmic.
 	
 	"""
 

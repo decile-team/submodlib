@@ -10,10 +10,10 @@ from submodlib_cpp import ConcaveOverModular
 class ConcaveOverModularFunction(SetFunction):
 	"""Implementation of the Concave Over Modular (COM) function.
 
-	In a :ref:`functions.submodular-mutual-information` function, although :math:`f` is defined on :math:`\\Omega`, the discrete optimization problem will only be defined on subsets :math:`\mathcal{A} \\subseteq \\mathcal{V}`. Hence we do not need :math:`f` to be submodular everywhere on :math:`\\Omega`. Instead it can be *restricted submodular*. When a :ref:`functions.submodular-mutual-information` function is defined using a restricted submodular function :math:`f`, we call it Generalized Submodular Mutual Information function (GMI). Concave Over Modular is a GMI function :cite:`kaushal2021prism` and is defined as:
+	In a :ref:`functions.submodular-mutual-information` function, although :math:`f` is defined on :math:`\\Omega`, the discrete optimization problem will only be defined on subsets :math:`\\mathcal{A} \\subseteq \\mathcal{V}`. Hence we do not need :math:`f` to be submodular everywhere on :math:`\\Omega`. Instead it can be *restricted submodular*. When a :ref:`functions.submodular-mutual-information` function is defined using a restricted submodular function :math:`f`, we call it Generalized Submodular Mutual Information function (GMI). Concave Over Modular is a GMI function :cite:`kaushal2021prism` and is defined as:
 	
 	.. math::
-			I_{f_{\\eta}}(\\mathcal{A}; \\mathcal{Q}) = \\eta \\sum_{i \\in \\mathcal{A}} \\psi(\\sum_{j \\in \\mathcal{Q}}s_{ij}) + \\sum_{j \\in \\mathcal{Q}} \\psi(\\sum_{i \\in \mathcal{A}} s_{ij})
+			I_{f_{\\eta}}(\\mathcal{A}; \\mathcal{Q}) = \\eta \\sum_{i \\in \\mathcal{A}} \\psi(\\sum_{j \\in \\mathcal{Q}}s_{ij}) + \\sum_{j \\in \\mathcal{Q}} \\psi(\\sum_{i \\in \\mathcal{A}} s_{ij})
 	
 	where :math:`\\eta` models query-relevance and diversity trade-off, :math:`\\psi` is a concave function and kernel matrix :math:`S` satisfies :math:`s_{ij} = 1(i == j)` for :math:`i, j \\in \\mathcal{V}` or :math:`i, j \\in \\mathcal{V}^{\\prime}`.
 	

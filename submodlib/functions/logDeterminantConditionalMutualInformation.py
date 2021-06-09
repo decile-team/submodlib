@@ -8,30 +8,72 @@ from submodlib_cpp import LogDeterminantConditionalMutualInformation
 from submodlib.helper import create_kernel
 
 class LogDeterminantConditionalMutualInformationFunction(SetFunction):
-	"""Implementation of the LogDeterminantConditionalMutualInformation function.
+	"""Implementation of the Log Determinant Conditional Mutual Information (LogDetCMI) function.
 
-	LogDeterminantConditionalMutualInformation models diversity by computing the sum of pairwise distances of all the elements in a subset. It is defined as
+	Given a :ref:`functions.conditional-mutual-information` function, Log Determinant Conditional Mutual Information function is its instantiation using a :class:`~submodlib.functions.logDeterminant.LogDeterminantFunction`. 
 
+	Let :math:`S_{A, B}` be the cross-similarity matrix between the items in sets :math:`A` and :math:`B`. Also, denote :math:`S_{AB} = S_{A \\cup B}`.
+
+	We construct a similarity matrix :math:`S^{\\eta,\\nu}` (on a base matrix :math:`S`) in such a way that the cross-similarity between :math:`A` and :math:`Q` is multiplied by :math:`\\eta` (i.e :math:`S^{\\eta}_{A,Q} = \\eta S_{A,Q}`) to control the query-relevance and diversity trade-off and between:math:`A` and :math:`P` is multiplied by :math:`\\nu` (i.e :math:`S^{\\nu}_{A,P} = \\nu S_{A,P}`) to control the hardness of enforcing privacy constraints. 
+	
+	Using a similarity matrix defined above and with :math:`f(A) = \\log\\det(S^{\\nu}_{A})`, we have: 
+	
 	.. math::
-			f(X) = \\sum_{i, j \\in X} (1 - s_{ij})
-
+			I_f(A; Q|P ) = \\log \\frac{\\det(I - S_{P}^{-1} S_{P, Q} S_{Q}^{-1} S_{P, Q}^T)}{\\det(I - S_{A P}^{-1} S_{A P, Q} S_{Q}^{-1} S_{A P, Q}^T)}
+	
+	.. note::
+			LogDetCMI favors query-relevance and privacy-irrelevance over query-coverage and diversity.
+	
 	Parameters
 	----------
 
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set. Must be > 0.
 	
-	sijs : list, optional
-		Similarity matrix to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed based on the following additional parameters
+	num_queries : int
+		Number of query points in the target.
+	
+	num_privates : int
+		Number of private instances in the target.
+	
+	lambdaVal : float
+		Addition to :math:`s_{ii} (1)` so that :math:`\\log` doesn't become 0
+	
+	image_sijs : numpy.ndarray, optional
+		Similarity kernel between the elements of the ground set. Shape: n X n. When not provided, it is computed using imageData.
+	
+	query_sijs : numpy.ndarray, optional
+		Similarity kernel between the ground set and the queries. Shape: n X num_queries. When not provided, it is computed using imageData, queryData and metric.
+	
+	query_query_sijs : numpy.ndarray, optional
+		Similarity kernel between the query points. Shape: num_queries X num_queries. When not provided, it is computed using queryData.
+	
+	private_sijs : numpy.ndarray, optional
+		Similarity kernel between the ground set and the private instances. Shape: n X num_privates. When not provided, it is computed using imageData and privateData.
+	
+	private_private_sijs : numpy.ndarray, optional
+		Similarity kernel between the private instances. Shape: num_privates X num_privates. When not provided, it is computed using privateData.
+	
+	query_private_sijs : numpy.ndarray, optional
+		Similarity kernel between the query instances and the private instances. Shape: num_queries X num_privates. When not provided, it is computed using queryData and privateData.
 
-	data : list, optional
-		Data matrix which will be used for computing the similarity matrix
+	imageData : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. imageData[i] should contain the num-features dimensional features of element i. Mandatory, if either if image_sijs or private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
+	
+	queryData : numpy.ndarray, optional
+		Matrix of shape num_queries X num_features containing the query elements. queryData[i] should contain the num-features dimensional features of query i. It is optional (and is ignored if provided) if query_sijs has been provided.
+
+	privateData : numpy.ndarray, optional
+		Matrix of shape num_privates X num_features containing the private instances. privateData[i] should contain the num-features dimensional features of private instance i. Must be provided if private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
 
 	metric : str, optional
-		Similarity metric to be used for computing the similarity matrix
+		Similarity metric to be used for computing the similarity kernels. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
 	
-	n_neighbors : int, optional
-		While constructing similarity matrix, number of nearest neighbors whose similarity values will be kept resulting in a sparse similarity matrix for computation speed up (at the cost of accuracy)
+	magnificationLambda : float, optional
+		The value of the query-relevance vs diversity trade-off. Increasing :math:`\eta` tends to increase query-relevance while reducing query-coverage and diversity. Default is 1.
+
+	privacyHardness : float, optional
+		Parameter that governs the hardness of the privacy constraint. Default is 1.
 	
 	"""
 

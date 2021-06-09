@@ -4,32 +4,33 @@ from .setFunction import SetFunction
 from submodlib_cpp import ProbabilisticSetCoverConditionalMutualInformation
 
 class ProbabilisticSetCoverConditionalMutualInformationFunction(SetFunction):
-	"""Implementation of the Probabilistic Set Cover Conditional Gain submodular function.
-	
-	This variant of the set cover function is defined as 
-	
-	.. math::
-			f_{psc}(X) = \\sum_{u \\in U} (1 - \\prod_{x \\in X} (1 - p_{xu}))
-	
-	where :math:`p_{xu}` is the probability with which concept :math:`u` is covered by element :math:`x`. Similar to the set cover function, this function models the coverage aspect of the candidate summary (subset), viewed stochastically and is also monotone submodular.
+	"""Implementation of the Probabilistic Set Cover Conditional Mutual Information (PSCCMI) function.
 
-	The probabilistic set cover function is 
-	
-	.. math::
-			f(A) = \\sum_{i \\in U} w_i(1 - P_i(A))
-	
-	where :math:`U` is the set of concepts, and :math:`P_i(A) = \\prod_{j \\in A} (1 - p_{ij})`, i.e. :math:`P_i(A)` is the probability that :math:`A` *doesn't* cover concept :math:`i`. Intuitively, PSC is a soft version of the SC, which allows for probability of covering concepts, instead of a binary yes/no, as is the case with SC.
+	Given a :ref:`functions.conditional-mutual-information` function, Probabilistic Set Cover Conditional Mutual Information function is its instantiation using a :class:`~submodlib.functions.probabilisticSetCover.ProbabilisticSetCoverFunction`. Mathematically, it takes the following form:
 
+	.. math::
+			I_f(A; Q | P) = \\sum\\limits_{u \\in \\mathcal{U}} w_u \\bar{P_u}(A)\\bar{P_u}(Q)P_u(P)
+	
 	Parameters
 	----------
+
 	n : int
-		Number of elements in the ground set
-	n_concepts : int
-		Number of concepts
+		Number of elements in the ground set. Must be > 0.
+	
+	num_concepts : int
+		Number of concepts.
+	
 	probs : list
-		List of probability vectors for each data point / image, each probability vector containing the probabilities with which that data point / image covers each concept
-	weights : list
-		Weight :math:`w_i` of each concept
+		List of probability vectors for each data point / image, each probability vector containing the probabilities with which that data point / image covers each concept. Hence each list is num_concepts dimensional and probs contains n such lists.
+	
+	query_concepts : set
+		Set of query concepts. That is, the concepts which should be covered by the optimal subset.
+	
+	private_concepts : set
+		Set of private concepts. That is, the concepts which should not be covered in the optimal subset
+	
+	concept_weights : list
+		Weight :math:`w_i` of each concept. Size must be same as num_concepts.
 	
 	"""
 

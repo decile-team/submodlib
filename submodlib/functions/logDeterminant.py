@@ -10,7 +10,7 @@ from submodlib.helper import create_kernel, create_cluster_kernels
 
 
 class LogDeterminantFunction(SetFunction):
-	"""Implementation of the Log-Determinant function.
+	"""Implementation of the Log-Determinant (LogDet) function.
 
 	Given a positive semi-definite kernel matrix :math:`L`, denote :math:`L_A` as the subset of rows and columns indexed by the set :math:`A`. The log-determinant function is 
 	
@@ -32,19 +32,25 @@ class LogDeterminantFunction(SetFunction):
 	Parameters
 	----------
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set, must be > 0.
+	
+	mode : string
+		Can be "dense" or "sparse". It specifies whether the Log Determinant function should operate in dense mode (using a dense similarity kernel) or sparse mode (using a sparse similarity kernel).
 
-	lam : float
+	lambdaVal : float
 		Addition to :math:`s_{ii} (1)` so that :math:`\\log` doesn't become 0 
 	
-	L : list, optional
-		Similarity matrix L. When not provided, it is computed based on the following additional parameters
-
-	data : list, optional
-		Data matrix which will be used for computing the similarity matrix
+	sijs : numpy.ndarray or scipy.sparse.csr.csr_matrix, optional
+		Similarity kernel (dense or sparse) between the elements of the ground set, to be used for getting :math:`L` as defined above. Shape of dense kernel must be n X n. When not provided, it is computed internally in C++ based on the following additional parameters.
+	
+	data : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. data[i] should contain the num-features dimensional features of element i. Used to compute the similarity kernel. It is optional (and is ignored if provided) if sijs has been provided.
 
 	metric : str, optional
-		Similarity metric to be used for computing the similarity matrix
+		Similarity metric to be used for computing the similarity kernel. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine".
+	
+	num_neighbors : int, optional
+		Number of neighbors applicable for the sparse similarity kernel. Must not be provided if mode is "dense". Must be provided if either a sparse kernel is provided or is to be computed.
 	
 	"""
 

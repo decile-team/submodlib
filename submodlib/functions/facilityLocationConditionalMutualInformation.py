@@ -13,7 +13,7 @@ class FacilityLocationConditionalMutualInformationFunction(SetFunction):
 	Given a :ref:`functions.conditional-mutual-information` function, Facility Location Conditional Mutual Information function is its instantiation using a :class:`~submodlib.functions.facilityLocation.FacilityLocationFunction`. Mathematically, it takes the following form:
 
 	.. math::
-			I_f(A; Q | P) = \sum\limits_{i \in \Vcal} \max(\min(\max\limits_{j \in A} s_{ij}, \eta \max\limits_{j \in Q} s_{ij}) - \nu \max\limits_{j \in P} s_{ij}, 0)
+			I_f(A; Q | P) = \\sum\\limits_{i \\in \\mathcal{V}} \\max(\\min(\\max\\limits_{j \\in A} s_{ij}, \\eta \\max\\limits_{j \\in Q} s_{ij}) - \\nu \\max\\limits_{j \\in P} s_{ij}, 0)
 	
 	.. note::
 			FLCMI tends to favor query-coverage and diversity in contrast to query-relevance and privacy-irrelevance.

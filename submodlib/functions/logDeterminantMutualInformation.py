@@ -8,31 +8,55 @@ from submodlib_cpp import LogDeterminantMutualInformation
 from submodlib.helper import create_kernel
 
 class LogDeterminantMutualInformationFunction(SetFunction):
-	"""Implementation of the LogDeterminantMutualInformation function.
+	"""Implementation of the Log Determinant Mutual Information (LogDetMI) function.
 
-	LogDeterminantMutualInformation models diversity by computing the sum of pairwise distances of all the elements in a subset. It is defined as
+	Given a :ref:`functions.submodular-mutual-information` function, Log Determinant Mutual Information function is its instantiation using a :class:`~submodlib.functions.logDeterminant.LogDeterminantFunction`. 
+	
+	Let :math:`S_{A, B}` be the cross-similarity matrix between the items in sets :math:`A` and :math:`B`. Also, denote :math:`S_{AB} = S_{A \\cup B}`.
 
+	We construct a similarity matrix :math:`S^{\\eta}` (on a base matrix :math:`S`) in such a way that the cross-similarity between :math:`A` and :math:`Q` is multiplied by :math:`\\eta` (i.e :math:`S^{\\eta}_{A,Q} = \\eta S_{A,Q}`) to control the trade-off between query relevance and diversity. Higher values of :math:`\\eta` ensure greater query-relevance while lower values favor diversity. 
+	
+	Using a similarity matrix defined above and with :math:`f(A) = \\log\\det(S^{\\eta}_{A})`, we have: 
+	
 	.. math::
-			f(X) = \\sum_{i, j \\in X} (1 - s_{ij})
-
+			I_f(A; Q) = \\log\\det(S_{A}) -\\log\\det(S_{A} - \\eta^2 S_{A,Q}S_{Q}^{-1}S_{A,Q}^T)
+			
+	.. note::
+			The query-DPP considered in :cite:`sharghi2016query,sharghi2017query` is a special case of LogDetMI.
+	
 	Parameters
 	----------
 
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set. Must be > 0.
 	
-	sijs : list, optional
-		Similarity matrix to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed based on the following additional parameters
-
-	data : list, optional
-		Data matrix which will be used for computing the similarity matrix
+	num_queries : int
+		Number of query points in the target.
+	
+	lambdaVal : float
+		Addition to :math:`s_{ii} (1)` so that :math:`\\log` doesn't become 0
+	
+	image_sijs : numpy.ndarray, optional
+		Similarity kernel between the elements of the ground set. Shape: n X n. When not provided, it is computed using imageData.
+	
+	query_sijs : numpy.ndarray, optional
+		Similarity kernel between the ground set and the queries. Shape: n X num_queries. When not provided, it is computed using imageData, queryData and metric.
+	
+	query_query_sijs : numpy.ndarray, optional
+		Similarity kernel between the query points. Shape: num_queries X num_queries. When not provided, it is computed using queryData.
+	
+	imageData : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. imageData[i] should contain the num-features dimensional features of element i. Mandatory, if either if image_sijs or private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
+	
+	queryData : numpy.ndarray, optional
+		Matrix of shape num_queries X num_features containing the query elements. queryData[i] should contain the num-features dimensional features of query i. It is optional (and is ignored if provided) if query_sijs has been provided.
 
 	metric : str, optional
-		Similarity metric to be used for computing the similarity matrix
+		Similarity metric to be used for computing the similarity kernels. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
 	
-	n_neighbors : int, optional
-		While constructing similarity matrix, number of nearest neighbors whose similarity values will be kept resulting in a sparse similarity matrix for computation speed up (at the cost of accuracy)
-	
+	magnificationLambda : float, optional
+		The value of the query-relevance vs diversity trade-off. Increasing :math:`\eta` tends to increase query-relevance while reducing query-coverage and diversity. Default is 1.
+
 	"""
 
 	def __init__(self, n, num_queries, lambdaVal, image_sijs=None, query_sijs=None, query_query_sijs=None, imageData=None, queryData=None, metric="cosine", magnificationLambda=1):

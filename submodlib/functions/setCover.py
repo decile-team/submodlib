@@ -4,35 +4,36 @@ from .setFunction import SetFunction
 from submodlib_cpp import SetCover
 
 class SetCoverFunction(SetFunction):
-	"""Implementation of the Set-Cover submodular function.
+	"""Implementation of the Set-Cover (SC) submodular function.
 	
-	For a subset :math:`X` being scored, the set cover is defined as 
-	
-	.. math::
-			f_{sc}(X) = \\sum_{u \\in U} min\\{m_u(X), 1\\}
-	
-	:math:`u` is a concept belonging to a set of all concepts :math:`U`, :math:`m_u(X) = \\sum_{x \\in X} w_{xu}` and :math:`w_{xu}` is the weight of coverage of concept :math:`u` by element :math:`x`. This functions models the coverage aspect of a candidate summary (subset) is monotone submodular.
+	For a subset :math:`A`, its Set Cover evaluation is defined as: 
 
 	.. math::
 			f(A) = w(\\cup_{a \\in A} \\gamma(a)) = w(\\gamma(A))
-	
-	where :math:`w` is a weight vector in :math:`\\mathbb{R}^{\\gamma(\\Omega)}`. Intuitively, each element in :math:`\\Omega` *covers* a set of elements from the concept set :math:`U` and hence :math:`w(\\gamma(A))` is total weight of concepts covered by elements in :math:`A`. Note that :math:`\\gamma(A \\cup B) = \\gamma(A) \\cup \\gamma(B)` and hence :math:`f(A \\cup B) = w(\\gamma(A \\cup B)) = w(\\gamma(A) \\cup \\gamma(B))`
-		
-	Alternatively we can also view the function as follows. With :math:`U` being the set of all concepts (namely :math:`U = \\gamma(\\Omega)`) and :math:`c_u(i)` denoting whether the concept :math:`u \\in U` is covered by the element :math:`i \\in \\Omega` i.e :math:`c_u(i) = 1` if :math:`u \\in \\gamma(\\{i\\})` and is zero otherwise. We then define :math:`c_u(A) = \\sum_{a\\in A} c_u(a)` as the count of concept :math:`u` in set :math:`A`, and the weighted set cover then is
+
+	where :math:`\\gamma(A)` refers to the set of concepts covered by :math:`A`. Thus the set of all concepts :math:`\\mathcal{U} = \\gamma(\\mathcal{V})`. :math:`w` is a weight vector in :math:`\\Re^{|\\mathcal{U}|}`. Intuitively, each element in :math:`\\mathcal{V}` *covers* a set of elements from the concept set :math:`U` and hence :math:`w(\\gamma(A))` is total weight of concepts covered by elements in :math:`A`. Note that :math:`\\gamma(A \\cup B) = \\gamma(A) \\cup \\gamma(B)` and hence :math:`f(A \\cup B) = w(\\gamma(A \\cup B)) = w(\\gamma(A) \\cup \\gamma(B))`.
+
+	Alternatively we can also view the function as follows. With :math:`U` being the set of all concepts (namely :math:`U = \\gamma(\\mathcal{V})`) and :math:`c_u(i)` denoting whether the concept :math:`u \\in U` is covered by the element :math:`i \\in \\mathcal{V}` i.e :math:`c_u(i) = 1` if :math:`u \\in \\gamma(\\{i\\})` and is zero otherwise. We then define :math:`c_u(A) = \\sum_{a\\in A} c_u(a)` as the count of concept :math:`u` in set :math:`A`, and the weighted set cover can then be written as:
 		
 	.. math::
 			f(A) = \\sum_{u \\in U} w_u \\min(c_u(A), 1)
-	
+			
+	.. note::
+			Set Cover functions models coverage of concepts and is monotone submodular.
+
 	Parameters
 	----------
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set, must be > 0.
 
 	cover_set : list
-		List of sets. Each set is the set of concepts covered by the corresponding data point / image
+		List of sets. Each set is the set of concepts covered by the corresponding data point / image. Hence cover_set is of size n.
 
-	weights : float
-		Weights of concepts
+	num_concepts : int
+		Number of concepts.
+
+	concept_weights : list
+		Weight :math:`w_i` of each concept. Size must be same as num_concepts.
 
 	"""
 

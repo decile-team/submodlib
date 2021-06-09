@@ -9,41 +9,61 @@ from submodlib_cpp import GraphCut
 from submodlib.helper import create_kernel, create_cluster_kernels
 
 class GraphCutFunction(SetFunction):
-	"""Implementation of the Graph-Cut submodular function.
+	"""Implementation of the Graph Cut (GC) submodular function.
 	
-	Graph-Cut models representation and is defined as
+	Graph Cut models representation and is defined as
 
 	.. math::
 			f_{gc}(X) = \\sum_{i \\in V, j \\in X} s_{ij} - \\lambda \\sum_{i, j \\in X} s_{ij}
 	
-	When :math:`\\lambda` becomes large, graph cut function also tries to model diversity in the subset. :math:`\\lambda` governs the tradeoff between representation and diversity.
+	Where :math:`\\lambda` governs the tradeoff between representation and diversity. When :math:`\\lambda` becomes large, graph cut function also tries to model diversity in the subset.
 
 	.. note::
 			For :math:`\\lambda < 0.5` Graph-Cut is monotone submodular. For :math:`\lambda > 0.5` it is non-monotone submodular.
 
+	In a more generic setting, the set whose representation is desired (we call it master set :math:`U`) may be different from the set whose subset is desired (we call it ground set :math:`V`). The expression for Graph Cut function then becomes
+
+	.. math::
+			f_{gc}(X) = \\sum_{i \\in U, j \\in X} s_{ij} - \\lambda \\sum_{i, j \\in X} s_{ij}
+
 	Parameters
 	----------
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set, must be > 0.
 
-	lam : float
-		Trade-off between representation and diversity as defined by :math:`\\lambda` in the above definition
+	mode : string
+		Can be "dense" or "sparse". It specifies whether the Graph Cut function should operate in dense mode (using a dense similarity kernel) or sparse mode (using a sparse similarity kernel).
 	
-	sijs : list, optional
-		Similarity matrix to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed based on the following additional parameters
+	lambdaVal : float
+		Trade-off between representation and diversity as defined by :math:`\\lambda` in the above definition. When :math:`\\lambda` becomes large, graph cut function also tries to model diversity in the subset.
+	
+	separate_master: bool, optional
+		Specifies whether a set different from ground set should be used as master set (whose representation is desired).
 
-	data : list, optional
-		Data matrix which will be used for computing the similarity matrix
+	n_master : int, optional
+		Number of elements in the master set if separate_master=True.
+	
+	mgsijs : numpy.ndarray or scipy.sparse.csr.csr_matrix, optional
+		When separate_master=False, atmost one of mgsijs or ggsijs must be provided. It is the similarity kernel (dense or sparse) between the elements of the ground set, to be used for getting :math:`s_{ij}` entries as defined above. Shape of dense kernel in this case must be n X n. When separate_master=True, mode must be "dense" and this is the dense similarity kernel between the master set and the ground set. Shape in this case must be n_master X n. When mgsijs is not provided, it is computed internally in C++ based on the following additional parameters.
+	
+	ggsijs : numpy.ndarray or scipy.sparse.csr.csr_matrix, optional
+		When separate_master=False, atmost one of mgsijs or ggsijs must be provided. It is the similarity kernel (dense or sparse) between the elements of the ground set, to be used for getting :math:`s_{ij}` entries as defined above. Shape of dense kernel in this case must be n X n. When separate_master=True, mode must be "dense" and this is the dense similarity kernel between the elements of the ground set. Shape will again be n X n. When ggsijs is not provided, it is computed internally in C++ based on the following additional parameters.
+	
+	data : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. data[i] should contain the num-features dimensional features of element i. Used to compute the similarity kernel. It is optional (and is ignored if provided) if sijs has been provided.
+
+	data_master : numpy.ndarray, optional
+		Master set data matrix (used to compute the dense similarity kernel) if separate_master=True and when a similarity kernel is not provided.
 
 	metric : str, optional
-		Similarity metric to be used for computing the similarity matrix
+		Similarity metric to be used for computing the similarity kernel(s). Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine".
 	
-	n_neighbors : int, optional
-		While constructing similarity matrix, number of nearest neighbors whose similarity values will be kept resulting in a sparse similarity matrix for computation speed up (at the cost of accuracy)
-	
+	num_neighbors : int, optional
+		Number of neighbors applicable for the sparse similarity kernel. Must not be provided if mode is "dense". Must be provided if either a sparse kernel is provided or is to be computed.
+
 	"""
 
-	def __init__(self, n, mode, lambdaVal, separate_master=None, n_master=None, mgsijs=None, ggsijs=None, data=None, data_master=None, num_clusters=None, cluster_labels=None, metric="cosine", num_neighbors=None):
+	def __init__(self, n, mode, lambdaVal, separate_master=None, n_master=None, mgsijs=None, ggsijs=None, data=None, data_master=None, metric="cosine", num_neighbors=None):
 		self.n = n
 		self.mode = mode
 		self.lambdaVal = lambdaVal

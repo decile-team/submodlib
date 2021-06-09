@@ -8,30 +8,39 @@ from submodlib_cpp import GraphCutMutualInformation
 from submodlib.helper import create_kernel
 
 class GraphCutMutualInformationFunction(SetFunction):
-	"""Implementation of the GraphCutMutualInformation function.
+	"""Implementation of the Graph Cut Mutual Information (GCMI) function.
 
-	GraphCutMutualInformation models diversity by computing the sum of pairwise distances of all the elements in a subset. It is defined as
+	Given a :ref:`functions.submodular-mutual-information` function, Graph Cut Mutual Information function is its instantiation using a :class:`~submodlib.functions.graphCut.GraphCutFunction`. Mathematically, it takes the following form:
 
 	.. math::
-			f(X) = \\sum_{i, j \\in X} (1 - s_{ij})
-
+			I_f(A; Q) = 2\\lambda \\sum\\limits_{i \\in A} \\sum\\limits_{j \\in Q} s_{ij}
+	
+	.. note::
+			GCMI lies at one end of the spectrum favoring only query-relevance. Thus it models a pure retrieval function.
+		
+	.. note::
+			The graph-cut based query-relevance term in :cite:`vasudevan2017query,lin2012submodularity,li2012multi` is actually GCMI.
+	
 	Parameters
 	----------
 
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set. Must be > 0.
 	
-	sijs : list, optional
-		Similarity matrix to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed based on the following additional parameters
+	num_queries : int
+		Number of query points in the target.
 
-	data : list, optional
-		Data matrix which will be used for computing the similarity matrix
+	query_sijs : numpy.ndarray, optional
+		Similarity kernel between the ground set and the queries. Shape: n X num_queries. When not provided, it is computed using imageData, queryData and metric.
+	
+	imageData : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. imageData[i] should contain the num-features dimensional features of element i. Mandatory, if either if image_sijs or private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
+	
+	queryData : numpy.ndarray, optional
+		Matrix of shape num_queries X num_features containing the query elements. queryData[i] should contain the num-features dimensional features of query i. It is optional (and is ignored if provided) if query_sijs has been provided.
 
 	metric : str, optional
-		Similarity metric to be used for computing the similarity matrix
-	
-	n_neighbors : int, optional
-		While constructing similarity matrix, number of nearest neighbors whose similarity values will be kept resulting in a sparse similarity matrix for computation speed up (at the cost of accuracy)
+		Similarity metric to be used for computing the similarity kernels. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
 	
 	"""
 

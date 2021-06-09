@@ -8,30 +8,50 @@ from submodlib_cpp import GraphCutConditionalGain
 from submodlib.helper import create_kernel
 
 class GraphCutConditionalGainFunction(SetFunction):
-	"""Implementation of the GraphCutConditionalGain function.
+	"""Implementation of the Graph Cut Conditional Gain (GCCG) function.
 
-	GraphCutConditionalGain models diversity by computing the sum of pairwise distances of all the elements in a subset. It is defined as
+	Given a :ref:`functions.conditional-gain` function, Graph Cut Conditional Gain function is its instantiation using a :class:`~submodlib.functions.graphCut.GraphCutFunction`. Mathematically, it takes the following form:
 
 	.. math::
-			f(X) = \\sum_{i, j \\in X} (1 - s_{ij})
+			f(A | P) = f_{\\lambda}(A) - 2 \\lambda \\nu \\sum\\limits_{i \\in A, j \\in P} s_{ij}
 
+	Where :math:`\\nu` is an additional parameter that controls the hardness of the privacy constraint and
+	
+	.. math::
+			f_{\\lambda}(A) = \\sum_{i \\in V, j \\in A} s_{ij} - \\lambda \\sum_{i, j \\in A} s_{ij}
+
+	.. note::
+			The submodular function used by :cite:`li2012multi` in update-summarization is GCCG.
+	
 	Parameters
 	----------
 
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set. Must be > 0.
 	
-	sijs : list, optional
-		Similarity matrix to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed based on the following additional parameters
+	num_privates : int
+		Number of private instances in the target.
 
-	data : list, optional
-		Data matrix which will be used for computing the similarity matrix
+	lambdaVal : float
+		The representation and diversity trade-off parameter :math:`\\lambda` in :class:`~submodlib.functions.graphCut.GraphCutFunction`
+	
+	image_sijs : numpy.ndarray, optional
+		Similarity kernel between the elements of the ground set. Shape: n X n. When not provided, it is computed using imageData.
+	
+	private_sijs : numpy.ndarray, optional
+		Similarity kernel between the ground set and the private instances. Shape: n X num_privates. When not provided, it is computed using imageData and privateData.
+
+	imageData : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. imageData[i] should contain the num-features dimensional features of element i. Mandatory, if either if image_sijs or private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
+
+	privateData : numpy.ndarray, optional
+		Matrix of shape num_privates X num_features containing the private instances. privateData[i] should contain the num-features dimensional features of private instance i. Must be provided if private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
 
 	metric : str, optional
-		Similarity metric to be used for computing the similarity matrix
-	
-	n_neighbors : int, optional
-		While constructing similarity matrix, number of nearest neighbors whose similarity values will be kept resulting in a sparse similarity matrix for computation speed up (at the cost of accuracy)
+		Similarity metric to be used for computing the similarity kernels. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
+
+	privacyHardness : float, optional
+		Parameter that governs the hardness of the privacy constraint. Default is 1.
 	
 	"""
 
@@ -110,5 +130,3 @@ class GraphCutConditionalGainFunction(SetFunction):
 
 		self.cpp_obj = GraphCutConditionalGain(self.n, self.num_privates, self.cpp_image_sijs, self.cpp_private_sijs, self.privacyHardness, self.lambdaVal)
 		self.effective_ground = set(range(n))
-
-	

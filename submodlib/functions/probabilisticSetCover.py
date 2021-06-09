@@ -4,32 +4,35 @@ from .setFunction import SetFunction
 from submodlib_cpp import ProbabilisticSetCover
 
 class ProbabilisticSetCoverFunction(SetFunction):
-	"""Implementation of the Probabilistic Set Cover submodular function.
+	"""Implementation of the Probabilistic Set Cover (PSC) submodular function.
 	
-	This variant of the set cover function is defined as 
+	This variant of the :class:`~submodlib.functions.setCover.SetCoverFunction` is defined as 
 	
 	.. math::
-			f_{psc}(X) = \\sum_{u \\in U} (1 - \\prod_{x \\in X} (1 - p_{xu}))
+			f_{psc}(X) = \\sum_{u \\in \\mathcal{U}} w_u(1 - P_u(X))
 	
-	where :math:`p_{xu}` is the probability with which concept :math:`u` is covered by element :math:`x`. Similar to the set cover function, this function models the coverage aspect of the candidate summary (subset), viewed stochastically and is also monotone submodular.
+	where :math:`\\mathcal{U}` is the set of concepts, :math:`w_u` is the weight of the concept :math:`u` and :math:`P_u(X) = \\prod_{j \\in X} (1 - p_{uj})` where :math:`p_{xu}` is the probability with which concept :math:`u` is covered by element :math:`x`. Thus, :math:`P_u(X)` is the probability that :math:`X` *doesn't* cover concept :math:`u`. In other words,
 
-	The probabilistic set cover function is 
-	
 	.. math::
-			f(A) = \\sum_{i \\in U} w_i(1 - P_i(A))
-	
-	where :math:`U` is the set of concepts, and :math:`P_i(A) = \\prod_{j \\in A} (1 - p_{ij})`, i.e. :math:`P_i(A)` is the probability that :math:`A` *doesn't* cover concept :math:`i`. Intuitively, PSC is a soft version of the SC, which allows for probability of covering concepts, instead of a binary yes/no, as is the case with SC.
+			f_{psc}(X) = \\sum_{u \\in \\mathcal{U}} w_u(1 - \\prod_{x \\in X} (1 - p_{xu}))
+
+	Intuitively, PSC is a soft version of the SC, which allows for probability of covering concepts, instead of a binary yes/no, as is the case with SC.
+
+	Similar to the set cover function, this function models the coverage aspect of the candidate summary (subset), viewed stochastically and is also monotone submodular.
 
 	Parameters
 	----------
 	n : int
-		Number of elements in the ground set
-	n_concepts : int
-		Number of concepts
+		Number of elements in the ground set, must be > 0.
+	
 	probs : list
-		List of probability vectors for each data point / image, each probability vector containing the probabilities with which that data point / image covers each concept
-	weights : list
-		Weight :math:`w_i` of each concept
+		List of probability vectors for each data point / image, each probability vector containing the probabilities with which that data point / image covers each concept. Hence each list is num_concepts dimensional and probs contains n such lists.
+
+	num_concepts : int
+		Number of concepts.
+
+	concept_weights : list
+		Weight :math:`w_i` of each concept. Size must be same as num_concepts.
 	
 	"""
 
@@ -58,5 +61,3 @@ class ProbabilisticSetCoverFunction(SetFunction):
 		self.cpp_obj = ProbabilisticSetCover(self.n, self.probs, self.num_concepts, self.concept_weights)
 
 		self.effective_ground = set(range(n))
-
-	

@@ -13,7 +13,7 @@ class FacilityLocationVariantMutualInformationFunction(SetFunction):
 	Given a :ref:`functions.submodular-mutual-information` function, Facility Location Variant Mutual Information function is its instantiation using a :class:`~submodlib.functions.facilityLocation.FacilityLocationFunction`. However it is slightly different from :class:`~submodlib.functions.facilityLocationMutualInformation.FacilityLocationMutualInformationFunction`. This variant considers only cross-similarities between data points and the target. Mathematically, it takes the following form:
 
 	.. math::
-			I_f(A; Q) = \sum_{i \in Q} \max_{j \in A} s_{ij} + \eta \sum_{i \in A} \max_{j \in Q} s_{ij}
+			I_f(A; Q) = \\sum_{i \\in Q} \\max_{j \\in A} s_{ij} + \\eta \\sum_{i \\in A} \\max_{j \\in Q} s_{ij}
 	
 	This expression has interesting characteristics different from those of FL1MI. In particular, there is no saturation in FL2MI and it just models the pairwise similarities of target to data points and vice versa.
 	

@@ -8,30 +8,56 @@ from submodlib_cpp import LogDeterminantConditionalGain
 from submodlib.helper import create_kernel
 
 class LogDeterminantConditionalGainFunction(SetFunction):
-	"""Implementation of the LogDeterminantConditionalGain function.
+	"""Implementation of the Log Determinant Conditional Gain (LogDetCG) function.
 
-	LogDeterminantConditionalGain models diversity by computing the sum of pairwise distances of all the elements in a subset. It is defined as
+	Given a :ref:`functions.conditional-gain` function, Log Determinantn Conditional Gain function is its instantiation using a :class:`~submodlib.functions.logDeterminant.LogDeterminantFunction`. 
+	
+	Let :math:`S_{A, B}` be the cross-similarity matrix between the items in sets :math:`A` and :math:`B`. Also, denote :math:`S_{AB} = S_{A \\cup B}`.
 
+	We construct a similarity matrix :math:`S^{\\nu}` (on a base matrix :math:`S`) in such a way that the cross-similarity between :math:`A` and :math:`P` is multiplied by :math:`\\nu` (i.e :math:`S^{\\nu}_{A,P} = \\nu S_{A,P}`) to control the hardness of enforcing privacy constraints. Higher values of :math:`\\nu` ensure stricter privacy constraints, such as  in the context of privacy-preserving summarization, i.e., tightening  the extent of dissimilarity of the subset from the private set.
+	
+	Using a similarity matrix defined above and with :math:`f(A) = \\log\\det(S^{\\nu}_{A})`, we have: 
+	
 	.. math::
-			f(X) = \\sum_{i, j \\in X} (1 - s_{ij})
+			f(A | P ) = \\log\\det(S_{A} - \\nu^2 S_{A, P}S_{P}^{-1}S_{A, P}^T)
 
+	Increasing :math:`\\nu` increases the privacy-irrelevance score, thereby ensuring a stricter privacy-irrelevance constraint.
+
+	.. note::
+			LogDetCG outperforms FLCG and GCCG both in terms of diversity and privacy-irrelevance.
+	
 	Parameters
 	----------
 
 	n : int
-		Number of elements in the ground set
+		Number of elements in the ground set. Must be > 0.
 	
-	sijs : list, optional
-		Similarity matrix to be used for getting :math:`s_{ij}` entries as defined above. When not provided, it is computed based on the following additional parameters
+	num_privates : int
+		Number of private instances in the target.
+	
+	lambdaVal : float
+		Addition to :math:`s_{ii} (1)` so that :math:`\\log` doesn't become 0
+	
+	image_sijs : numpy.ndarray, optional
+		Similarity kernel between the elements of the ground set. Shape: n X n. When not provided, it is computed using imageData.
+	
+	private_sijs : numpy.ndarray, optional
+		Similarity kernel between the ground set and the private instances. Shape: n X num_privates. When not provided, it is computed using imageData and privateData.
+	
+	private_private_sijs : numpy.ndarray, optional
+		Similarity kernel between the private instances. Shape: num_privates X num_privates. When not provided, it is computed using privateData.
 
-	data : list, optional
-		Data matrix which will be used for computing the similarity matrix
+	imageData : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. imageData[i] should contain the num-features dimensional features of element i. Mandatory, if either if image_sijs or private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
+
+	privateData : numpy.ndarray, optional
+		Matrix of shape num_privates X num_features containing the private instances. privateData[i] should contain the num-features dimensional features of private instance i. Must be provided if private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
 
 	metric : str, optional
-		Similarity metric to be used for computing the similarity matrix
-	
-	n_neighbors : int, optional
-		While constructing similarity matrix, number of nearest neighbors whose similarity values will be kept resulting in a sparse similarity matrix for computation speed up (at the cost of accuracy)
+		Similarity metric to be used for computing the similarity kernels. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
+
+	privacyHardness : float, optional
+		Parameter that governs the hardness of the privacy constraint. Default is 1.
 	
 	"""
 

@@ -41,7 +41,7 @@ class FacilityLocationFunction(SetFunction):
 		Number of elements in the ground set, must be > 0.
 
 	mode : string
-		Can be "dense", "sparse" or "clustered". It specifies whether the Disparity-Min function should operate in dense mode (using a dense similarity kernel) or sparse mode (using a sparse similarity kernel) or clustered mode (evaluating over clusters).
+		Can be "dense", "sparse" or "clustered". It specifies whether the Facility Location function should operate in dense mode (using a dense similarity kernel) or sparse mode (using a sparse similarity kernel) or clustered mode (evaluating over clusters).
 	
 	separate_master: bool, optional
 		Specifies whether a set different from ground set should be used as master set (whose representation is desired).

@@ -13,7 +13,10 @@ class FacilityLocationConditionalGainFunction(SetFunction):
 	Given a :ref:`functions.conditional-gain` function, Facility Location Conditional Gain function is its instantiation using a :class:`~submodlib.functions.facilityLocation.FacilityLocationFunction`. Mathematically, it takes the following form:
 
 	.. math::
-			f(A | P) = \sum\limits_{i \in \mathcal{V}} \max(\max\limits_{j \in A} s_{ij}-\nu \max\limits_{j \in P} s_{ij}, 0)
+			f(A | P) = \\sum\\limits_{i \\in \\mathcal{V}} \\max(\\max\\limits_{j \\in A} s_{ij}-\\nu \\max\\limits_{j \\in P} s_{ij}, 0)
+
+	.. note::
+			Increasing :math:`\\nu` increases the privacy-irrelevance score, thereby ensuring a stricter privacy-irrelevance constraint.
 	
 	Parameters
 	----------
