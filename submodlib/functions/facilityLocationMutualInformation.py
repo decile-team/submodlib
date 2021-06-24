@@ -13,7 +13,7 @@ class FacilityLocationMutualInformationFunction(SetFunction):
 	Given a :ref:`functions.submodular-mutual-information` function, Facility Location Mutual Information function is its instantiation using a :class:`~submodlib.functions.facilityLocation.FacilityLocationFunction`. Mathematically, it takes the following form:
 
 	.. math::
-			I_f(A; Q) = \sum\limits_{i \in \Vcal}\min(\max\limits_{j \in A}s_{ij}, \eta \max\limits_{j \in Q}s_{ij})
+			I_f(A; Q) = \sum\limits_{i \in V}\min(\max\limits_{j \in A}s_{ij}, \eta \max\limits_{j \in Q}s_{ij})
 	
 	.. note::
 			FL1MI tends to get *saturated*. That is, once the query is satisfied, it doesn't see any gain in picking another query-relevant data point. Also, while GCMI lies at one end of the spectrum favoring query-relevance, FLMI lies at the other end favoring diversity and query coverage over query-relevance.

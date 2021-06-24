@@ -76,8 +76,9 @@ submodlib is an efficient and scalable library for submodular optimization which
    :caption: Optimizers
 
    optimizers/naiveGreedy.rst
-   optimizers/randomGreedy.rst
+   optimizers/stochasticGreedy.rst
    optimizers/lazyGreedy.rst
+   optimizers/lazierThanLazyGreedy.rst
 
 .. toctree::
    :maxdepth: 1

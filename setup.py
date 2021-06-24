@@ -1,20 +1,26 @@
-from glob import glob
+#from glob import glob
 from setuptools import find_packages, setup
+
+# try:
+#     from pybind11.setup_helpers import Pybind11Extension, build_ext
+# except ImportError:
+#     from setuptools import Extension as Pybind11Extension
+
+# Available at setup time due to pyproject.toml
+from pybind11.setup_helpers import Pybind11Extension, build_ext
+
 import sys
-
-try:
-    from pybind11.setup_helpers import Pybind11Extension, build_ext
-except ImportError:
-    from setuptools import Extension as Pybind11Extension
-
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 exec(open('submodlib/version.py').read())
 
+#ParallelCompile("NPY_NUM_BUILD_JOBS").install()
+
 ext_modules = [
-    Pybind11Extension("submodlib_cpp",
+    Pybind11Extension(name="submodlib_cpp",
+    sources=
         ["cpp/SetFunction.cpp",
         "cpp/utils/helper.cpp", "cpp/wrappers/wr_helper.cpp",
         "cpp/utils/sparse_utils.cpp", "cpp/wrappers/wr_sparse_utils.cpp",
@@ -50,6 +56,7 @@ ext_modules = [
         "cpp/cmi/SetCoverConditionalMutualInformation.cpp", "cpp/wrappers/wr_SetCoverConditionalMutualInformation.cpp", 
         "cpp/cmi/ProbabilisticSetCoverConditionalMutualInformation.cpp", "cpp/wrappers/wr_ProbabilisticSetCoverConditionalMutualInformation.cpp", 
         "cpp/Clustered.cpp", "cpp/wrappers/wr_Clustered.cpp"],
+        #include_dirs=["cpp/"],
         # Example: passing in the version to the compiled code
         #sorted(glob("cpp/submod/*.cpp")),
         define_macros = [('VERSION_INFO', __version__)],
@@ -83,9 +90,10 @@ setup(
     #     "tqdm >= 4.24.0",
     #     "nose"
     # ],
-    install_requires=[],
-    setup_requires=['pybind11','pytest-runner'],
+    #install_requires=["numpy", "scipy", "sklearn"],
+    #setup_requires=['pybind11','pytest-runner'],
     tests_require=['pytest'],
+    #extras_require={"test": "pytest"},
     test_suite='tests',
     #classifiers=[
     #    "Programming Language :: Python :: 3",
