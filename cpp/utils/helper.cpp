@@ -61,7 +61,7 @@ float euclidean_similarity(std::vector<float> &v1, std::vector<float> &v2)
 
 
 
-datapoint_pair::datapoint_pair(ll a = 0, ll b = 0, float c = 0) :i1(a), i2(b), val(c) {}
+datapoint_pair::datapoint_pair(ll a, ll b, float c) :i1(a), i2(b), val(c) {}
 
 bool operator < (datapoint_pair lval, datapoint_pair rval)
 {

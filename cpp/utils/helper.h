@@ -12,7 +12,7 @@ struct datapoint_pair
 	ll i1;
 	ll i2;
 	float val;
-	datapoint_pair(ll a , ll b, float c);
+	datapoint_pair(ll a = 0, ll b = 0, float c = 0);
 };
 
 bool operator < (datapoint_pair lval, datapoint_pair rval);
