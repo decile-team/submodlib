@@ -2,7 +2,7 @@
 
 *submodlib* is an efficient and scalable library for submodular optimization which finds its application in summarization, data subset selection, hyper parameter tuning etc. It offers great ease-of-use and flexibility in the way it can be used.
 
-**Salient Features**
+# Salient Features
 
 * Rich suite of functions for a wide variety of subset selection tasks - regular set (submodular) functions, submodular mutual information functions, conditional gain functions and conditional mutual information functions
 * Supports different types of optimizers - naive greedy, lazy (accelerated) greedy, stochastic (random) greedy, lazier than lazy greedy
@@ -11,16 +11,27 @@
 * De-coupled function and optimizer paradigm makes it suitable for a wide-variety of tasks 
 * Comprehensive documentation (available [here](https://submodlib.readthedocs.io/))
 
-**Setup**
+# Setup
 
-* `$ conda create --name submodlib python=3`
-* `$ conda activate submodlib`
-* `$ conda install -c conda-forge pybind11`
-* `$ pip install numpy matplotlib scipy sklearn`
-* `$ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple submodlib==0.0.8`
-* `$ pip install ipython==7.19 notebook` (to be able to run the tutorial notebooks)
+## Alternative 1
+* `$ pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ submodlib`
 
-**Usage**
+## Alternative 2 (if local docs need to be built and test cases need to be run)
+* `$ git clone https://github.com/vishkaush/submodlib.git`
+* `$ cd submodlib`
+* `$ pip install .`
+* Latest documentation is available at [readthedocs](https://submodlib.readthedocs.io/). However, if local documentation is required to be built, follow these steps::
+    * `$ pip install -U sphinx`
+    * `$ pip install sphinxcontrib-bibtex`
+    * `$ pip install sphinx-rtd-theme`
+    * `$ cd docs`
+    * `$ make clean html`
+* To run the tests, follow these steps:
+    * `$ pip install pytest`
+    * `$ pytest` # this runs ALL tests
+    * `$ pytest -m <marker> --verbose -x --disable-warnings -rA` # this runs test specified by the <marker>. Possible markers are mentioned in pyproject.toml file.
+
+# Usage
 
 It is very easy to get started with submodlib. Using a submodular function in submodlib essentially boils down to just two steps:
 
@@ -42,7 +53,7 @@ greedyList = objFL.maximize(budget=10,optimizer='NaiveGreedy', stopIfZeroGain=Fa
 For a more detailed discussion on all possible usage patterns, please see [Basic Usage](https://github.com/vishkaush/submodlib/blob/master/tutorials/Basic%20Usage.ipynb)
 
 
-**Functions**
+# Functions
 
 * [Regular set (submodular) functions](https://submodlib.readthedocs.io/en/latest/functions/submodularFunctions.html) (for classic subset selection requiring representation, diversity, importance, relevance, coverage)
     * [Facility Location](https://submodlib.readthedocs.io/en/latest/functions/facilityLocation.html)
@@ -73,11 +84,11 @@ For a more detailed discussion on all possible usage patterns, please see [Basic
     * [Set Cover Conditional Mutual Information](https://submodlib.readthedocs.io/en/latest/functions/setCoverConditionalMutualInformation.html)
     * [Probabilistic Set Cover Conditional Mutual Information](https://submodlib.readthedocs.io/en/latest/functions/probabilisticSetCoverConditionalMutualInformation.html)
 
-**Modelling Capabilities of Different Functions**
+# Modelling Capabilities of Different Functions
 
 We demonstrate the representational power and modeling capabilities of different functions in [this](https://github.com/vishkaush/submodlib/blob/master/tutorials/Representational%20Power%20of%20Different%20Functions.ipynb) notebook.
 
-**Optimizers**
+# Optimizers 
 
 * [NaiveGreedy](https://submodlib.readthedocs.io/en/latest/optimizers/naiveGreedy.html)
 * [LazyGreedy](https://submodlib.readthedocs.io/en/latest/optimizers/lazyGreedy.html)

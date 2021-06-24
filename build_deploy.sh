@@ -20,8 +20,8 @@ if [ "$1" = "--deploy" ] ; then
     #if [ "$1" = "--test" ] ; then
     echo "Deploying to TestPyPi..."
     #python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-    #python3 -m twine upload --repository testpypi dist/*.tar.gz --verbose
-    python3 -m twine upload -- repository testpypi dist/*
+    python3 -m twine upload --repository testpypi dist/*.tar.gz --verbose
+    #python3 -m twine upload --repository testpypi dist/* --verbose
     #else
     #twine upload dist/* ;
   fi
