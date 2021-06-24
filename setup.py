@@ -5,8 +5,10 @@ from setuptools import find_packages, setup
 #     from pybind11.setup_helpers import Pybind11Extension, build_ext
 # except ImportError:
 #     from setuptools import Extension as Pybind11Extension
+# The above
+# is not eeded any more because it is available at setup time due to pyproject.toml
+# this is why setup_requires is also not needed
 
-# Available at setup time due to pyproject.toml
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 
 import sys
@@ -62,7 +64,6 @@ ext_modules = [
         define_macros = [('VERSION_INFO', __version__)],
         ),
 ]
-
 
 setup(
     name='submodlib',

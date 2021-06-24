@@ -1,2 +1,8 @@
+include cpp/*.h
 include cpp/submod/*.h
+include cpp/cmi/*.h
+include cpp/smi/*.h
+include cpp/condgain/*.h
 include cpp/optimizers/*.h
+include cpp/utils/*.h
+include cpp/wrappers/*.h
