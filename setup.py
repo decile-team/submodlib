@@ -90,7 +90,7 @@ setup(
     #     "tqdm >= 4.24.0",
     #     "nose"
     # ],
-    #install_requires=["numpy", "scipy", "sklearn"],
+    install_requires=["numpy", "scipy", "sklearn"],
     #setup_requires=['pybind11','pytest-runner'],
     tests_require=['pytest'],
     #extras_require={"test": "pytest"},
