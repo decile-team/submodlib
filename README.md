@@ -1,14 +1,21 @@
-# submodlib
+<p align="center">
+    <br>
+        &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+        <img src="https://github.com/decile-team/submodlib/blob/master/submodlib_logo.svg" width="500" height="150"/>
+    </br>
+</p>
 
-*submodlib* is an efficient and scalable library for submodular optimization which finds its application in summarization, data subset selection, hyper parameter tuning etc. It offers great ease-of-use and flexibility in the way it can be used.
+# About SubModLib
+
+*SubModLib* is an efficient and scalable library for submodular optimization which finds its application in summarization, data subset selection, hyper parameter tuning etc. It offers great ease-of-use and flexibility in the way it can be used.
 
 # Salient Features
 
-* Rich suite of functions for a wide variety of subset selection tasks - regular set (submodular) functions, submodular mutual information functions, conditional gain functions and conditional mutual information functions
-* Supports different types of optimizers - naive greedy, lazy (accelerated) greedy, stochastic (random) greedy, lazier than lazy greedy
-* Combines the best of Python's ease of use and C++'s efficiency
-* Rich API which gives a variety of options to the user. See [this](https://github.com/vishkaush/submodlib/blob/master/tutorials/Basic%20Usage.ipynb) notebook for an example of different usage patterns
-* De-coupled function and optimizer paradigm makes it suitable for a wide-variety of tasks 
+* **Rich suite of functions** for a wide variety of subset selection tasks - regular set (submodular) functions, submodular mutual information functions, conditional gain functions and conditional mutual information functions
+* Supports **different types of optimizers** - naive greedy, lazy (accelerated) greedy, stochastic (random) greedy, lazier than lazy greedy
+* Combines the **best of Python's ease of use and C++'s efficiency**
+* **Rich API** which gives a variety of options to the user. See [this notebook](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Different_Options_for_Usage.ipynb) notebook for an example of different usage patterns
+* De-coupled function and optimizer paradigm makes it **suitable for a wide-variety of tasks** 
 * Comprehensive documentation (available [here](https://submodlib.readthedocs.io/))
 
 # Setup
@@ -17,16 +24,16 @@
 * `$ pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ submodlib`
 
 ## Alternative 2 (if local docs need to be built and test cases need to be run)
-* `$ git clone https://github.com/vishkaush/submodlib.git`
+* `$ git clone https://github.com/decile-team/submodlib.git`
 * `$ cd submodlib`
 * `$ pip install .`
-* Latest documentation is available at [readthedocs](https://submodlib.readthedocs.io/). However, if local documentation is required to be built, follow these steps::
+* **Latest documentation** is available at [readthedocs](https://submodlib.readthedocs.io/). However, if local documentation is required to be built, follow these steps::
     * `$ pip install -U sphinx`
     * `$ pip install sphinxcontrib-bibtex`
     * `$ pip install sphinx-rtd-theme`
     * `$ cd docs`
     * `$ make clean html`
-* To run the tests, follow these steps:
+* **To run the tests**, follow these steps:
     * `$ pip install pytest`
     * `$ pytest` # this runs ALL tests
     * `$ pytest -m <marker> --verbose -x --disable-warnings -rA` # this runs test specified by the <marker>. Possible markers are mentioned in pyproject.toml file.
@@ -50,12 +57,12 @@ objFL = FacilityLocationFunction(n=43, data=groundData, separate_master=True, n_
 greedyList = objFL.maximize(budget=10,optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 ```
 
-For a more detailed discussion on all possible usage patterns, please see [Basic Usage](https://github.com/vishkaush/submodlib/blob/master/tutorials/Basic%20Usage.ipynb)
+For a more detailed discussion on all possible usage patterns, please see [Different Options of Usage](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Different_Options_for_Usage.ipynb)
 
 
 # Functions
 
-* [Regular set (submodular) functions](https://submodlib.readthedocs.io/en/latest/functions/submodularFunctions.html) (for classic subset selection requiring representation, diversity, importance, relevance, coverage)
+* [Regular set (submodular) functions](https://submodlib.readthedocs.io/en/latest/functions/submodularFunctions.html) (**for vanilla subset selection** requiring representation, diversity, importance, relevance, coverage)
     * [Facility Location](https://submodlib.readthedocs.io/en/latest/functions/facilityLocation.html)
     * [Disparity Sum](https://submodlib.readthedocs.io/en/latest/functions/disparitySum.html)
     * [Disparity Min](https://submodlib.readthedocs.io/en/latest/functions/disparityMin.html)
@@ -64,7 +71,7 @@ For a more detailed discussion on all possible usage patterns, please see [Basic
     * [Probabilistic Set Cover](https://submodlib.readthedocs.io/en/latest/functions/probabilisticSetCover.html)
     * [Graph Cut](https://submodlib.readthedocs.io/en/latest/functions/graphCut.html)
     * [Feature Based](https://submodlib.readthedocs.io/en/latest/functions/featureBased.html)
-* [Submodular mutual information functions](https://submodlib.readthedocs.io/en/latest/functions/submodularMutualInformation.html) (for query-focused subset selelction)
+* [Submodular mutual information functions](https://submodlib.readthedocs.io/en/latest/functions/submodularMutualInformation.html) (**for query-focused subset selelction**)
     * [Facility Location Mutual Information](https://submodlib.readthedocs.io/en/latest/functions/facilityLocationMutualInformation.html)
     * [Facility Location Variant Mutual Information](https://submodlib.readthedocs.io/en/latest/functions/facilityLocationVariantMutualInformation.html)
     * [Graph Cut Mutual Information](https://submodlib.readthedocs.io/en/latest/functions/graphCutMutualInformation.html)
@@ -72,13 +79,13 @@ For a more detailed discussion on all possible usage patterns, please see [Basic
     * [Concave Over Modular](https://submodlib.readthedocs.io/en/latest/functions/concaveOverModular.html)
     * [Set Cover Mutual Information](https://submodlib.readthedocs.io/en/latest/functions/setCoverMutualInformation.html)
     * [Probabilistc Set Cover Mutual Information](https://submodlib.readthedocs.io/en/latest/functions/probabilisticSetCoverMutualInformation.html)
-* [Conditional gain functions](https://submodlib.readthedocs.io/en/latest/functions/conditionalGain.html) (for query-irrelevant/privacy-preserving subset selection)
+* [Conditional gain functions](https://submodlib.readthedocs.io/en/latest/functions/conditionalGain.html) (**for query-irrelevant/privacy-preserving subset selection**)
     * [Facility Location Conditional Gain](https://submodlib.readthedocs.io/en/latest/functions/facilityLocationConditionalGain.html)
     * [Graph Cut Conditional Gain](https://submodlib.readthedocs.io/en/latest/functions/graphCutConditionalGain.html)
     * [Log Determinant Conditional Gain](https://submodlib.readthedocs.io/en/latest/functions/logDeterminantConditionalGain.html)
     * [Set Cover Conditional Gain](https://submodlib.readthedocs.io/en/latest/functions/setCoverConditionalGain.html)
     * [Probabilistic Set Cover Conditional Gain](https://submodlib.readthedocs.io/en/latest/functions/probabilisticSetCoverConditionalGain.html)
-* [Conditional mutual information functions](https://submodlib.readthedocs.io/en/latest/functions/conditionalMutualInformation.html) (for joint query-focused and privacy-preserving subset selection)
+* [Conditional mutual information functions](https://submodlib.readthedocs.io/en/latest/functions/conditionalMutualInformation.html) (**for joint query-focused and privacy-preserving subset selection**)
     * [Facility Location Conditional Mutual Information](https://submodlib.readthedocs.io/en/latest/functions/facilityLocationConditionalMutualInformation.html)
     * [Log Determinant Conditional Mutual Information](https://submodlib.readthedocs.io/en/latest/functions/logDeterminantConditionalMutualInformation.html)
     * [Set Cover Conditional Mutual Information](https://submodlib.readthedocs.io/en/latest/functions/setCoverConditionalMutualInformation.html)
@@ -86,7 +93,7 @@ For a more detailed discussion on all possible usage patterns, please see [Basic
 
 # Modelling Capabilities of Different Functions
 
-We demonstrate the representational power and modeling capabilities of different functions in [this](https://github.com/vishkaush/submodlib/blob/master/tutorials/Representational%20Power%20of%20Different%20Functions.ipynb) notebook.
+We demonstrate the representational power and modeling capabilities of different functions in [this](https://github.com/decile-team/submodlib/blob/master/tutorials/Representational%20Power%20of%20Different%20Functions.ipynb) notebook.
 
 # Optimizers 
 
@@ -94,7 +101,15 @@ We demonstrate the representational power and modeling capabilities of different
 * [LazyGreedy](https://submodlib.readthedocs.io/en/latest/optimizers/lazyGreedy.html)
 * [StochasticGreedy](https://submodlib.readthedocs.io/en/latest/optimizers/stochasticGreedy.html)
 * [LazierThanLazyGreedy](https://submodlib.readthedocs.io/en/latest/optimizers/lazierThanLazyGreedy.html)
-* [This](https://github.com/vishkaush/submodlib/blob/master/tutorials/Optimizers.ipynb) notebook demonstrates the use and comparison of different optimizers
+* [This](https://github.com/decile-team/submodlib/blob/master/tutorials/Optimizers.ipynb) notebook demonstrates the use and comparison of different optimizers
+
+# Contributors
+
+* Vishal Kaushal
+
+# Contact
+
+Should you face any issues or have any feedback or suggestions, please feel free to contact vishal[dot]kaushal[at]gmail.com
 
 # Acknowledgements 
 

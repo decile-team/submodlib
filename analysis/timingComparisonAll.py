@@ -23,14 +23,14 @@ def inner(_it, _timer{init}):
 """
 
 #prepare data to be used in the analysis
-num_clusters = 100 #100 #10
-cluster_std_dev = 4
-num_samples = 5000 #30000 #500
-num_set = 40 #80 #6   #should be <= num_clusters and <= num points in each cluster
-num_neighbors = 100 #100 #10
-num_executions = 5 #1 #5
+num_samples = 200 #50 100 200 500 1000
+num_clusters = 10 #5 10 10 10 10 
+cluster_std_dev = 2
+num_set = 9 #4 9 9 9 9   #should be <= num_clusters and <= num points in each cluster
+num_neighbors = 100 #10 50 100 100 100
+num_executions = 1
 num_places = 6
-num_features = 10
+num_features = 1024
 
 # points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=2, cluster_std=cluster_std_dev, center_box=(0,100), return_centers=True, random_state=4)
 points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
@@ -57,6 +57,8 @@ dataArray = np.array(data)
 
 l_record = []
 results_csv = [["Function", "Create", "Eval1", "Eval2", "Gain1", "Gain2", "SetM", "EvalFast", "GainFast", "Maximize"]]
+
+print("Timing the dense and sparse kernel creations in Python and C++...")
 
 def py_dense_kernel():
     _, K_dense = create_kernel(dataArray, 'dense','euclidean')
@@ -117,6 +119,8 @@ def marginalGainWithMemoization(obj, subset, item):
 
 ##### Dense similarity kernel in CPP
 
+print("Timing FL with creating dense similarity kernel in CPP...")
+
 row = ["fl_dense_cpp_kernel"]
 
 def create_fl_dense_cpp_kernel():
@@ -160,6 +164,7 @@ row.append(round(t/num_executions, num_places))
 results_csv.append(row)
 
 ########### Dense Similairty Kernel in Python
+print("Timing FL with pre created Python dense similarity kernel...")
 
 row = ["fl_dense_py_kernel"]
 
@@ -204,6 +209,7 @@ row.append(round(t/num_executions, num_places))
 results_csv.append(row)
 
 ##### Sparse similarity kernel in CPP
+print("Timing FL with sparse similarity kernel in CPP...")
 
 row = ["fl_sparse_cpp_kernel"]
 
@@ -248,6 +254,7 @@ row.append(round(t/num_executions, num_places))
 results_csv.append(row)
 
 ########### Sparse Similairty Kernel in Python
+print("Timing FL with pre-created Python sparse similarity kernel...")
 
 row = ["fl_sparse_py_kernel"]
 
@@ -292,6 +299,7 @@ row.append(round(t/num_executions, num_places))
 results_csv.append(row)
 
 ##### Clustered mode BIRCH clustering
+print("Timing FL clustered mode with BIRCH clustering...")
 
 row = ["fl_mode_birch"]
 
@@ -336,6 +344,7 @@ row.append(round(t/num_executions, num_places))
 results_csv.append(row)
 
 ##### Clustered mode user clustering
+print("Timing FL clustered mode with user clustering...")
 
 row = ["fl_mode_user"]
 
@@ -380,6 +389,7 @@ row.append(round(t/num_executions, num_places))
 results_csv.append(row)
 
 ##### Clustered function BIRCH clustering multi
+print("Timing FL clustered function with BIRCH clustering multi kernels...")
 
 row = ["fl_clustered_birch_multi"]
 
@@ -424,6 +434,7 @@ row.append(round(t/num_executions, num_places))
 results_csv.append(row)
 
 ##### Clustered function user clustering multi
+print("Timing FL clustered function with user clustering multi kernels...")
 
 row = ["fl_clustered_user_multi"]
 
@@ -468,6 +479,7 @@ row.append(round(t/num_executions, num_places))
 results_csv.append(row)
 
 ##### Clustered function BIRCH clustering single
+print("Timing FL clustered function with BIRCH clustering single kernel...")
 
 row = ["fl_clustered_birch_single"]
 
@@ -512,6 +524,7 @@ row.append(round(t/num_executions, num_places))
 results_csv.append(row)
 
 ##### Clustered function user clustering single
+print("Timing FL clustered function with user clustering single kernel...")
 
 row = ["fl_clustered_user_single"]
 
