@@ -1,7 +1,7 @@
 <p align="center">
     <br>
         &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
-        <img src="https://github.com/decile-team/submodlib/blob/master/submodlib_logo.svg" width="500" height="150"/>
+        <img src="https://github.com/decile-team/submodlib/blob/master/Submodlib%20Logo.png" width="500" />
     </br>
 </p>
 
