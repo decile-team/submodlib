@@ -21,7 +21,7 @@ class GraphCutFunction(SetFunction):
 	.. note::
 			For :math:`\\lambda < 0.5` Graph-Cut is monotone submodular. For :math:`\lambda > 0.5` it is non-monotone submodular.
 
-	In a more generic setting, the set whose representation is desired (we call it master set :math:`U`) may be different from the set whose subset is desired (we call it ground set :math:`V`). The expression for Graph Cut function then becomes
+	In a more generic setting, the set whose representation is desired (we call it represented set :math:`U`) may be different from the set whose subset is desired (we call it ground set :math:`V`). The expression for Graph Cut function then becomes
 
 	.. math::
 			f_{gc}(X) = \\sum_{i \\in U, j \\in X} s_{ij} - \\lambda \\sum_{i, j \\in X} s_{ij}
@@ -37,23 +37,23 @@ class GraphCutFunction(SetFunction):
 	lambdaVal : float
 		Trade-off between representation and diversity as defined by :math:`\\lambda` in the above definition. When :math:`\\lambda` becomes large, graph cut function also tries to model diversity in the subset.
 	
-	separate_master: bool, optional
-		Specifies whether a set different from ground set should be used as master set (whose representation is desired).
+	separate_rep: bool, optional
+		Specifies whether a set different from ground set should be used as represented set (whose representation is desired).
 
-	n_master : int, optional
-		Number of elements in the master set if separate_master=True.
+	n_rep : int, optional
+		Number of elements in the represented set if separate_rep=True.
 	
 	mgsijs : numpy.ndarray or scipy.sparse.csr.csr_matrix, optional
-		When separate_master=False, atmost one of mgsijs or ggsijs must be provided. It is the similarity kernel (dense or sparse) between the elements of the ground set, to be used for getting :math:`s_{ij}` entries as defined above. Shape of dense kernel in this case must be n X n. When separate_master=True, mode must be "dense" and this is the dense similarity kernel between the master set and the ground set. Shape in this case must be n_master X n. When mgsijs is not provided, it is computed internally in C++ based on the following additional parameters.
+		When separate_rep=False, atmost one of mgsijs or ggsijs must be provided. It is the similarity kernel (dense or sparse) between the elements of the ground set, to be used for getting :math:`s_{ij}` entries as defined above. Shape of dense kernel in this case must be n X n. When separate_rep=True, mode must be "dense" and this is the dense similarity kernel between the represented set and the ground set. Shape in this case must be n_rep X n. When mgsijs is not provided, it is computed internally in C++ based on the following additional parameters.
 	
 	ggsijs : numpy.ndarray or scipy.sparse.csr.csr_matrix, optional
-		When separate_master=False, atmost one of mgsijs or ggsijs must be provided. It is the similarity kernel (dense or sparse) between the elements of the ground set, to be used for getting :math:`s_{ij}` entries as defined above. Shape of dense kernel in this case must be n X n. When separate_master=True, mode must be "dense" and this is the dense similarity kernel between the elements of the ground set. Shape will again be n X n. When ggsijs is not provided, it is computed internally in C++ based on the following additional parameters.
+		When separate_rep=False, atmost one of mgsijs or ggsijs must be provided. It is the similarity kernel (dense or sparse) between the elements of the ground set, to be used for getting :math:`s_{ij}` entries as defined above. Shape of dense kernel in this case must be n X n. When separate_rep=True, mode must be "dense" and this is the dense similarity kernel between the elements of the ground set. Shape will again be n X n. When ggsijs is not provided, it is computed internally in C++ based on the following additional parameters.
 	
 	data : numpy.ndarray, optional
 		Matrix of shape n X num_features containing the ground set data elements. data[i] should contain the num-features dimensional features of element i. Used to compute the similarity kernel. It is optional (and is ignored if provided) if sijs has been provided.
 
-	data_master : numpy.ndarray, optional
-		Master set data matrix (used to compute the dense similarity kernel) if separate_master=True and when a similarity kernel is not provided.
+	data_rep : numpy.ndarray, optional
+		Represented set data matrix (used to compute the dense similarity kernel) if separate_rep=True and when a similarity kernel is not provided.
 
 	metric : str, optional
 		Similarity metric to be used for computing the similarity kernel(s). Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine".
@@ -63,18 +63,16 @@ class GraphCutFunction(SetFunction):
 
 	"""
 
-	def __init__(self, n, mode, lambdaVal, separate_master=None, n_master=None, mgsijs=None, ggsijs=None, data=None, data_master=None, metric="cosine", num_neighbors=None):
+	def __init__(self, n, mode, lambdaVal, separate_rep=None, n_rep=None, mgsijs=None, ggsijs=None, data=None, data_rep=None, metric="cosine", num_neighbors=None):
 		self.n = n
 		self.mode = mode
 		self.lambdaVal = lambdaVal
-		self.separate_master=separate_master
-		self.n_master = n_master
+		self.separate_rep=separate_rep
+		self.n_rep = n_rep
 		self.mgsijs = mgsijs
 		self.ggsijs = ggsijs
 		self.data = data
-		self.data_master=data_master
-		self.num_clusters=num_clusters
-		self.cluster_labels=cluster_labels
+		self.data_rep=data_rep
 		self.metric = metric
 		self.num_neighbors = num_neighbors
 		
@@ -98,29 +96,29 @@ class GraphCutFunction(SetFunction):
 		if self.metric not in ['euclidean', 'cosine']:
 			raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
 
-		if self.separate_master == True:
-			if self.n_master is None or self.n_master <=0:
-				raise Exception("ERROR: separate master intended but number of elements in master not specified or not positive")	
+		if self.separate_rep == True:
+			if self.n_rep is None or self.n_rep <=0:
+				raise Exception("ERROR: separate represented intended but number of elements in represented not specified or not positive")	
 			if self.mode != "dense":
-				raise Exception("Only dense mode supported if separate_master = True")
+				raise Exception("Only dense mode supported if separate_rep = True")
 			if (type(self.mgsijs) != type(None)) and (type(self.mgsijs) != np.ndarray):
 				raise Exception("mgsijs provided, but is not dense")
 			if (type(self.ggsijs) != type(None)) and (type(self.ggsijs) != np.ndarray):
 				raise Exception("ggsijs provided, but is not dense")
 			
 		if mode == "dense":
-			if self.separate_master == True:
+			if self.separate_rep == True:
 				if type(self.mgsijs) == type(None):
 					#not provided mgsij - make it
-					if (type(data) == type(None)) or (type(data_master) == type(None)):
+					if (type(data) == type(None)) or (type(data_rep) == type(None)):
 						raise Exception("Data missing to compute mgsijs")
-					if np.shape(self.data)[0]!=self.n or np.shape(self.data_master)[0]!=self.n_master:
-						raise Exception("ERROR: Inconsistentcy between n, n_master and no of examples in the given ground data matrix and master data matrix")
-					self.mgsijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_master.tolist(), self.metric))
+					if np.shape(self.data)[0]!=self.n or np.shape(self.data_rep)[0]!=self.n_rep:
+						raise Exception("ERROR: Inconsistentcy between n, n_rep and no of examples in the given ground data matrix and represented data matrix")
+					self.mgsijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_rep.tolist(), self.metric))
 				else:
 					#provided mgsijs - verify it's dimensionality
-					if np.shape(self.mgsijs)[1]!=self.n or np.shape(self.mgsijs)[0]!=self.n_master:
-						raise Exception("ERROR: Inconsistency between n_master, n and no of rows, columns of given mg kernel")
+					if np.shape(self.mgsijs)[1]!=self.n or np.shape(self.mgsijs)[0]!=self.n_rep:
+						raise Exception("ERROR: Inconsistency between n_rep, n and no of rows, columns of given mg kernel")
 
 				if type(self.ggsijs) == type(None):
 					#not provided ggsijs - make it
@@ -167,10 +165,10 @@ class GraphCutFunction(SetFunction):
 						raise Exception("ERROR: Inconsistency between n and no of rows, columns of given kernel")
 				else:
 					#both are available - something is wrong
-					raise Exception("Two kernels have been wrongly provided when separate_master=False")
+					raise Exception("Two kernels have been wrongly provided when separate_rep=False")
 		elif mode == "sparse":
-			if self.separate_master == True:
-					raise Exception("Separate master is supported only in dense mode")
+			if self.separate_rep == True:
+					raise Exception("Separate represented is supported only in dense mode")
 			if self.num_neighbors is None or self.num_neighbors <=0:
 				raise Exception("Valid num_neighbors is needed for sparse mode")
 			if (type(self.ggsijs) == type(None)) and (type(self.mgsijs) == type(None)):
@@ -195,12 +193,12 @@ class GraphCutFunction(SetFunction):
 					raise Exception("Provided kernel is not sparse")
 			else:
 				#both are available - something is wrong
-				raise Exception("Two kernels have been wrongly provided when separate_master=False")
+				raise Exception("Two kernels have been wrongly provided when separate_rep=False")
 
-		if self.separate_master==None:
-			self.separate_master = False
+		if self.separate_rep==None:
+			self.separate_rep = False
 
-		if self.mode=="dense" and self.separate_master == False :
+		if self.mode=="dense" and self.separate_rep == False :
 			self.cpp_ggsijs = self.ggsijs.tolist() #break numpy ndarray to native list of list datastructure
 			
 			if type(self.cpp_ggsijs[0])==int or type(self.cpp_ggsijs[0])==float: #Its critical that we pass a list of list to pybind11
@@ -211,7 +209,7 @@ class GraphCutFunction(SetFunction):
 
 			self.cpp_obj = GraphCut(self.n, self.cpp_ggsijs, False, self.cpp_ground_sub, self.lambdaVal)
 		
-		elif self.mode=="dense" and self.separate_master == True :
+		elif self.mode=="dense" and self.separate_rep == True :
 			self.cpp_ggsijs = self.ggsijs.tolist() #break numpy ndarray to native list of list datastructure
 			
 			if type(self.cpp_ggsijs[0])==int or type(self.cpp_ggsijs[0])==float: #Its critical that we pass a list of list to pybind11

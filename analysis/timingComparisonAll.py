@@ -23,12 +23,12 @@ def inner(_it, _timer{init}):
 """
 
 #prepare data to be used in the analysis
-num_samples = 200 #50 100 200 500 1000
-num_clusters = 10 #5 10 10 10 10 
+num_samples = 5000 #50 100 200 500 1000 5000
+num_clusters = 10 #5 10 10 10 10 10
 cluster_std_dev = 2
-num_set = 9 #4 9 9 9 9   #should be <= num_clusters and <= num points in each cluster
+num_set = 9 #4 9 9 9 9 9  #should be <= num_clusters and <= num points in each cluster
 num_neighbors = 100 #10 50 100 100 100
-num_executions = 1
+num_executions = 3
 num_places = 6
 num_features = 1024
 
@@ -55,11 +55,11 @@ item2 = subset2[-1]
 
 dataArray = np.array(data)
 
-l_record = []
 results_csv = [["Function", "Create", "Eval1", "Eval2", "Gain1", "Gain2", "SetM", "EvalFast", "GainFast", "Maximize"]]
 
 print("Timing the dense and sparse kernel creations in Python and C++...")
 
+row = []
 def py_dense_kernel():
     _, K_dense = create_kernel(dataArray, 'dense','euclidean')
     return K_dense
@@ -70,10 +70,12 @@ def py_dense_kernel():
 # t = t_obj2.timeit(number = 1)
 # l_record.append(("py_dense_kernel:obj(callable)", t))
 t, pyDenseKernel = timeit.timeit('py_dense_kernel()', 'from __main__ import py_dense_kernel', number=num_executions)
-l_record.append(("py_dense_kernel", round(t/num_executions,num_places)))
+row.append(("py_dense_kernel", round(t/num_executions,num_places)))
+results_csv.append(row)
 
+row=[]
 def cpp_dense_kernel():
-    content = np.array(subcp.create_kernel(dataArray.tolist(), "euclidean", num_neighbors))
+    content = np.array(subcp.create_kernel(dataArray.tolist(), "euclidean", np.shape(dataArray)[0]))
     val = content[0]
     row = list(map(lambda arg: int(arg), content[1]))
     col = list(map(lambda arg: int(arg), content[2]))
@@ -81,14 +83,18 @@ def cpp_dense_kernel():
     sijs[row,col] = val
     return sijs
 t, _ = timeit.timeit('cpp_dense_kernel()', 'from __main__ import cpp_dense_kernel', number=num_executions)
-l_record.append(("cpp_dense_kernel", round(t/num_executions,num_places)))
+row.append(("cpp_dense_kernel", round(t/num_executions,num_places)))
+results_csv.append(row)
 
+row=[]
 def py_sparse_kernel():
     _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_neighbors)
     return K_sparse
 t, pySparseKernel = timeit.timeit('py_sparse_kernel()', 'from __main__ import py_sparse_kernel', number=num_executions)
-l_record.append(("py_sparse_kernel", round(t/num_executions,num_places)))
+row.append(("py_sparse_kernel", round(t/num_executions,num_places)))
+results_csv.append(row)
 
+row=[]
 def cpp_sparse_kernel():
     content = np.array(subcp.create_kernel(dataArray.tolist(), "euclidean", num_neighbors))
     val = content[0]
@@ -97,10 +103,11 @@ def cpp_sparse_kernel():
     sijs = sparse.csr_matrix((val, (row, col)), [num_samples,num_samples])
     return sijs
 t, _ = timeit.timeit('cpp_sparse_kernel()', 'from __main__ import cpp_sparse_kernel', number=num_executions)
-l_record.append(("cpp_sparse_kernel", round(t/num_executions,num_places)))
+row.append(("cpp_sparse_kernel", round(t/num_executions,num_places)))
+results_csv.append(row)
 
 def maximize(obj):
-    obj.maximize(budget=num_set,optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+    obj.maximize(budget=num_set,optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 
 def evaluate(obj, subset):
     obj.evaluate(subset)
@@ -169,7 +176,7 @@ print("Timing FL with pre created Python dense similarity kernel...")
 row = ["fl_dense_py_kernel"]
 
 def create_fl_dense_py_kernel():
-    return FacilityLocationFunction(n=num_samples, mode="dense", sijs=pyDenseKernel, separate_master=False)
+    return FacilityLocationFunction(n=num_samples, mode="dense", sijs=pyDenseKernel, separate_rep=False)
 t, fl_dense_py_kernel_obj = timeit.timeit('create_fl_dense_py_kernel()', 'from __main__ import create_fl_dense_py_kernel', number=num_executions)
 #l_record.append(("create_fl_dense_py_kernel", t))
 row.append(round(t/num_executions, num_places))
@@ -568,8 +575,8 @@ row.append(round(t/num_executions, num_places))
 
 results_csv.append(row)
 
-df = pd.DataFrame(columns = ['name', 'time'],data=l_record)
-print(df)
+# df = pd.DataFrame(columns = ['name', 'time'],data=l_record)
+# print(df)
 
 with open("timing_results.csv", "w") as f:
     writer = csv.writer(f)

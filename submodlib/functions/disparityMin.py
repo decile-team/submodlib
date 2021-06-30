@@ -12,7 +12,7 @@ from submodlib_cpp import DisparityMin
 class DisparityMinFunction(SetFunction):
 	"""Implementation of the Disparity-Min (DispMin) function.
 	
-	Diversity based functions attempt to obtain a diverse set of keypoints. The goal is to have minimum similarity across elements in the chosen subset by maximizing minimum pairwise distance between elements. There is a subtle difference between the notion of diversity and the notion of representativeness. While diversity *only* looks at the elements in the chosen subset, representativeness also worries about their similarity with the remaining elements in the superset. Denote :math:`d_{ij}` as a distance measure between images/data points :math:`i` and :math:`j`. Disparity-Min for a subset :math:`X` is defined as: 
+	Diversity based functions attempt to obtain a diverse set of keypoints. The goal is to have minimum similarity across elements in the chosen subset by maximizing minimum pairwise distance between elements. There is a subtle difference between the notion of diversity and the notion of representativeness. While diversity *only* looks at the elements in the chosen subset, representativeness also worries about their similarity with the remaining elements in the superset. Denote :math:`d_{ij}` as a distance measure between data points :math:`i` and :math:`j`. Disparity-Min for a subset :math:`X` is defined as: 
 	
 	.. math::
 			f(X) = \\min_{i, j \\in X, i \\neq j} (1 - s_{ij})

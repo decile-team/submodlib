@@ -1,6 +1,10 @@
 .. title:: Introduction
 
-submodlib is an efficient and scalable library for submodular optimization which finds its application in summarization, data subset selection, hyper parameter tuning etc.
+.. image:: ../../submodlib_logo.png
+
+|
+
+*SubModLib* is an easy-to-use, efficient and scalable library for submodular optimization which finds its application in summarization, data subset selection, hyper parameter tuning etc. Through a rich API, it offers a great deal of flexibility in the way it can be used.
 
 .. toctree::
    :maxdepth: 1

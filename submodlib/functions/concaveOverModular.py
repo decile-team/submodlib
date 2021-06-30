@@ -32,10 +32,10 @@ class ConcaveOverModularFunction(SetFunction):
 		Number of query points in the target.
 	
 	query_sijs : numpy.ndarray, optional
-		Similarity kernel between the ground set and the queries. Shape: n X num_queries. When not provided, it is computed using imageData, queryData and metric.
+		Similarity kernel between the ground set and the queries. Shape: n X num_queries. When not provided, it is computed using data, queryData and metric.
 
-	imageData : numpy.ndarray, optional
-		Matrix of shape n X num_features containing the ground set data elements. imageData[i] should contain the num-features dimensional features of element i. It is optional (and is ignored if provided) if query_sijs has been provided.
+	data : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. data[i] should contain the num-features dimensional features of element i. It is optional (and is ignored if provided) if query_sijs has been provided.
 
 	queryData : numpy.ndarray, optional
 		Matrix of shape num_queries X num_features containing the query elements. queryData[i] should contain the num-features dimensional features of query i. It is optional (and is ignored if provided) if query_sijs has been provided.
@@ -51,12 +51,12 @@ class ConcaveOverModularFunction(SetFunction):
 	
 	"""
 
-	def __init__(self, n, num_queries, query_sijs=None, imageData=None, queryData=None, metric="cosine", magnificationLambda=1, mode=ConcaveOverModular.logarithmic):
+	def __init__(self, n, num_queries, query_sijs=None, data=None, queryData=None, metric="cosine", magnificationLambda=1, mode=ConcaveOverModular.logarithmic):
 		self.n = n
 		self.num_queries = num_queries
 		self.metric = metric
 		self.query_sijs = query_sijs
-		self.imageData = imageData
+		self.data = data
 		self.queryData = queryData
 		self.magnificationLambda=magnificationLambda
 		self.mode = mode
@@ -79,18 +79,18 @@ class ConcaveOverModularFunction(SetFunction):
 				raise Exception("Invalid query kernel type provided, must be ndarray")
 			if np.shape(self.query_sijs)[0]!=self.n or np.shape(self.query_sijs)[1]!=self.num_queries:
 				raise Exception("ERROR: Query Kernel should be n X num_queries")
-			if (type(self.imageData) != type(None)) or (type(self.queryData) != type(None)):
-				print("WARNING: similarity query kernel found. Provided image and query data matrices will be ignored.")
+			if (type(self.data) != type(None)) or (type(self.queryData) != type(None)):
+				print("WARNING: similarity query kernel found. Provided data and query matrices will be ignored.")
 		else: #similarity query kernel has not been provided
-			if (type(self.imageData) == type(None)) or (type(self.queryData) == type(None)):
+			if (type(self.data) == type(None)) or (type(self.queryData) == type(None)):
 				raise Exception("Since query kernel is not provided, data matrices are a must")
-			if np.shape(self.imageData)[0]!=self.n:
-				raise Exception("ERROR: Inconsistentcy between n and no of examples in the given image data matrix")
+			if np.shape(self.data)[0]!=self.n:
+				raise Exception("ERROR: Inconsistentcy between n and no of examples in the given data matrix")
 			if np.shape(self.queryData)[0]!=self.num_queries:
 				raise Exception("ERROR: Inconsistentcy between num_queries and no of examples in the given query data matrix")
 			
 		  #construct queryKernel
-			self.query_sijs = np.array(subcp.create_kernel_NS(self.queryData.tolist(),self.imageData.tolist(), self.metric))
+			self.query_sijs = np.array(subcp.create_kernel_NS(self.queryData.tolist(),self.data.tolist(), self.metric))
 		
 		#Breaking similarity matrix to simpler native data structures for implicit pybind11 binding
 		self.cpp_query_sijs = self.query_sijs.tolist() #break numpy ndarray to native list of list datastructure

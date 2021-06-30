@@ -7,15 +7,15 @@ from scipy import sparse
 from sklearn.cluster import Birch #https://scikit-learn.org/stable/modules/clustering.html#birch
 
 
-def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1, X_master=None):
-    #print(type(X_master))
-    if type(X_master)!=type(None) and mode=="sparse":
+def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1, X_rep=None):
+    #print(type(X_rep))
+    if type(X_rep)!=type(None) and mode=="sparse":
         raise Exception("ERROR: sparse mode not allowed when using rectangular kernel")
 
-    if type(X_master)!=type(None) and num_neigh!=-1:
+    if type(X_rep)!=type(None) and num_neigh!=-1:
         raise Exception("ERROR: num_neigh can't be specified when using rectangular kernel")
 
-    if num_neigh==-1 and type(X_master)==type(None):
+    if num_neigh==-1 and type(X_rep)==type(None):
         num_neigh=np.shape(X)[0] #default is total no of datapoints
 
     if num_neigh>np.shape(X)[0]:
@@ -25,25 +25,25 @@ def create_kernel(X, mode, metric, num_neigh=-1, n_jobs=1, X_master=None):
         dense=None
         D=None
         if metric=="euclidean":
-            if type(X_master)==type(None):
+            if type(X_rep)==type(None):
                 D = euclidean_distances(X)
             else:
-                D = euclidean_distances(X_master, X)
+                D = euclidean_distances(X_rep, X)
             gamma = 1/np.shape(X)[1]
             dense = np.exp(-D * gamma) #Obtaining Similarity from distance
         else:
             if metric=="cosine":
                 #D = cosine_distances(X) 
-                if type(X_master)==type(None):
+                if type(X_rep)==type(None):
                     dense = cosine_similarity(X)
                 else:
-                    dense = cosine_similarity(X_master, X)
+                    dense = cosine_similarity(X_rep, X)
             else:
                 raise Exception("ERROR: unsupported metric")
         
         #nbrs = NearestNeighbors(n_neighbors=2, metric='precomputed', n_jobs=n_jobs).fit(D)
         dense_ = None
-        if type(X_master)==type(None):
+        if type(X_rep)==type(None):
             nbrs = NearestNeighbors(n_neighbors=num_neigh, metric=metric, n_jobs=n_jobs).fit(X)
             _, ind = nbrs.kneighbors(X)
             ind_l = [(index[0],x) for index, x in np.ndenumerate(ind)]

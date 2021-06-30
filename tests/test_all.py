@@ -99,8 +99,8 @@ num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric 
 budget = 20
 num_concepts = 50
 num_queries = 10
-magnificationLambda = 1
-privacyHardness = 1
+magnificationLambda = 1 #3
+privacyHardness = 1 #3
 num_privates=5
 
 # num_internal_clusters = 3 #3
@@ -386,21 +386,21 @@ def object_dense_cpp_kernel(request, data):
 def object_mi_dense_cpp_kernel(request, data_queries):
     num_data, num_q, imageData, queryData, _ = data_queries
     if request.param == "FacilityLocationMutualInformation":
-        obj = FacilityLocationMutualInformationFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric, magnificationLambda=magnificationLambda)
+        obj = FacilityLocationMutualInformationFunction(n=num_data, num_queries=num_q, data=imageData, queryData=queryData, metric=metric, magnificationLambda=magnificationLambda)
     elif request.param == "FacilityLocationVariantMutualInformation":
-        obj = FacilityLocationVariantMutualInformationFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric, magnificationLambda=magnificationLambda)
+        obj = FacilityLocationVariantMutualInformationFunction(n=num_data, num_queries=num_q, data=imageData, queryData=queryData, metric=metric, magnificationLambda=magnificationLambda)
     elif request.param == "ConcaveOverModular":
-        obj = ConcaveOverModularFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric, magnificationLambda=magnificationLambda, mode=ConcaveOverModular.logarithmic)
+        obj = ConcaveOverModularFunction(n=num_data, num_queries=num_q, data=imageData, queryData=queryData, metric=metric, magnificationLambda=magnificationLambda, mode=ConcaveOverModular.logarithmic)
     elif request.param == "GraphCutMutualInformation":
-        obj = GraphCutMutualInformationFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric)
+        obj = GraphCutMutualInformationFunction(n=num_data, num_queries=num_q, data=imageData, queryData=queryData, metric=metric)
     elif request.param == "GraphCutConditionalGain":
-        obj = GraphCutConditionalGainFunction(n=num_data, num_privates=num_q, lambdaVal=1, imageData=imageData, privateData=queryData, metric=metric, privacyHardness=privacyHardness)
+        obj = GraphCutConditionalGainFunction(n=num_data, num_privates=num_q, lambdaVal=1, data=imageData, privateData=queryData, metric=metric, privacyHardness=privacyHardness)
     elif request.param == "FacilityLocationConditionalGain":
-        obj = FacilityLocationConditionalGainFunction(n=num_data, num_privates=num_q, imageData=imageData, privateData=queryData, metric=metric, privacyHardness=privacyHardness)
+        obj = FacilityLocationConditionalGainFunction(n=num_data, num_privates=num_q, data=imageData, privateData=queryData, metric=metric, privacyHardness=privacyHardness)
     elif request.param == "LogDeterminantMutualInformation":
-        obj = LogDeterminantMutualInformationFunction(n=num_data, num_queries=num_q, imageData=imageData, queryData=queryData, metric=metric, lambdaVal=1, magnificationLambda=magnificationLambda)
+        obj = LogDeterminantMutualInformationFunction(n=num_data, num_queries=num_q, data=imageData, queryData=queryData, metric=metric, lambdaVal=1, magnificationLambda=magnificationLambda)
     elif request.param == "LogDeterminantConditionalGain":
-        obj = LogDeterminantConditionalGainFunction(n=num_data, num_privates=num_q, imageData=imageData, privateData=queryData, metric=metric, lambdaVal=1, privacyHardness=privacyHardness)
+        obj = LogDeterminantConditionalGainFunction(n=num_data, num_privates=num_q, data=imageData, privateData=queryData, metric=metric, lambdaVal=1, privacyHardness=privacyHardness)
     else:
         return None
     return obj
@@ -409,9 +409,9 @@ def object_mi_dense_cpp_kernel(request, data_queries):
 def object_cmi_dense_cpp_kernel(request, data_queries_privates):
     num_data, num_q, num_p, imageData, queryData, privateData, _ = data_queries_privates
     if request.param == "FacilityLocationConditionalMutualInformation":
-        obj = FacilityLocationConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, imageData=imageData, queryData=queryData, privateData=privateData, metric=metric, magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
+        obj = FacilityLocationConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, data=imageData, queryData=queryData, privateData=privateData, metric=metric, magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
     elif request.param == "LogDeterminantConditionalMutualInformation":
-        obj = LogDeterminantConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, imageData=imageData, queryData=queryData, privateData=privateData, metric=metric, lambdaVal=1, magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
+        obj = LogDeterminantConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, data=imageData, queryData=queryData, privateData=privateData, metric=metric, lambdaVal=1, magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
     else:
         return None
     return obj
@@ -420,10 +420,10 @@ def object_cmi_dense_cpp_kernel(request, data_queries_privates):
 def object_mi_dense_py_kernel(request, data_queries):
     num_data, num_q, imageData, queryData, _ = data_queries
     _, imageKernel = create_kernel(imageData, mode="dense", metric=metric)
-    queryKernel = create_kernel(queryData, mode="dense", metric=metric, X_master=imageData)
+    queryKernel = create_kernel(queryData, mode="dense", metric=metric, X_rep=imageData)
     _, queryQueryKernel = create_kernel(queryData, mode="dense", metric=metric)
     if request.param == "FacilityLocationMutualInformation":
-        obj = FacilityLocationMutualInformationFunction(n=num_data, num_queries=num_q, image_sijs=imageKernel, query_sijs=queryKernel, magnificationLambda=magnificationLambda)
+        obj = FacilityLocationMutualInformationFunction(n=num_data, num_queries=num_q, data_sijs=imageKernel, query_sijs=queryKernel, magnificationLambda=magnificationLambda)
     elif request.param == "FacilityLocationVariantMutualInformation":
         obj = FacilityLocationVariantMutualInformationFunction(n=num_data, num_queries=num_q, query_sijs=queryKernel, magnificationLambda=magnificationLambda)
     elif request.param == "ConcaveOverModular":
@@ -431,13 +431,13 @@ def object_mi_dense_py_kernel(request, data_queries):
     elif request.param == "GraphCutMutualInformation":
         obj = GraphCutMutualInformationFunction(n=num_data, num_queries=num_q, query_sijs=queryKernel)
     elif request.param == "GraphCutConditionalGain":
-        obj = GraphCutConditionalGainFunction(n=num_data, num_privates=num_q, lambdaVal=1, image_sijs=imageKernel, private_sijs=queryKernel, privacyHardness=privacyHardness)
+        obj = GraphCutConditionalGainFunction(n=num_data, num_privates=num_q, lambdaVal=1, data_sijs=imageKernel, private_sijs=queryKernel, privacyHardness=privacyHardness)
     elif request.param == "FacilityLocationConditionalGain":
-        obj = FacilityLocationConditionalGainFunction(n=num_data, num_privates=num_q, image_sijs=imageKernel, private_sijs=queryKernel, privacyHardness=privacyHardness)
+        obj = FacilityLocationConditionalGainFunction(n=num_data, num_privates=num_q, data_sijs=imageKernel, private_sijs=queryKernel, privacyHardness=privacyHardness)
     elif request.param == "LogDeterminantMutualInformation":
-        obj = LogDeterminantMutualInformationFunction(n=num_data, num_queries=num_q, image_sijs=imageKernel, query_sijs=queryKernel, query_query_sijs=queryQueryKernel, lambdaVal=1, magnificationLambda=magnificationLambda)
+        obj = LogDeterminantMutualInformationFunction(n=num_data, num_queries=num_q, data_sijs=imageKernel, query_sijs=queryKernel, query_query_sijs=queryQueryKernel, lambdaVal=1, magnificationLambda=magnificationLambda)
     elif request.param == "LogDeterminantConditionalGain":
-        obj = LogDeterminantConditionalGainFunction(n=num_data, num_privates=num_q, image_sijs=imageKernel, private_sijs=queryKernel, private_private_sijs=queryQueryKernel, lambdaVal=1, privacyHardness=privacyHardness)
+        obj = LogDeterminantConditionalGainFunction(n=num_data, num_privates=num_q, data_sijs=imageKernel, private_sijs=queryKernel, private_private_sijs=queryQueryKernel, lambdaVal=1, privacyHardness=privacyHardness)
     else:
         return None
     return obj
@@ -446,15 +446,15 @@ def object_mi_dense_py_kernel(request, data_queries):
 def object_cmi_dense_py_kernel(request, data_queries_privates):
     num_data, num_q, num_p, imageData, queryData, privateData, _ = data_queries_privates
     _, imageKernel = create_kernel(imageData, mode="dense", metric=metric)
-    queryKernel = create_kernel(queryData, mode="dense", metric=metric, X_master=imageData)
-    privateKernel = create_kernel(privateData, mode="dense", metric=metric, X_master=imageData)
+    queryKernel = create_kernel(queryData, mode="dense", metric=metric, X_rep=imageData)
+    privateKernel = create_kernel(privateData, mode="dense", metric=metric, X_rep=imageData)
     _, queryQueryKernel = create_kernel(queryData, mode="dense", metric=metric)
     _, privatePrivateKernel = create_kernel(privateData, mode="dense", metric=metric)
-    queryPrivateKernel = create_kernel(privateData, mode="dense", metric=metric, X_master=queryData)
+    queryPrivateKernel = create_kernel(privateData, mode="dense", metric=metric, X_rep=queryData)
     if request.param == "FacilityLocationConditionalMutualInformation":
-        obj = FacilityLocationConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, image_sijs=imageKernel, query_sijs=queryKernel, private_sijs=privateKernel,magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
+        obj = FacilityLocationConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, data_sijs=imageKernel, query_sijs=queryKernel, private_sijs=privateKernel,magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
     elif request.param == "LogDeterminantConditionalMutualInformation":
-        obj = LogDeterminantConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, image_sijs=imageKernel, query_sijs=queryKernel, query_query_sijs=queryQueryKernel, private_sijs=privateKernel, private_private_sijs=privatePrivateKernel, query_private_sijs=queryPrivateKernel, lambdaVal=1, magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
+        obj = LogDeterminantConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, data_sijs=imageKernel, query_sijs=queryKernel, query_query_sijs=queryQueryKernel, private_sijs=privateKernel, private_private_sijs=privatePrivateKernel, query_private_sijs=queryPrivateKernel, lambdaVal=1, magnificationLambda=magnificationLambda, privacyHardness=privacyHardness)
     else:
         return None
     return obj
@@ -464,7 +464,7 @@ def object_dense_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
     _, K_dense = create_kernel(dataArray, 'dense','euclidean')
     if request.param == "FacilityLocation":
-        obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_master=False)
+        obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False)
     elif request.param == "DisparitySum":
         obj = DisparitySumFunction(n=num_samples, mode="dense", sijs = K_dense)
     elif request.param == "DisparityMin":
@@ -483,7 +483,7 @@ def objects_dense_cpp_py_kernel(request, data):
     _, K_dense = create_kernel(dataArray, 'dense','euclidean')
     if request.param == "FacilityLocation":
         obj1 = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
-        obj2 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_master=False)
+        obj2 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False)
     elif request.param == "DisparitySum":
         obj1 = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
         obj2 = DisparitySumFunction(n=num_samples, mode="dense", sijs = K_dense)

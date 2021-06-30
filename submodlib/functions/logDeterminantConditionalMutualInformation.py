@@ -39,17 +39,17 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 	lambdaVal : float
 		Addition to :math:`s_{ii} (1)` so that :math:`\\log` doesn't become 0
 	
-	image_sijs : numpy.ndarray, optional
-		Similarity kernel between the elements of the ground set. Shape: n X n. When not provided, it is computed using imageData.
+	data_sijs : numpy.ndarray, optional
+		Similarity kernel between the elements of the ground set. Shape: n X n. When not provided, it is computed using data.
 	
 	query_sijs : numpy.ndarray, optional
-		Similarity kernel between the ground set and the queries. Shape: n X num_queries. When not provided, it is computed using imageData, queryData and metric.
+		Similarity kernel between the ground set and the queries. Shape: n X num_queries. When not provided, it is computed using data, queryData and metric.
 	
 	query_query_sijs : numpy.ndarray, optional
 		Similarity kernel between the query points. Shape: num_queries X num_queries. When not provided, it is computed using queryData.
 	
 	private_sijs : numpy.ndarray, optional
-		Similarity kernel between the ground set and the private instances. Shape: n X num_privates. When not provided, it is computed using imageData and privateData.
+		Similarity kernel between the ground set and the private instances. Shape: n X num_privates. When not provided, it is computed using data and privateData.
 	
 	private_private_sijs : numpy.ndarray, optional
 		Similarity kernel between the private instances. Shape: num_privates X num_privates. When not provided, it is computed using privateData.
@@ -57,14 +57,14 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 	query_private_sijs : numpy.ndarray, optional
 		Similarity kernel between the query instances and the private instances. Shape: num_queries X num_privates. When not provided, it is computed using queryData and privateData.
 
-	imageData : numpy.ndarray, optional
-		Matrix of shape n X num_features containing the ground set data elements. imageData[i] should contain the num-features dimensional features of element i. Mandatory, if either if image_sijs or private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
+	data : numpy.ndarray, optional
+		Matrix of shape n X num_features containing the ground set data elements. data[i] should contain the num-features dimensional features of element i. Mandatory, if either if data_sijs or private_sijs is not provided. Ignored if both data_sijs and private_sijs are provided.
 	
 	queryData : numpy.ndarray, optional
 		Matrix of shape num_queries X num_features containing the query elements. queryData[i] should contain the num-features dimensional features of query i. It is optional (and is ignored if provided) if query_sijs has been provided.
 
 	privateData : numpy.ndarray, optional
-		Matrix of shape num_privates X num_features containing the private instances. privateData[i] should contain the num-features dimensional features of private instance i. Must be provided if private_sijs is not provided. Ignored if both image_sijs and private_sijs are provided.
+		Matrix of shape num_privates X num_features containing the private instances. privateData[i] should contain the num-features dimensional features of private instance i. Must be provided if private_sijs is not provided. Ignored if both data_sijs and private_sijs are provided.
 
 	metric : str, optional
 		Similarity metric to be used for computing the similarity kernels. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
@@ -77,7 +77,7 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 	
 	"""
 
-	def __init__(self, n, num_queries, num_privates, lambdaVal, image_sijs=None, query_sijs=None, query_query_sijs=None, private_sijs=None, private_private_sijs=None, query_private_sijs=None, imageData=None, queryData=None, privateData=None, metric="cosine", magnificationLambda=1, privacyHardness=1):
+	def __init__(self, n, num_queries, num_privates, lambdaVal, data_sijs=None, query_sijs=None, query_query_sijs=None, private_sijs=None, private_private_sijs=None, query_private_sijs=None, data=None, queryData=None, privateData=None, metric="cosine", magnificationLambda=1, privacyHardness=1):
 		self.n = n
 		self.num_queries = num_queries
 		self.num_privates = num_privates
@@ -85,18 +85,18 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 		self.metric = metric
 		self.magnificationLambda=magnificationLambda
 		self.privacyHardness=privacyHardness
-		self.image_sijs = image_sijs
+		self.data_sijs = data_sijs
 		self.query_sijs = query_sijs
 		self.query_query_sijs = query_query_sijs
 		self.private_sijs = private_sijs
 		self.private_private_sijs = private_private_sijs
 		self.query_private_sijs = query_private_sijs
-		self.imageData = imageData
+		self.data = data
 		self.queryData = queryData
 		self.privateData = privateData
 		
 		self.cpp_obj = None
-		self.cpp_image_sijs = None
+		self.cpp_data_sijs = None
 		self.cpp_query_sijs = None
 		self.cpp_query_query_sijs = None
 		self.cpp_private_sijs = None
@@ -119,9 +119,9 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 		if self.metric not in ['euclidean', 'cosine']:
 			raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
 
-		if (type(self.image_sijs) != type(None)) and (type(self.query_sijs) != type(None)) and (type(self.query_query_sijs) != type(None)) and (type(self.private_sijs) != type(None)) and (type(self.private_private_sijs) != type(None)) and (type(self.query_private_sijs) != type(None)): # User has provided all required kernels
-			if type(self.image_sijs) != np.ndarray:
-				raise Exception("Invalid image kernel type provided, must be ndarray")
+		if (type(self.data_sijs) != type(None)) and (type(self.query_sijs) != type(None)) and (type(self.query_query_sijs) != type(None)) and (type(self.private_sijs) != type(None)) and (type(self.private_private_sijs) != type(None)) and (type(self.query_private_sijs) != type(None)): # User has provided all required kernels
+			if type(self.data_sijs) != np.ndarray:
+				raise Exception("Invalid data kernel type provided, must be ndarray")
 			if type(self.query_sijs) != np.ndarray:
 				raise Exception("Invalid query kernel type provided, must be ndarray")
 			if type(self.query_query_sijs) != np.ndarray:
@@ -132,8 +132,8 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 				raise Exception("Invalid private-private kernel type provided, must be ndarray")
 			if type(self.query_private_sijs) != np.ndarray:
 				raise Exception("Invalid query-private kernel type provided, must be ndarray")
-			if np.shape(self.image_sijs)[0]!=self.n or np.shape(self.image_sijs)[1]!=self.n:
-				raise Exception("ERROR: Image Kernel should be n X n")
+			if np.shape(self.data_sijs)[0]!=self.n or np.shape(self.data_sijs)[1]!=self.n:
+				raise Exception("ERROR: data kernel should be n X n")
 			if np.shape(self.query_sijs)[0]!=self.n or np.shape(self.query_sijs)[1]!=self.num_queries:
 				raise Exception("ERROR: Query Kernel should be n X num_queries")
 			if np.shape(self.query_query_sijs)[0]!=self.num_queries or np.shape(self.query_query_sijs)[1]!=self.num_queries:
@@ -144,13 +144,13 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 				raise Exception("ERROR: Private-private Kernel should be num_privates X num_privates")
 			if np.shape(self.query_private_sijs)[0]!=self.num_queries or np.shape(self.query_private_sijs)[1]!=self.num_privates:
 				raise Exception("ERROR: Query-private Kernel should be num_queries X num_privates")
-			if (type(self.imageData) != type(None)) or (type(self.queryData) != type(None)) or (type(self.privateData) != type(None)):
-				print("WARNING: similarity kernels found. Provided image, query and private data matrices will be ignored.")
+			if (type(self.data) != type(None)) or (type(self.queryData) != type(None)) or (type(self.privateData) != type(None)):
+				print("WARNING: similarity kernels found. Provided data, query and private matrices will be ignored.")
 		else: #similarity kernels have not been provided
-			if (type(self.imageData) == type(None)) or (type(self.queryData) == type(None)) or (type(self.privateData) == type(None)):
+			if (type(self.data) == type(None)) or (type(self.queryData) == type(None)) or (type(self.privateData) == type(None)):
 				raise Exception("Since kernels are not provided, data matrices are a must")
-			if np.shape(self.imageData)[0]!=self.n:
-				raise Exception("ERROR: Inconsistentcy between n and no of examples in the given image data matrix")
+			if np.shape(self.data)[0]!=self.n:
+				raise Exception("ERROR: Inconsistentcy between n and no of examples in the given data matrix")
 			if np.shape(self.queryData)[0]!=self.num_queries:
 				raise Exception("ERROR: Inconsistentcy between num_queries and no of examples in the given query data matrix")
 			if np.shape(self.privateData)[0]!=self.num_privates:
@@ -158,15 +158,15 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 			
 			#construct imageKernel
 			self.num_neighbors = self.n #Using all data as num_neighbors in case of dense mode
-			self.cpp_content = np.array(subcp.create_kernel(self.imageData.tolist(), self.metric, self.num_neighbors))
+			self.cpp_content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neighbors))
 			val = self.cpp_content[0]
 			row = list(self.cpp_content[1].astype(int))
 			col = list(self.cpp_content[2].astype(int))
-			self.image_sijs = np.zeros((self.n,self.n))
-			self.image_sijs[row,col] = val
+			self.data_sijs = np.zeros((self.n,self.n))
+			self.data_sijs[row,col] = val
 		
 		    #construct queryKernel
-			self.query_sijs = np.array(subcp.create_kernel_NS(self.queryData.tolist(),self.imageData.tolist(), self.metric))
+			self.query_sijs = np.array(subcp.create_kernel_NS(self.queryData.tolist(),self.data.tolist(), self.metric))
 
 			#construct queryQueryKernel
 			self.num_neighbors2 = self.num_queries #Using all data as num_neighbors in case of dense mode
@@ -178,7 +178,7 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 			self.query_query_sijs[row2,col2] = val2
 
 			#construct privateKernel
-			self.private_sijs = np.array(subcp.create_kernel_NS(self.privateData.tolist(),self.imageData.tolist(), self.metric))
+			self.private_sijs = np.array(subcp.create_kernel_NS(self.privateData.tolist(),self.data.tolist(), self.metric))
 
 			#construct privatePrivateKernel
 			self.num_neighbors3 = self.num_privates #Using all data as num_neighbors in case of dense mode
@@ -193,13 +193,13 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 			self.query_private_sijs = np.array(subcp.create_kernel_NS(self.privateData.tolist(),self.queryData.tolist(), self.metric))
 		
 		#Breaking similarity matrix to simpler native data structures for implicit pybind11 binding
-		self.cpp_image_sijs = self.image_sijs.tolist() #break numpy ndarray to native list of list datastructure
+		self.cpp_data_sijs = self.data_sijs.tolist() #break numpy ndarray to native list of list datastructure
 		
-		if type(self.cpp_image_sijs[0])==int or type(self.cpp_image_sijs[0])==float: #Its critical that we pass a list of list to pybind11
+		if type(self.cpp_data_sijs[0])==int or type(self.cpp_data_sijs[0])==float: #Its critical that we pass a list of list to pybind11
 																			#This condition ensures the same in case of a 1D numpy array (for 1x1 sim matrix)
 			l=[]
-			l.append(self.cpp_image_sijs)
-			self.cpp_image_sijs=l
+			l.append(self.cpp_data_sijs)
+			self.cpp_data_sijs=l
 		
 		self.cpp_query_sijs = self.query_sijs.tolist() #break numpy ndarray to native list of list datastructure
 		
@@ -241,7 +241,7 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 			l.append(self.cpp_query_private_sijs)
 			self.cpp_query_private_sijs=l
 
-		self.cpp_obj = LogDeterminantConditionalMutualInformation(self.n, self.num_queries, self.num_privates, self.cpp_image_sijs, self.cpp_query_sijs, self.cpp_query_query_sijs, self.cpp_private_sijs, self.cpp_private_private_sijs,self.cpp_query_private_sijs, self.lambdaVal, self.magnificationLambda, self.privacyHardness)
+		self.cpp_obj = LogDeterminantConditionalMutualInformation(self.n, self.num_queries, self.num_privates, self.cpp_data_sijs, self.cpp_query_sijs, self.cpp_query_query_sijs, self.cpp_private_sijs, self.cpp_private_private_sijs,self.cpp_query_private_sijs, self.lambdaVal, self.magnificationLambda, self.privacyHardness)
 		self.effective_ground = set(range(n))
 
 	

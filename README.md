@@ -1,13 +1,13 @@
 <p align="center">
     <br>
         &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
-        <img src="https://github.com/decile-team/submodlib/blob/master/Submodlib%20Logo.png" width="500" />
+        <img src="https://github.com/decile-team/submodlib/blob/master/submodlib_logo.png" width="500" />
     </br>
 </p>
 
 # About SubModLib
 
-*SubModLib* is an efficient and scalable library for submodular optimization which finds its application in summarization, data subset selection, hyper parameter tuning etc. It offers great ease-of-use and flexibility in the way it can be used.
+*SubModLib* is an easy-to-use, efficient and scalable library for submodular optimization which finds its application in summarization, data subset selection, hyper parameter tuning etc. Through a rich API, it offers a great deal of flexibility in the way it can be used.
 
 # Salient Features
 
@@ -36,7 +36,7 @@
 * **To run the tests**, follow these steps:
     * `$ pip install pytest`
     * `$ pytest` # this runs ALL tests
-    * `$ pytest -m <marker> --verbose -x --disable-warnings -rA` # this runs test specified by the <marker>. Possible markers are mentioned in pyproject.toml file.
+    * `$ pytest -m <marker> --verbose --disable-warnings -rA` # this runs test specified by the <marker>. Possible markers are mentioned in pyproject.toml file.
 
 # Usage
 
@@ -53,8 +53,8 @@ The most frequently used methods are:
 For example,
 ```
 from submodlib import FacilityLocationFunction
-objFL = FacilityLocationFunction(n=43, data=groundData, separate_master=True, n_master=36, data_master=masterData, mode="dense", metric="euclidean")
-greedyList = objFL.maximize(budget=10,optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+objFL = FacilityLocationFunction(n=43, data=groundData, mode="dense", metric="euclidean")
+greedyList = objFL.maximize(budget=10,optimizer='NaiveGreedy')
 ```
 
 For a more detailed discussion on all possible usage patterns, please see [Different Options of Usage](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Different_Options_for_Usage.ipynb)
