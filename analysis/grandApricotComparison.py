@@ -53,7 +53,9 @@ for param in params:
         start = time.time()
         fl_dense_cpp_kernel()
         stop = time.time()
-        totalTime += (stop-start)
+        currentTime = stop - start
+        totalTime += currentTime
+        row.append(round(currentTime,num_places))
     actualTime = totalTime/num_executions
     row.append(round(actualTime, num_places))
     results_csv.append(row)
@@ -64,7 +66,9 @@ for param in params:
         start = time.time()
         fl_dense_py_kernel()
         stop = time.time()
-        totalTime += (stop-start)
+        currentTime = stop - start
+        totalTime += currentTime
+        row.append(round(currentTime,num_places))
     actualTime = totalTime/num_executions
     row.append(round(actualTime, num_places))
     results_csv.append(row)
@@ -75,7 +79,9 @@ for param in params:
         start = time.time()
         apricot_dense()
         stop = time.time()
-        totalTime += (stop-start)
+        currentTime = stop - start
+        totalTime += currentTime
+        row.append(round(currentTime,num_places))
     actualTime = totalTime/num_executions
     row.append(round(actualTime, num_places))
     results_csv.append(row)

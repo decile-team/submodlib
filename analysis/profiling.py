@@ -7,12 +7,11 @@ from scipy import sparse
 from submodlib.functions.facilityLocation import FacilityLocationFunction
 from submodlib import ClusteredFunction
 from apricot import FacilityLocationSelection
-import time
 
 #prepare data to be used in the analysis
 num_clusters = 10
 cluster_std_dev = 2
-num_samples = 1000
+num_samples = 5000
 num_neighbors = 100
 optimizer = "LazyGreedy"
 num_features = 1024
@@ -90,8 +89,4 @@ def apricot_dense():
 # fl_clustered_user_multi()
 # fl_clustered_birch_single()
 # fl_clustered_user_single()
-#apricot_dense()
-start = time.time()
-fl_dense_py_kernel()
-stop = time.time()
-print("TIme taken: ", stop-start)
+apricot_dense()
