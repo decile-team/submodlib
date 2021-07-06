@@ -11,13 +11,6 @@
 
 FacilityLocationVariantMutualInformation::FacilityLocationVariantMutualInformation(ll n_, int numQueries_, std::vector<std::vector<float>> const &kernelQuery_, float magnificationLambda_): n(n_), numQueries(numQueries_), kernelQuery(kernelQuery_), magnificationLambda(magnificationLambda_){
     qMaxMod.clear();
-    if(magnificationLambda != 1) {
-        for(ll i=0; i<n; i++) {
-            for(int j=0; j<numQueries; j++) {
-                kernelQuery[i][j] *= magnificationLambda;
-            }
-        }
-    }
     for (ll i = 0; i < n; i++) {
         float max = std::numeric_limits<float>::min();
         for(int q = 0; q < numQueries; q++) {
@@ -51,9 +44,11 @@ double FacilityLocationVariantMutualInformation::evaluate(std::unordered_set<ll>
         }
         result += maxcurr;
     }
+    double sum = 0;
     for (auto elem: X) {
-        result += qMaxMod[elem];
+        sum += qMaxMod[elem];
     }
+    result += magnificationLambda*sum;
     return result;
 }
 
@@ -65,9 +60,11 @@ double FacilityLocationVariantMutualInformation::evaluateWithMemoization(std::un
     for (int i = 0; i < numQueries; i++) {
         result += similarityWithNearestInX[i];
     }
+    double sum = 0;
     for (auto elem: X) {
-        result += qMaxMod[elem];
+        sum += qMaxMod[elem];
     }
+    result += magnificationLambda*sum;
     return result;
 }
 
@@ -94,7 +91,7 @@ double FacilityLocationVariantMutualInformation::marginalGainWithMemoization(std
                      kernelQuery[item][i]) -
                  similarityWithNearestInX[i];
     }
-    gain += qMaxMod[item];
+    gain += (magnificationLambda * qMaxMod[item]);
     return gain;
 }
 

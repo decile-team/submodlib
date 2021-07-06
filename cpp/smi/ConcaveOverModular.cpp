@@ -9,7 +9,7 @@
 #include "../utils/helper.h"
 #include"ConcaveOverModular.h"
 
-ConcaveOverModular::ConcaveOverModular(ll n_, int numQueries_, std::vector<std::vector<float>> const &kernelQuery_, float magnificationLambda_, Type type_): n(n_), numQueries(numQueries_), kernelQuery(kernelQuery_), magnificationLambda(magnificationLambda_), type(type_){
+ConcaveOverModular::ConcaveOverModular(ll n_, int numQueries_, std::vector<std::vector<float>> const &kernelQuery_, float queryDiversityEta_, Type type_): n(n_), numQueries(numQueries_), kernelQuery(kernelQuery_), queryDiversityEta(queryDiversityEta_), type(type_){
     querySumForEachImage.clear();
     for (ll i = 0; i < n; i++) {
         double sum = 0;
@@ -56,7 +56,7 @@ double ConcaveOverModular::evaluate(std::unordered_set<ll> const &X) {
         }
         sum1 += transform(sum);
     }
-    result += magnificationLambda * sum1;
+    result += queryDiversityEta * sum1;
 
     double sum2 = 0;
     for (int it=0; it<numQueries; it++) {
@@ -81,7 +81,7 @@ double ConcaveOverModular::evaluateWithMemoization(std::unordered_set<ll> const 
     for (auto it: X) {
         sum1 += transform(querySumForEachImage[it]);
     }
-    result += magnificationLambda * sum1;
+    result += queryDiversityEta * sum1;
 
     double sum2 = 0;
     for (int it=0; it < numQueries; it++) {
@@ -101,7 +101,7 @@ double ConcaveOverModular::marginalGain(std::unordered_set<ll> const &X, ll item
     for (int it=0; it<numQueries; it++) {
         sum += kernelQuery[item][it];
     }
-    gain += magnificationLambda * transform(sum);
+    gain += queryDiversityEta * transform(sum);
 
     sum = 0;
     for (int it=0; it<numQueries; it++) {
@@ -133,7 +133,7 @@ double ConcaveOverModular::marginalGainWithMemoization(std::unordered_set<ll> co
         return 0;
     }
 
-    gain += magnificationLambda * transform(querySumForEachImage[item]);
+    gain += queryDiversityEta * transform(querySumForEachImage[item]);
 
     double sum = 0;
     for (int it=0; it<numQueries; it++) {

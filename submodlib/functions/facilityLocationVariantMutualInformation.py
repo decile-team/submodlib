@@ -41,19 +41,19 @@ class FacilityLocationVariantMutualInformationFunction(SetFunction):
 	metric : str, optional
 		Similarity metric to be used for computing the similarity kernels. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
 	
-	magnificationLambda : float, optional
+	queryDiversityEta : float, optional
 		The value of the query-relevance vs diversity trade-off. Increasing :math:`\eta` tends to increase query-relevance while reducing query-coverage and diversity. Default is 1.
 
 	"""
 
-	def __init__(self, n, num_queries, query_sijs=None, data=None, queryData=None, metric="cosine", magnificationLambda=1):
+	def __init__(self, n, num_queries, query_sijs=None, data=None, queryData=None, metric="cosine", queryDiversityEta=1):
 		self.n = n
 		self.num_queries = num_queries
 		self.metric = metric
 		self.query_sijs = query_sijs
 		self.data = data
 		self.queryData = queryData
-		self.magnificationLambda=magnificationLambda
+		self.queryDiversityEta=queryDiversityEta
 		self.cpp_obj = None
 		self.cpp_query_sijs = None
 		self.cpp_content = None
@@ -95,7 +95,7 @@ class FacilityLocationVariantMutualInformationFunction(SetFunction):
 			l.append(self.cpp_query_sijs)
 			self.cpp_query_sijs=l
 
-		self.cpp_obj = FacilityLocationVariantMutualInformation(self.n, self.num_queries, self.cpp_query_sijs, self.magnificationLambda)
+		self.cpp_obj = FacilityLocationVariantMutualInformation(self.n, self.num_queries, self.cpp_query_sijs, self.queryDiversityEta)
 		self.effective_ground = set(range(n))
 
 	

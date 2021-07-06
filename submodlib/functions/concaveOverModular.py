@@ -5,7 +5,6 @@ import scipy
 from .setFunction import SetFunction
 import submodlib_cpp as subcp
 from submodlib_cpp import ConcaveOverModular 
-#from submodlib.helper import create_kernel
 
 class ConcaveOverModularFunction(SetFunction):
 	"""Implementation of the Concave Over Modular (COM) function.
@@ -24,7 +23,6 @@ class ConcaveOverModularFunction(SetFunction):
 
 	Parameters
 	----------
-
 	n : int
 		Number of elements in the ground set. Must be > 0.
 	
@@ -39,26 +37,26 @@ class ConcaveOverModularFunction(SetFunction):
 
 	queryData : numpy.ndarray, optional
 		Matrix of shape num_queries X num_features containing the query elements. queryData[i] should contain the num-features dimensional features of query i. It is optional (and is ignored if provided) if query_sijs has been provided.
-
-    metric : str, optional
+		
+	metric : str, optional
 		Similarity metric to be used for computing the similarity kernel between the ground set and the query set. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
 	
-	magnificationLambda : float, optional
+	queryDiversityEta : float, optional
 		The value of the query-relevance vs diversity trade-off. Increasing :math:`\eta` tends to increase query-relevance while reducing query-coverage and diversity. Default is 1.
 
 	mode : ConcaveOverModular.Type, optional
 		The concave function to be used. Can be ConcaveOverModular.logarithmic, ConcaveOverModular.squareRoot, ConcaveOverModular.inverse. Default is ConcaveOverModular.logarithmic.
-	
+
 	"""
 
-	def __init__(self, n, num_queries, query_sijs=None, data=None, queryData=None, metric="cosine", magnificationLambda=1, mode=ConcaveOverModular.logarithmic):
+	def __init__(self, n, num_queries, query_sijs=None, data=None, queryData=None, metric="cosine", queryDiversityEta=1, mode=ConcaveOverModular.logarithmic):
 		self.n = n
 		self.num_queries = num_queries
 		self.metric = metric
 		self.query_sijs = query_sijs
 		self.data = data
 		self.queryData = queryData
-		self.magnificationLambda=magnificationLambda
+		self.queryDiversityEta=queryDiversityEta
 		self.mode = mode
 		self.cpp_obj = None
 		self.cpp_query_sijs = None
@@ -101,5 +99,5 @@ class ConcaveOverModularFunction(SetFunction):
 			l.append(self.cpp_query_sijs)
 			self.cpp_query_sijs=l
 
-		self.cpp_obj = ConcaveOverModular(self.n, self.num_queries, self.cpp_query_sijs, self.magnificationLambda, self.mode)
+		self.cpp_obj = ConcaveOverModular(self.n, self.num_queries, self.cpp_query_sijs, self.queryDiversityEta, self.mode)
 		self.effective_ground = set(range(n))

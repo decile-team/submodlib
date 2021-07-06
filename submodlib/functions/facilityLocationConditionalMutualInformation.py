@@ -51,7 +51,7 @@ class FacilityLocationConditionalMutualInformationFunction(SetFunction):
 	metric : str, optional
 		Similarity metric to be used for computing the similarity kernels. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
 	
-	magnificationLambda : float, optional
+	magnificationEta : float, optional
 		The value of the query-relevance vs diversity trade-off. Increasing :math:`\eta` tends to increase query-relevance while reducing query-coverage and diversity. Default is 1.
 
 	privacyHardness : float, optional
@@ -59,12 +59,12 @@ class FacilityLocationConditionalMutualInformationFunction(SetFunction):
 	
 	"""
 
-	def __init__(self, n, num_queries, num_privates, data_sijs=None, query_sijs=None, private_sijs=None, data=None, queryData=None, privateData=None, metric="cosine", magnificationLambda=1, privacyHardness=1):
+	def __init__(self, n, num_queries, num_privates, data_sijs=None, query_sijs=None, private_sijs=None, data=None, queryData=None, privateData=None, metric="cosine", magnificationEta=1, privacyHardness=1):
 		self.n = n
 		self.num_queries = num_queries
 		self.num_privates = num_privates
 		self.metric = metric
-		self.magnificationLambda=magnificationLambda
+		self.magnificationEta=magnificationEta
 		self.privacyHardness=privacyHardness
 		self.data_sijs = data_sijs
 		self.query_sijs = query_sijs
@@ -157,5 +157,5 @@ class FacilityLocationConditionalMutualInformationFunction(SetFunction):
 			l.append(self.cpp_private_sijs)
 			self.cpp_private_sijs=l
 		
-		self.cpp_obj = FacilityLocationConditionalMutualInformation(self.n, self.num_queries, self.num_privates, self.cpp_data_sijs, self.cpp_query_sijs, self.cpp_private_sijs, self.magnificationLambda, self.privacyHardness)
+		self.cpp_obj = FacilityLocationConditionalMutualInformation(self.n, self.num_queries, self.num_privates, self.cpp_data_sijs, self.cpp_query_sijs, self.cpp_private_sijs, self.magnificationEta, self.privacyHardness)
 		self.effective_ground = set(range(n))

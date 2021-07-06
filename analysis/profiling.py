@@ -11,7 +11,7 @@ from apricot import FacilityLocationSelection
 #prepare data to be used in the analysis
 num_clusters = 10
 cluster_std_dev = 2
-num_samples = 5000
+num_samples = 1000
 num_neighbors = 100
 optimizer = "LazyGreedy"
 num_features = 1024
@@ -79,7 +79,7 @@ def apricot_dense():
     obj = FacilityLocationSelection(n_samples=budget, metric='euclidean', optimizer='lazy')
     obj.fit_transform(dataArray)
 
-#fl_dense_cpp_kernel()
+fl_dense_cpp_kernel()
 #fl_dense_py_kernel()
 #fl_sparse_cpp_kernel()
 #fl_sparse_py_kernel()
@@ -89,4 +89,4 @@ def apricot_dense():
 # fl_clustered_user_multi()
 # fl_clustered_birch_single()
 # fl_clustered_user_single()
-apricot_dense()
+#apricot_dense()

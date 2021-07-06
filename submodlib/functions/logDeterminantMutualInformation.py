@@ -54,17 +54,17 @@ class LogDeterminantMutualInformationFunction(SetFunction):
 	metric : str, optional
 		Similarity metric to be used for computing the similarity kernels. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
 	
-	magnificationLambda : float, optional
+	magnificationEta : float, optional
 		The value of the query-relevance vs diversity trade-off. Increasing :math:`\eta` tends to increase query-relevance while reducing query-coverage and diversity. Default is 1.
 
 	"""
 
-	def __init__(self, n, num_queries, lambdaVal, data_sijs=None, query_sijs=None, query_query_sijs=None, data=None, queryData=None, metric="cosine", magnificationLambda=1):
+	def __init__(self, n, num_queries, lambdaVal, data_sijs=None, query_sijs=None, query_query_sijs=None, data=None, queryData=None, metric="cosine", magnificationEta=1):
 		self.n = n
 		self.num_queries = num_queries
 		self.lambdaVal=lambdaVal
 		self.metric = metric
-		self.magnificationLambda=magnificationLambda
+		self.magnificationEta=magnificationEta
 		self.data_sijs = data_sijs
 		self.query_sijs = query_sijs
 		self.query_query_sijs = query_query_sijs
@@ -158,7 +158,7 @@ class LogDeterminantMutualInformationFunction(SetFunction):
 			l.append(self.cpp_query_query_sijs)
 			self.cpp_query_query_sijs=l
 
-		self.cpp_obj = LogDeterminantMutualInformation(self.n, self.num_queries, self.cpp_data_sijs, self.cpp_query_sijs, self.cpp_query_query_sijs, self.lambdaVal, self.magnificationLambda)
+		self.cpp_obj = LogDeterminantMutualInformation(self.n, self.num_queries, self.cpp_data_sijs, self.cpp_query_sijs, self.cpp_query_query_sijs, self.lambdaVal, self.magnificationEta)
 		self.effective_ground = set(range(n))
 
 	

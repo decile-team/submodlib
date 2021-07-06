@@ -14,7 +14,7 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 
 	Let :math:`S_{A, B}` be the cross-similarity matrix between the items in sets :math:`A` and :math:`B`. Also, denote :math:`S_{AB} = S_{A \\cup B}`.
 
-	We construct a similarity matrix :math:`S^{\\eta,\\nu}` (on a base matrix :math:`S`) in such a way that the cross-similarity between :math:`A` and :math:`Q` is multiplied by :math:`\\eta` (i.e :math:`S^{\\eta}_{A,Q} = \\eta S_{A,Q}`) to control the query-relevance and diversity trade-off and between:math:`A` and :math:`P` is multiplied by :math:`\\nu` (i.e :math:`S^{\\nu}_{A,P} = \\nu S_{A,P}`) to control the hardness of enforcing privacy constraints. 
+	We construct a similarity matrix :math:`S^{\\eta,\\nu}` (on a base matrix :math:`S`) in such a way that the cross-similarity between :math:`A` and :math:`Q` is multiplied by :math:`\\eta` (i.e :math:`S^{\\eta}_{A,Q} = \\eta S_{A,Q}`) to control the query-relevance and diversity trade-off and between :math:`A` and :math:`P` is multiplied by :math:`\\nu` (i.e :math:`S^{\\nu}_{A,P} = \\nu S_{A,P}`) to control the hardness of enforcing privacy constraints. 
 	
 	Using a similarity matrix defined above and with :math:`f(A) = \\log\\det(S^{\\nu}_{A})`, we have: 
 	
@@ -69,7 +69,7 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 	metric : str, optional
 		Similarity metric to be used for computing the similarity kernels. Can be "cosine" for cosine similarity or "euclidean" for similarity based on euclidean distance. Default is "cosine". 
 	
-	magnificationLambda : float, optional
+	magnificationEta : float, optional
 		The value of the query-relevance vs diversity trade-off. Increasing :math:`\eta` tends to increase query-relevance while reducing query-coverage and diversity. Default is 1.
 
 	privacyHardness : float, optional
@@ -77,13 +77,13 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 	
 	"""
 
-	def __init__(self, n, num_queries, num_privates, lambdaVal, data_sijs=None, query_sijs=None, query_query_sijs=None, private_sijs=None, private_private_sijs=None, query_private_sijs=None, data=None, queryData=None, privateData=None, metric="cosine", magnificationLambda=1, privacyHardness=1):
+	def __init__(self, n, num_queries, num_privates, lambdaVal, data_sijs=None, query_sijs=None, query_query_sijs=None, private_sijs=None, private_private_sijs=None, query_private_sijs=None, data=None, queryData=None, privateData=None, metric="cosine", magnificationEta=1, privacyHardness=1):
 		self.n = n
 		self.num_queries = num_queries
 		self.num_privates = num_privates
 		self.lambdaVal=lambdaVal
 		self.metric = metric
-		self.magnificationLambda=magnificationLambda
+		self.magnificationEta=magnificationEta
 		self.privacyHardness=privacyHardness
 		self.data_sijs = data_sijs
 		self.query_sijs = query_sijs
@@ -241,7 +241,7 @@ class LogDeterminantConditionalMutualInformationFunction(SetFunction):
 			l.append(self.cpp_query_private_sijs)
 			self.cpp_query_private_sijs=l
 
-		self.cpp_obj = LogDeterminantConditionalMutualInformation(self.n, self.num_queries, self.num_privates, self.cpp_data_sijs, self.cpp_query_sijs, self.cpp_query_query_sijs, self.cpp_private_sijs, self.cpp_private_private_sijs,self.cpp_query_private_sijs, self.lambdaVal, self.magnificationLambda, self.privacyHardness)
+		self.cpp_obj = LogDeterminantConditionalMutualInformation(self.n, self.num_queries, self.num_privates, self.cpp_data_sijs, self.cpp_query_sijs, self.cpp_query_query_sijs, self.cpp_private_sijs, self.cpp_private_private_sijs,self.cpp_query_private_sijs, self.lambdaVal, self.magnificationEta, self.privacyHardness)
 		self.effective_ground = set(range(n))
 
 	

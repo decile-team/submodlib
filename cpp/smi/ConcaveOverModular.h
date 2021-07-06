@@ -11,7 +11,7 @@ class ConcaveOverModular : public SetFunction {
     protected:
     ll n;  
     int numQueries;
-    float magnificationLambda;
+    float queryDiversityEta;
     std::vector<std::vector <float> > kernelQuery;   //n X numQueries
     std::vector<double> querySumForEachImage;
     std::vector<double> subsetSumForEachQuery;
@@ -23,7 +23,7 @@ class ConcaveOverModular : public SetFunction {
 		logarithmic
 	};
 	Type type;
-    ConcaveOverModular(ll n_, int numQueries_, std::vector<std::vector<float>> const &kernelQuery_, float magnificationLambda_, Type type_);
+    ConcaveOverModular(ll n_, int numQueries_, std::vector<std::vector<float>> const &kernelQuery_, float queryDiversityEta_, Type type_);
 
     double evaluate(std::unordered_set<ll> const &X);
 	double evaluateWithMemoization(std::unordered_set<ll> const &X);
