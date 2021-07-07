@@ -15,6 +15,10 @@ if [ "$1" = "--install" ] ; then
   echo "Installing submodlib from whl file..."
   pip install dist/*.whl
 fi
+if [ "$1" = "--devinstall" ] ; then
+  echo "Installing submodlib in editable mode..."
+  pip install -e .
+fi
 if [ "$1" = "--deploy" ] ; then
   if twine check dist/* ; then
     #if [ "$1" = "--test" ] ; then
