@@ -3,7 +3,7 @@ import random
 import numpy as np
 #import submodlib_cpp as subcp
 import submodlib.helper as helper
-import time
+import timeit
 import csv
 from numba import threading_layer
 
@@ -49,20 +49,16 @@ for param in params:
     for method in method_dictionary:
         print("Method: ", method)
         row=[num_samples, method]
-        totalTime = 0
-        for i in range(num_executions):
-            func = getattr(helper, method_dictionary[method])
-            start = time.time()
-            kernel = func(dataArray, "euclidean")
-            stop = time.time()
-            currentTime = stop - start
-            totalTime += currentTime
-            row.append(round(currentTime,num_places))
-        actualTime = totalTime/num_executions
-        row.append(round(actualTime, num_places))
+        func = method_dictionary[method] + "(dataArray, 'euclidean')"
+        #print("Calling :", func)
+        setup = "from submodlib.helper import " + method_dictionary[method] + "; from __main__ import dataArray"
+        #print("Setup: ", setup)
+        t = timeit.timeit(func, setup, number=num_executions)
+        t = round(t/num_executions,num_places)
+        row.append(t)
         results_csv.append(row)
 
-    with open("kernel_creation_timings_" + str(num_samples) + ".csv", "w") as f:
+    with open("kernel_creation_timings(timeit)_" + str(num_samples) + ".csv", "w") as f:
         writer = csv.writer(f)
         for result in results_csv:
             writer.writerow(result)

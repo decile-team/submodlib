@@ -8,7 +8,9 @@ from scipy.spatial import distance_matrix
 from scipy.spatial.distance import cdist
 from scipy.spatial.distance import pdist
 from fastdist import fastdist
-from numba import jit
+from numba import jit, config
+
+#config.THREADING_LAYER = 'default'
 
 #TODO: https://stackoverflow.com/questions/13079563/how-does-condensed-distance-matrix-work-pdist
 #Represent a dense kernel with upper triangular entries only to save memory
@@ -49,7 +51,7 @@ def euc_dis(A, B):
     D_squared[zero_mask] = 0.0
     return np.sqrt(D_squared)
 
-@jit(nopython=True, cache=True, parallel=True)
+@jit(nopython=True, parallel=True)
 def euc_dis_numba(A, B):
     M = A.shape[0]
     N = B.shape[0]
@@ -61,7 +63,7 @@ def euc_dis_numba(A, B):
     #D_squared[zero_mask] = 0.0
     return np.sqrt(D_squared)
 
-@jit(nopython=True, cache=True, parallel=True)
+@jit(nopython=True, parallel=True)
 def cos_sim_square_numba(A):
     # base similarity matrix (all dot products)
     similarity = np.dot(A, A.T)
@@ -83,7 +85,7 @@ def cos_sim_square_numba(A):
     cosine = cosine.T * inv_mag
     return cosine
 
-@jit(nopython=True, cache=True, parallel=True)
+@jit(nopython=True, parallel=True)
 def cos_sim_rectangle_numba(A, B):
     num=np.dot(A,B.T)
     p1=np.sqrt(np.sum(A**2,axis=1))[:,np.newaxis]
@@ -336,7 +338,7 @@ def create_kernel_dense_np(X, metric, X_rep=None):
             raise Exception("ERROR: unsupported metric")
     return dense
 
-@jit(nopython=True, cache=True, parallel=True)
+@jit(nopython=True, parallel=True)
 def create_kernel_dense_np_numba(X, metric):
     dense=None
     D=None
