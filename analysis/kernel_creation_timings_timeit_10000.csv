@@ -1,0 +1,4 @@
+Num_Samples,Function,Time
+10000,np_numba,2.602832
+10000,np,5.003032
+10000,sklearn,3.603801

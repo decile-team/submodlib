@@ -9,22 +9,22 @@ from numba import threading_layer
 
 method_dictionary = {"np_numba": "create_kernel_dense_np_numba",
                      "np": "create_kernel_dense_np",
-                     "fastdist": "create_kernel_dense_fastdist",
+                     #"fastdist": "create_kernel_dense_fastdist",
                      #"scipy_numba": "create_kernel_dense_scipy_numba",
-                     "scipy": "create_kernel_dense_scipy",
+                     #"scipy": "create_kernel_dense_scipy",
                      #"sklearn_numba": "create_kernel_dense_sklearn_numba",
                      "sklearn": "create_kernel_dense_sklearn",
                      #"current_numba": "create_kernel_numba",
-                     "current": "create_kernel"
+                     #"current": "create_kernel"
 }
 
 cluster_std_dev = 2
-num_executions = 10
+num_executions = 3
 num_places = 6
 num_features = 1024
 
-params = [(50, 5), (100, 10), (200, 10), (500, 10), (1000, 10), (5000, 10)]
-#params = [(50, 5), (100, 10)]
+#params = [(50, 5), (100, 10), (200, 10), (500, 10), (1000, 10), (5000, 10)]
+params = [(6000,10), (7000,10),(8000,10),(9000,10),(10000,10)]
 first = True
 
 for param in params:
