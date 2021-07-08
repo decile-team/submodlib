@@ -1,3 +1,8 @@
+# kernelCreationTiming.py
+# Author: Vishal Kaushal
+# Run as 'python kernelCreationTiming.py' to compare performance of different methods of creating kernel in python
+# Uses naive time.time, runs a method num_executions times
+
 from sklearn.datasets import make_blobs
 import random
 import numpy as np

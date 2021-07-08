@@ -1,3 +1,9 @@
+# grandApricotComparison.py
+# Author: Vishal Kaushal
+# Run as 'python grandApricotComparison.py' to compare performance of 
+# fl_dense_cpp, fl_dense_python and apricot_dense
+# Uses naive time.time, runs a method num_executions times
+
 from sklearn.datasets import make_blobs
 import random
 import numpy as np
@@ -16,8 +22,8 @@ def fl_dense_cpp_kernel():
     obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 
 ########### Dense Similairty Kernel in Python
-def fl_dense_py_kernel():
-    _, K_dense = create_kernel(dataArray, 'dense','euclidean')
+def fl_dense_py_kernel_current():
+    _, K_dense = create_kernel(dataArray, mode='dense', metric='euclidean')
     obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False)
     obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 
@@ -26,12 +32,12 @@ def apricot_dense():
     obj.fit_transform(dataArray)
 
 cluster_std_dev = 2
-num_executions = 10
+num_executions = 3
 num_places = 6
 num_features = 1024
 optimizer = 'LazyGreedy'
 
-params = [(50, 5, 10), (100, 10, 50), (200, 10, 100), (500, 10, 100), (1000, 10, 100), (5000, 10, 100)]
+params = [(50, 5, 10), (100, 10, 50), (200, 10, 100), (500, 10, 100), (1000, 10, 100), (5000, 10, 100), (6000, 10, 100), (7000, 10, 100), (8000, 10, 100), (9000, 10, 100), (10000, 10, 100)]
 results_csv = [["Num_Samples", "Function", "Time"]]
 
 for param in params:

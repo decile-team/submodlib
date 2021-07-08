@@ -73,7 +73,7 @@ class FacilityLocationFunction(SetFunction):
 	"""
 
 	#@profile
-	def __init__(self, n, mode, separate_rep=None, n_rep=None, sijs=None, data=None, data_rep=None, num_clusters=None, cluster_labels=None, metric="cosine", num_neighbors=None):
+	def __init__(self, n, mode, separate_rep=None, n_rep=None, sijs=None, data=None, data_rep=None, num_clusters=None, cluster_labels=None, metric="cosine", num_neighbors=None, create_dense_cpp_kernel_in_python=True):
 		self.n = n
 		self.n_rep = n_rep
 		self.mode = mode
@@ -134,6 +134,8 @@ class FacilityLocationFunction(SetFunction):
 				raise Exception("Cluster IDs/labels contain invalid values")
 
 		if type(self.sijs) != type(None): # User has provided similarity kernel
+			if create_dense_cpp_kernel_in_python == False:
+				raise Exception("ERROR: create_dense_cpp_kernel_in_python is to be set to False ONLY when a similarity kernel is not provided and a CPP kernel is desired to be created in CPP")
 			if type(self.sijs) == scipy.sparse.csr.csr_matrix:
 				if num_neighbors is None or num_neighbors <= 0:
 					raise Exception("ERROR: Positive num_neighbors must be provided for given sparse kernel")
@@ -172,25 +174,25 @@ class FacilityLocationFunction(SetFunction):
 					self.clusters, self.cluster_sijs, self.cluster_map = create_cluster_kernels(self.data.tolist(), self.metric, self.cluster_labels, self.num_clusters) #creates clusters if not provided
 				else:
 					if self.separate_rep==True: #mode in this case will always be dense
-						self.sijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_rep.tolist(), self.metric))
+						if create_dense_cpp_kernel_in_python == True:
+						    self.sijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_rep.tolist(), self.metric))
 					else:
 						if self.mode == "dense":
 							if self.num_neighbors  is not None:
 								raise Exception("num_neighbors wrongly provided for dense mode")
-							self.num_neighbors = np.shape(self.data)[0] #Using all data as num_neighbors in case of dense mode
-						self.cpp_content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neighbors))
-						val = self.cpp_content[0]
-						#TODO: these two lambdas take quite a bit of time, worth optimizing
-						#row = list(map(lambda arg: int(arg), self.cpp_content[1]))
-						#col = list(map(lambda arg: int(arg), self.cpp_content[2]))
-						# row = [int(x) for x in self.cpp_content[1]]
-						# col = [int(x) for x in self.cpp_content[2]]
-						row = list(self.cpp_content[1].astype(int))
-						col = list(self.cpp_content[2].astype(int))
-						if self.mode=="dense":
-							self.sijs = np.zeros((n,n))
-							self.sijs[row,col] = val
-						if self.mode=="sparse":
+							#self.num_neighbors = np.shape(self.data)[0] #Using all data as num_neighbors in case of dense mode
+							if create_dense_cpp_kernel_in_python == True:
+								self.sijs = np.array(subcp.create_square_kernel_dense(self.data.tolist(), self.metric))
+						else:
+							self.cpp_content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neighbors))
+							val = self.cpp_content[0]
+							#TODO: these two lambdas take quite a bit of time, worth optimizing
+							#row = list(map(lambda arg: int(arg), self.cpp_content[1]))
+							#col = list(map(lambda arg: int(arg), self.cpp_content[2]))
+							# row = [int(x) for x in self.cpp_content[1]]
+							# col = [int(x) for x in self.cpp_content[2]]
+							row = list(self.cpp_content[1].astype(int))
+							col = list(self.cpp_content[2].astype(int))
 							self.sijs = sparse.csr_matrix((val, (row, col)), [n,n])
 			else:
 				raise Exception("ERROR: Neither ground set data matrix nor similarity kernel provided")
@@ -205,7 +207,7 @@ class FacilityLocationFunction(SetFunction):
 		self.cpp_ground_sub = {-1} #Provide a dummy set for pybind11 binding to be successful
 		
 		#Breaking similarity matrix to simpler native data structures for implicit pybind11 binding
-		if self.mode=="dense":
+		if self.mode=="dense" and create_dense_cpp_kernel_in_python == True:
 			self.cpp_sijs = self.sijs.tolist() #break numpy ndarray to native list of list datastructure
 			
 			if type(self.cpp_sijs[0])==int or type(self.cpp_sijs[0])==float: #Its critical that we pass a list of list to pybind11
@@ -215,6 +217,12 @@ class FacilityLocationFunction(SetFunction):
 				self.cpp_sijs=l
 
 			self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs, False, self.cpp_ground_sub, self.separate_rep)
+		
+		if self.mode=="dense" and create_dense_cpp_kernel_in_python == False:
+			if self.separate_rep == True:
+				self.cpp_obj = FacilityLocation(self.n, self.data.tolist(), self.data_rep.tolist(), True, self.metric)
+			else:
+				self.cpp_obj = FacilityLocation(self.n, self.data.tolist(), [[0.]], False, self.metric)
 		
 		if self.mode=="sparse": #break scipy sparse matrix to native component lists (for csr implementation)
 			self.cpp_sijs = {}

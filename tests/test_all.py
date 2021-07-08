@@ -85,6 +85,7 @@ SCMIFunctions = ["SetCoverMutualInformation", "SetCoverConditionalGain"]
 # sc_cmi_opt - for optimizer tests of SC CMI
 # psc_cmi_regular - for regular tests of PSC CMI
 # psc_cmi_opt - for optimizer tests of PSC CMI
+# cpp_kernel_cpp - for checking CPP kernel creation in CPP
 
 num_internal_clusters = 20 #3
 num_sparse_neighbors = 100 #10 #4
@@ -119,6 +120,8 @@ queryDiversityEta = 2
 # num_queries = 2
 # magnificationEta = 2
 # privacyHardness = 2
+# num_privates = 1
+# queryDiversityEta = 2
 
 @pytest.fixture
 def data():
@@ -384,6 +387,15 @@ def object_dense_cpp_kernel(request, data):
     return obj
 
 @pytest.fixture
+def object_dense_cpp_kernel_cpp(request, data):
+    num_samples, dataArray, _, _ = data
+    if request.param == "FacilityLocation":
+        obj = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric=metric, create_dense_cpp_kernel_in_python=False)
+    else:
+        return None
+    return obj
+
+@pytest.fixture
 def object_mi_dense_cpp_kernel(request, data_queries):
     num_data, num_q, imageData, queryData, _ = data_queries
     if request.param == "FacilityLocationMutualInformation":
@@ -463,7 +475,7 @@ def object_cmi_dense_py_kernel(request, data_queries_privates):
 @pytest.fixture
 def object_dense_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    _, K_dense = create_kernel(dataArray, 'dense','euclidean')
+    _, K_dense = create_kernel(dataArray, mode='dense', metric='euclidean')
     if request.param == "FacilityLocation":
         obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False)
     elif request.param == "DisparitySum":
@@ -481,7 +493,7 @@ def object_dense_py_kernel(request, data):
 @pytest.fixture
 def objects_dense_cpp_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    _, K_dense = create_kernel(dataArray, 'dense','euclidean')
+    _, K_dense = create_kernel(dataArray, mode='dense',metric='euclidean')
     if request.param == "FacilityLocation":
         obj1 = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
         obj2 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False)
@@ -521,21 +533,16 @@ def object_sparse_cpp_kernel(request, data):
 @pytest.fixture
 def object_sparse_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    
+    _, K_sparse = create_kernel(dataArray, mode='sparse',metric='euclidean', num_neigh=num_sparse_neighbors)
     if request.param == "FacilityLocation":
-        _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors)
         obj = FacilityLocationFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors)
     elif request.param == "DisparitySum":
-        _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors_full)
         obj = DisparitySumFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full)
     elif request.param == "DisparityMin":
-        _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors_full)
         obj = DisparityMinFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full)
     elif request.param == "GraphCut":
-        _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors)
         obj = GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, ggsijs=K_sparse, num_neighbors=num_sparse_neighbors)
     elif request.param == "LogDeterminant":
-        _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors_full)
         obj = LogDeterminantFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full, lambdaVal=1)
     else:
         return None
@@ -544,25 +551,20 @@ def object_sparse_py_kernel(request, data):
 @pytest.fixture
 def objects_sparse_cpp_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    
+    _, K_sparse = create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_sparse_neighbors)
     if request.param == "FacilityLocation":
-        _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors)
         obj1 = FacilityLocationFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors)
         obj2 = FacilityLocationFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors)
     elif request.param == "DisparitySum":
-        _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors_full)
         obj1 = DisparitySumFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full)
         obj2 = DisparitySumFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full)
     elif request.param == "DisparityMin":
-        _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors_full)
         obj1 = DisparityMinFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full)
         obj2 = DisparityMinFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full)
     elif request.param == "GraphCut":
-        _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors)
         obj1= GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors)
         obj2 = GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, ggsijs=K_sparse, num_neighbors=num_sparse_neighbors)
     elif request.param == "LogDeterminant":
-        _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_sparse_neighbors_full)
         obj1 = LogDeterminantFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full, lambdaVal=1)
         obj2 = LogDeterminantFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full, lambdaVal=1)
     else:
@@ -709,6 +711,70 @@ class TestAll:
         subset.remove(elem)
         simpleGain = object_dense_cpp_kernel.marginalGain(subset, elem)
         fastGain = object_dense_cpp_kernel.marginalGainWithMemoization(subset, elem)
+        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+    
+    ############ 6 tests for dense cpp kernel made in CPP #######################
+    @pytest.mark.cpp_kernel_cpp
+    @pytest.mark.parametrize("object_dense_cpp_kernel_cpp", clusteredModeFunctions, indirect=['object_dense_cpp_kernel_cpp'])
+    def test_dense_cpp_cpp_eval_groundset(self, object_dense_cpp_kernel_cpp):
+        groundSet = object_dense_cpp_kernel_cpp.getEffectiveGroundSet()
+        eval = object_dense_cpp_kernel_cpp.evaluate(groundSet)
+        assert eval >= 0 and not math.isnan(eval) and not math.isinf(eval), "Eval on groundset is not >= 0 or is NAN or is INF"
+
+    @pytest.mark.cpp_kernel_cpp
+    @pytest.mark.parametrize("object_dense_cpp_kernel_cpp", clusteredModeFunctions, indirect=['object_dense_cpp_kernel_cpp'])
+    def test_dense_cpp_cpp_eval_emptyset(self, object_dense_cpp_kernel_cpp):
+        eval = object_dense_cpp_kernel_cpp.evaluate(set())
+        assert eval == 0, "Eval on empty set is not = 0"
+    
+    @pytest.mark.cpp_kernel_cpp
+    @pytest.mark.parametrize("object_dense_cpp_kernel_cpp", clusteredModeFunctions, indirect=['object_dense_cpp_kernel_cpp'])
+    def test_dense_cpp_cpp_gain_on_empty(self, data, object_dense_cpp_kernel_cpp):
+        _, _, set1, _ = data
+        elem = random.sample(set1, 1)[0]
+        testSet = set()
+        evalEmpty = object_dense_cpp_kernel_cpp.evaluate(testSet)
+        testSet.add(elem)
+        evalSingleItem = object_dense_cpp_kernel_cpp.evaluate(testSet)
+        gain1 = evalSingleItem - evalEmpty
+        gain2 = object_dense_cpp_kernel_cpp.marginalGain(set(), elem)
+        assert gain1 == gain2, "Mismatch for gain on empty set"
+
+    @pytest.mark.cpp_kernel_cpp
+    @pytest.mark.parametrize("object_dense_cpp_kernel_cpp", clusteredModeFunctions, indirect=['object_dense_cpp_kernel_cpp'])
+    def test_dense_cpp_cpp_eval_evalfast(self, data, object_dense_cpp_kernel_cpp):
+        _, _, set1, _ = data
+        subset = set()
+        for elem in set1:
+            object_dense_cpp_kernel_cpp.updateMemoization(subset, elem)
+            subset.add(elem)
+        simpleEval = object_dense_cpp_kernel_cpp.evaluate(subset)
+        fastEval = object_dense_cpp_kernel_cpp.evaluateWithMemoization(subset)
+        assert math.isclose(simpleEval, fastEval, rel_tol=1e-05), "Mismatch between evaluate() and evaluateWithMemoization after incremental addition"
+
+    @pytest.mark.cpp_kernel_cpp
+    @pytest.mark.parametrize("object_dense_cpp_kernel_cpp", clusteredModeFunctions, indirect=['object_dense_cpp_kernel_cpp'])
+    def test_dense_cpp_cpp_set_memoization(self, data, object_dense_cpp_kernel_cpp):
+        _, _, set1, _ = data
+        object_dense_cpp_kernel_cpp.setMemoization(set1)
+        simpleEval = object_dense_cpp_kernel_cpp.evaluate(set1)
+        fastEval = object_dense_cpp_kernel_cpp.evaluateWithMemoization(set1)
+        assert simpleEval == fastEval, "Mismatch between evaluate() and evaluateWithMemoization after setMemoization"
+
+    @pytest.mark.cpp_kernel_cpp
+    @pytest.mark.parametrize("object_dense_cpp_kernel_cpp", clusteredModeFunctions, indirect=['object_dense_cpp_kernel_cpp'])
+    def test_dense_cpp_cpp_gain(self, data, object_dense_cpp_kernel_cpp):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        object_dense_cpp_kernel_cpp.setMemoization(subset)
+        firstEval = object_dense_cpp_kernel_cpp.evaluateWithMemoization(subset)
+        subset.add(elem)
+        naiveGain = object_dense_cpp_kernel_cpp.evaluate(subset) - firstEval
+        subset.remove(elem)
+        simpleGain = object_dense_cpp_kernel_cpp.marginalGain(subset, elem)
+        fastGain = object_dense_cpp_kernel_cpp.marginalGainWithMemoization(subset, elem)
         assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
 
     ############ 6 tests for dense python kernel #######################
@@ -1576,14 +1642,18 @@ class TestAll:
     def test_naive_lazy(self, object_dense_cpp_kernel):
         greedyListNaive = object_dense_cpp_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazy = object_dense_cpp_kernel.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        assert greedyListNaive == greedyListLazy, "Mismatch between naiveGreedy and lazyGreedy"
+        naiveGains = [x[1] for x in greedyListNaive]
+        lazyGains = [x[1] for x in greedyListLazy]
+        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.opt_regular
     @pytest.mark.parametrize("object_dense_cpp_kernel", optimizerTests, indirect=['object_dense_cpp_kernel'])
     def test_stochastic_lazierThanLazy(self, object_dense_cpp_kernel):
         greedyListStochastic = object_dense_cpp_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazierThanLazy = object_dense_cpp_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        stochasticGains = [x[1] for x in greedyListStochastic]
+        lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
+        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ######## Optimizers test for FeatureBased Logarithmic #####################
     @pytest.mark.fb_opt
@@ -1591,14 +1661,18 @@ class TestAll:
         object_fb, _ = data_features_log
         greedyListNaive = object_fb.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazy = object_fb.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        assert greedyListNaive == greedyListLazy, "Mismatch between naiveGreedy and lazyGreedy"
+        naiveGains = [x[1] for x in greedyListNaive]
+        lazyGains = [x[1] for x in greedyListLazy]
+        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.fb_opt
     def test_fb_log_optimizer_stochastic_lazierThanLazy(self, data_features_log):
         object_fb, _ = data_features_log
         greedyListStochastic = object_fb.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazierThanLazy = object_fb.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        stochasticGains = [x[1] for x in greedyListStochastic]
+        lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
+        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 regular tests for FeatureBased Logarithmic Function #######################
     @pytest.mark.fb_regular
@@ -1666,14 +1740,18 @@ class TestAll:
         object_fb, _ = data_features_sqrt
         greedyListNaive = object_fb.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazy = object_fb.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        assert greedyListNaive == greedyListLazy, "Mismatch between naiveGreedy and lazyGreedy"
+        naiveGains = [x[1] for x in greedyListNaive]
+        lazyGains = [x[1] for x in greedyListLazy]
+        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.fb_opt
     def test_fb_sqrt_optimizer_stochastic_lazierThanLazy(self, data_features_sqrt):
         object_fb, _ = data_features_sqrt
         greedyListStochastic = object_fb.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazierThanLazy = object_fb.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        stochasticGains = [x[1] for x in greedyListStochastic]
+        lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
+        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 regular tests for FeatureBased SquareRoot Function #######################
     @pytest.mark.fb_regular
@@ -1741,14 +1819,18 @@ class TestAll:
         object_fb, _ = data_features_inverse
         greedyListNaive = object_fb.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazy = object_fb.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        assert greedyListNaive == greedyListLazy, "Mismatch between naiveGreedy and lazyGreedy"
+        naiveGains = [x[1] for x in greedyListNaive]
+        lazyGains = [x[1] for x in greedyListLazy]
+        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.fb_opt
     def test_fb_inverse_optimizer_stochastic_lazierThanLazy(self, data_features_inverse):
         object_fb, _ = data_features_inverse
         greedyListStochastic = object_fb.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazierThanLazy = object_fb.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        stochasticGains = [x[1] for x in greedyListStochastic]
+        lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
+        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 regular tests for FeatureBased Inverse Function #######################
     @pytest.mark.fb_regular
@@ -2293,14 +2375,18 @@ class TestAll:
     def test_mi_naive_lazy(self, object_mi_dense_cpp_kernel):
         greedyListNaive = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazy = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        assert greedyListNaive == greedyListLazy, "Mismatch between naiveGreedy and lazyGreedy"
+        naiveGains = [x[1] for x in greedyListNaive]
+        lazyGains = [x[1] for x in greedyListLazy]
+        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.mi_opt_regular
     @pytest.mark.parametrize("object_mi_dense_cpp_kernel", optimizerMITests, indirect=['object_mi_dense_cpp_kernel'])
     def test_mi_stochastic_lazierThanLazy(self, object_mi_dense_cpp_kernel):
         greedyListStochastic = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazierThanLazy = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        stochasticGains = [x[1] for x in greedyListStochastic]
+        lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
+        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 tests for CMI dense cpp kernel #######################
     @pytest.mark.cmi_regular
@@ -2439,14 +2525,18 @@ class TestAll:
     def test_cmi_naive_lazy(self, object_cmi_dense_cpp_kernel):
         greedyListNaive = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazy = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        assert greedyListNaive == greedyListLazy, "Mismatch between naiveGreedy and lazyGreedy"
+        naiveGains = [x[1] for x in greedyListNaive]
+        lazyGains = [x[1] for x in greedyListLazy]
+        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.cmi_opt_regular
     @pytest.mark.parametrize("object_cmi_dense_cpp_kernel", optimizerCMITests, indirect=['object_cmi_dense_cpp_kernel'])
     def test_cmi_stochastic_lazierThanLazy(self, object_cmi_dense_cpp_kernel):
         greedyListStochastic = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         greedyListLazierThanLazy = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        assert greedyListStochastic == greedyListLazierThanLazy, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        stochasticGains = [x[1] for x in greedyListStochastic]
+        lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
+        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
     
 
     ######## Optimizers test for SetCoverCMI #####################

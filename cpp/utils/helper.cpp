@@ -1,3 +1,11 @@
+/*
+helper.cpp
+Author: Vishal Kaushal
+g++ -std=c++11 helper.cpp -o helper
+./helper
+Defines helper functions and compares performance of two different approaches of kernel computation in C++
+*/
+
 #include<iostream>
 #include<vector>
 #include<string>

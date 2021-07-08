@@ -1,3 +1,8 @@
+# kernelCreationTiming2.py
+# Author: Vishal Kaushal
+# Run as 'python kernelCreationTiming2.py' to compare performance of different methods of creating kernel in python
+# Uses python's timeit module
+
 from sklearn.datasets import make_blobs
 import random
 import numpy as np

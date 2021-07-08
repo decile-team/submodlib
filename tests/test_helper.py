@@ -164,13 +164,13 @@ class TestHelper:
         ED = euclidean_distances(data) 
         gamma = 1/np.shape(data)[1] 
         ES = np.exp(-ED* gamma) #sklearn ground truth 
-        _, M = create_kernel(data, 'dense','euclidean')
+        _, M = create_kernel(data, mode='dense', metric='euclidean')
         assert np.allclose(M, ES)
 
     @pytest.mark.parametrize("data", list_tests)
     def test_dense_cosine(self, data):
         CS = cosine_similarity(data)  #sklearn ground truth 
-        _, M = create_kernel(data, 'dense','cosine')
+        _, M = create_kernel(data, mode='dense', metric='cosine')
         assert np.allclose(M, CS)
 
 
@@ -180,46 +180,46 @@ class TestHelper:
         gamma = 1/np.shape(data)[1] 
         ES = np.exp(-ED* gamma)  
         ES_csr = sparse.csr_matrix(ES) #sklearn ground truth
-        _, M = create_kernel(data, 'sparse','euclidean')
+        _, M = create_kernel(data, mode='sparse', metric='euclidean')
         assert np.allclose(M.todense(), ES_csr.todense())
 
     @pytest.mark.parametrize("data", list_tests)
     def test_sparse_cosine(self, data):
         CS = cosine_similarity(data) 
         CS_csr = sparse.csr_matrix(CS) #sklearn ground truth
-        _, M = create_kernel(data, 'sparse','cosine')
+        _, M = create_kernel(data, mode='sparse', metric='cosine')
         assert np.allclose(M.todense(), CS_csr.todense())
 
 
     @pytest.mark.parametrize("data, val", l_ES1)
     def test_euclidean_neigh1(self, data, val):
-        _, M = create_kernel(data, 'sparse','euclidean',1)
+        _, M = create_kernel(data, mode='sparse', metric='euclidean', num_neigh=1)
         assert np.allclose(M.todense(), val)
 
     @pytest.mark.parametrize("data, val", l_CS1)
     def test_cosine_neigh1(self, data, val):
-        _, M = create_kernel(data, 'sparse','cosine',1)
+        _, M = create_kernel(data, mode='sparse', metric='cosine', num_neigh=1)
         assert np.allclose(M.todense(), val)
 
 
     @pytest.mark.parametrize("data, val", l_ES2)
     def test_euclidean_neigh2(self, data, val):
-        _, M = create_kernel(data, 'sparse','euclidean',2)
+        _, M = create_kernel(data, mode='sparse', metric='euclidean', num_neigh=2)
         assert np.allclose(M.todense(), val)
 
     @pytest.mark.parametrize("data, val", l_CS2)
     def test_cosine_neigh2(self, data, val):
-        _, M = create_kernel(data, 'sparse','cosine',2)
+        _, M = create_kernel(data, mode='sparse', metric='cosine', num_neigh=2)
         assert np.allclose(M.todense(), val)
 
     @pytest.mark.parametrize("data, val", l_ES3)
     def test_euclidean_neigh3(self, data, val):
-        _, M = create_kernel(data, 'sparse','euclidean',3)
+        _, M = create_kernel(data, mode='sparse', metric='euclidean', num_neigh=3)
         assert np.allclose(M.todense(), val)
 
     @pytest.mark.parametrize("data, val", l_CS3)
     def test_cosine_neigh3(self, data, val):
-        _, M = create_kernel(data, 'sparse','cosine',3)
+        _, M = create_kernel(data, mode='sparse', metric='cosine', num_neigh=3)
         assert np.allclose(M.todense(), val)
 
 
@@ -235,14 +235,14 @@ class TestHelper:
     def test_neg2(self): # Incorrect mode
         data = np.array([[0, 1, 3], [5, 1, 5], [10, 2, 6], [12,20,68]])
         try:
-            create_kernel(data, 'sparss','cosine', num_neigh=3)
+            create_kernel(data, mode='sparss', metric='cosine', num_neigh=3)
         except Exception as e:
             assert str(e)=="ERROR: unsupported mode"
 
     def test_neg3(self): # Incorrect metric
         data = np.array([[0, 1, 3], [5, 1, 5], [10, 2, 6], [12,20,68]])
         try:
-            create_kernel(data, 'sparse','cosinee', num_neigh=3)
+            create_kernel(data, mode='sparse', metric='cosinee', num_neigh=3)
         except Exception as e:
             assert str(e)=="ERROR: unsupported metric"
     

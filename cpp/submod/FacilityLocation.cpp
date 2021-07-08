@@ -11,7 +11,7 @@
 
 FacilityLocation::FacilityLocation(){}
 
-//Constructor for dense mode
+//Constructor for dense mode (kenel supplied)
 FacilityLocation::FacilityLocation(ll n_, std::vector<std::vector<float>> const &denseKernel_, bool partial_, std::unordered_set<ll> const &ground_, bool separateMaster_): n(n_), mode(dense), denseKernel(denseKernel_), partial(partial_), separateMaster(separateMaster_)  {
 	// std::cout << "FacilityLocation Dense Constructor\n";
 	//n = n_;
@@ -54,6 +54,40 @@ FacilityLocation::FacilityLocation(ll n_, std::vector<std::vector<float>> const 
 			ind += 1;
 		}
 	}
+}
+
+//Constructor for dense mode (kenel not supplied)
+FacilityLocation::FacilityLocation(ll n_, std::vector<std::vector<float>> &data, std::vector<std::vector<float>> &data_master, bool separateMaster_, std::string metric): n(n_), separateMaster(separateMaster_)  {
+	if(separateMaster == true) {
+		denseKernel = create_kernel_NS(data, data_master, metric);
+	} else {
+		denseKernel = create_square_kernel_dense(data, metric);
+	}
+	mode = dense;
+	partial = false;
+
+	//create groundSet with items 0 to n-1
+	effectiveGroundSet.reserve(n);
+	for (ll i = 0; i < n; ++i){
+		effectiveGroundSet.insert(i); //each insert takes O(1) time
+	}
+	
+	numEffectiveGroundset = effectiveGroundSet.size();
+	
+	if(separateMaster==true) {
+		//populate a different master set
+		n_master = denseKernel.size();	
+		masterSet.reserve(n_master);
+		for (ll i = 0; i < n_master; ++i) {
+			masterSet.insert(i); //each insert takes O(1) time
+		}
+	}
+	else {
+		//master set will now be same as the ground set
+		n_master=numEffectiveGroundset;
+		masterSet=effectiveGroundSet;
+	}
+	similarityWithNearestInEffectiveX.resize(n_master, 0);
 }
 
 //For sparse mode

@@ -47,8 +47,11 @@ public:
 
 	FacilityLocation();
 
-	//For dense mode
+	//For dense mode with kernel
 	FacilityLocation(ll n_, std::vector<std::vector<float>> const &denseKernel_, bool partial_, std::unordered_set<ll> const &ground_, bool separateMaster_);
+
+    //For dense mode without kernel
+	FacilityLocation(ll n_, std::vector<std::vector<float>> &data, std::vector<std::vector<float>> &data_master, bool separateMaster_, std::string metric);
 
 	//For sparse mode
 	FacilityLocation(ll n_, std::vector<float> const &arr_val, std::vector<ll> const &arr_count, std::vector<ll> const &arr_col);

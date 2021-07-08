@@ -29,5 +29,6 @@ markers = [
     "sc_cmi_regular: for regular tests of SC CMI",
     "sc_cmi_opt: for optimizer tests of SC CMI",
     "psc_cmi_regular: for regular tests of PSC CMI",
-    "psc_cmi_opt: for optimizer tests of PSC CMI"
+    "psc_cmi_opt: for optimizer tests of PSC CMI",
+    "cpp_kernel_cpp: for testing cpp kernel created in cpp"
 ]

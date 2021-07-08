@@ -1,3 +1,9 @@
+# profiling.py
+# Author: Vishal Kaushal
+# Run as 'python -m cProfile -o analysis.prof profiling.py' 
+# to generate profiling information for the uncommented function call
+# Analyze the profile dump by running 'snakeviz analysis.prof'
+
 from sklearn.datasets import make_blobs
 import random
 import numpy as np
@@ -30,7 +36,7 @@ def fl_dense_cpp_kernel():
 
 ########### Dense Similairty Kernel in Python
 def fl_dense_py_kernel():
-    _, K_dense = create_kernel(dataArray, 'dense','euclidean')
+    _, K_dense = create_kernel(dataArray, mode='dense', metric='euclidean')
     obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False)
     obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 
@@ -41,7 +47,7 @@ def fl_sparse_cpp_kernel():
 
 ########### Sparse Similairty Kernel in Python
 def fl_sparse_py_kernel():
-    _, K_sparse = create_kernel(dataArray, 'sparse','euclidean', num_neigh=num_neighbors)
+    _, K_sparse = create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_neighbors)
     obj = FacilityLocationFunction(n=num_samples, mode="sparse", sijs=K_sparse, num_neighbors=num_neighbors)
     obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 
