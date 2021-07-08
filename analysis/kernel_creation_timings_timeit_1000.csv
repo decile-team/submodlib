@@ -1,0 +1,7 @@
+Num_Samples,Function,Time
+1000,np_numba,0.0939
+1000,np,0.078111
+1000,fastdist,0.832976
+1000,scipy,11.754775
+1000,sklearn,0.063366
+1000,current,0.721315

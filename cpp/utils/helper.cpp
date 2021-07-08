@@ -261,8 +261,8 @@ int main(int argc, char** argv) {
 	int num_executions = 10;
 	int num_places = 6;
 	int num_features = 1024;
-	//std::vector<int> params{ 50, 100, 200, 500, 1000, 5000 };
-	std::vector<int> params{ 50, 100 };
+	std::vector<int> params{ 50, 100, 200, 500, 1000, 5000 };
+	//std::vector<int> params{ 50, 100 };
 	for (auto num_samples: params) {
 		std::ofstream csvfile;
 		csvfile.open ("cpp_kernel_creation_timings_" + std::to_string(num_samples) + "_.csv");

@@ -58,7 +58,7 @@ for param in params:
         row.append(t)
         results_csv.append(row)
 
-    with open("kernel_creation_timings(timeit)_" + str(num_samples) + ".csv", "w") as f:
+    with open("kernel_creation_timings_timeit_" + str(num_samples) + ".csv", "w") as f:
         writer = csv.writer(f)
         for result in results_csv:
             writer.writerow(result)
