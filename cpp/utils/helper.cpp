@@ -4,7 +4,8 @@
 #include<cmath>
 #include<unordered_map>
 #include<algorithm>
-
+#include <chrono>
+#include <iomanip>
 #include"helper.h"
 
 float dot_prod(std::vector<float> &v1, std::vector<float> &v2)
@@ -169,6 +170,38 @@ std::vector<std::vector<float>> create_kernel_NS(std::vector<std::vector<float>>
 	
 }
 
+//Returns a Dense kernel of n_ground x n_ground
+std::vector<std::vector<float>> create_square_kernel_dense(std::vector<std::vector<float>> &X_ground, std::string metric)
+{
+	ll n_ground = X_ground.size();
+	std::vector<std::vector<float>>k_dense(n_ground, std::vector<float>(n_ground, 0)); 
+	float sim = 0;
+    float a_norm = 0, b_norm = 0;
+	if (metric == "euclidean") {
+		for (int r = 0; r < n_ground; ++r) {
+			k_dense[r][r] = 1.0;
+			for (int c = r + 1; c < n_ground; ++c) {
+				sim = euclidean_similarity(X_ground[r], X_ground[c]);
+				k_dense[r][c] = sim;
+				k_dense[c][r] = sim;
+			}
+		}
+	} else if (metric == "cosine") {
+		for (int r = 0; r < n_ground; ++r) {
+			a_norm = sqrt(dot_prod(X_ground[r], X_ground[r]));
+			k_dense[r][r] = 1.0;
+			for (int c = r + 1; c < n_ground; ++c) {
+				sim = dot_prod(X_ground[r], X_ground[c]);
+				b_norm = sqrt(dot_prod(X_ground[c], X_ground[c]));
+				sim = (a_norm * b_norm) > 0 ? sim / (a_norm * b_norm) : 0;
+				k_dense[r][c] = sim;
+				k_dense[c][r] = sim;
+			}
+		}
+    }
+	return k_dense;
+}
+
 std::unordered_set<ll> set_intersection(std::unordered_set<ll> const &a, std::unordered_set<ll> const &b) {
 	std::unordered_set<ll> c;
 	//looping over the elements of the first set, hence better when first set is smaller
@@ -190,6 +223,68 @@ std::unordered_set<ll> set_union(std::unordered_set<ll> const &a, std::unordered
 		c.insert(element);
 	}
 	return c;
+}
+
+int main(int argc, char** argv) {
+	std::cout << "Checking kernel values" << std::endl;
+	std::vector<std::vector<float>> test_features {
+                { 4.5, 13.5 },
+                { 5, 13.5 },
+                { 5.5, 13.5 }
+            };
+	std::vector<std::vector<float> > kernel1;
+	std::vector<std::vector<float> > kernel2;
+	std::cout << "Computing sample kernel using current method: \n";
+	kernel1 = create_kernel(test_features, "euclidean", 3);
+	std::cout << "[ ";
+	for(auto row : kernel1) {
+		std::cout << "[";
+		for (auto column : row ) {
+            std::cout << column << " ";
+		}
+		std::cout << "]\n";
+	}
+	std::cout << "]\n";
+	std::cout << "Computing sample kernel using new method: \n";
+	kernel2 = create_square_kernel_dense(test_features, "euclidean");
+	std::cout << "[ ";
+	for(auto row : kernel2) {
+		std::cout << "[";
+		for (auto column : row ) {
+            std::cout << column << " ";
+		}
+		std::cout << "]\n";
+	}
+	std::cout << "]\n";
+	//std::vector<int> params{ 50, 100, 200, 500, 1000, 5000 };
+	std::vector<int> params{ 50, 100 };
+	for (auto num_samples: params) {
+		std::cout << "Running for " << num_samples << " samples\n";
+		std::vector<std::vector<float> > features;
+		for(int i = 0; i < num_samples; i++) {
+			std::vector<float> featuresOfOneElement;
+			for(int j = 0; j < 1024; j++) {
+				featuresOfOneElement.push_back((float)(rand()%10)/5.0);
+			}
+			features.push_back(featuresOfOneElement);
+		}
+		std::cout << "Computing kernel using current method\n";
+		std::vector<std::vector<float> > kernel1;
+		auto start = std::chrono::high_resolution_clock::now();
+		kernel1 = create_kernel(features, "euclidean", num_samples);
+		auto stop = std::chrono::high_resolution_clock::now();
+		double duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+		duration *= 1e-9;
+        std::cout << "Time taken in seconds: " << std::fixed << duration << std::setprecision(9) << std::endl;
+		std::cout << "Computing kernel using new method\n";
+		std::vector<std::vector<float> > kernel2;
+		start = std::chrono::high_resolution_clock::now();
+		kernel2 = create_square_kernel_dense(features, "euclidean");
+		stop = std::chrono::high_resolution_clock::now();
+		duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+		duration *= 1e-9;
+        std::cout << "Time taken in seconds: " << std::fixed << duration << std::setprecision(9) << std::endl;
+	}
 }
 
 
