@@ -7,6 +7,8 @@
 #include <chrono>
 #include <iomanip>
 #include"helper.h"
+#include <iostream>
+#include <fstream>
 
 float dot_prod(std::vector<float> &v1, std::vector<float> &v2)
 {
@@ -256,34 +258,57 @@ int main(int argc, char** argv) {
 		std::cout << "]\n";
 	}
 	std::cout << "]\n";
+	int num_executions = 10;
+	int num_places = 6;
+	int num_features = 1024;
 	//std::vector<int> params{ 50, 100, 200, 500, 1000, 5000 };
 	std::vector<int> params{ 50, 100 };
 	for (auto num_samples: params) {
+		std::ofstream csvfile;
+		csvfile.open ("cpp_kernel_creation_timings_" + std::to_string(num_samples) + "_.csv");
+		csvfile << "Num Samples, Function, Time\n";
 		std::cout << "Running for " << num_samples << " samples\n";
 		std::vector<std::vector<float> > features;
 		for(int i = 0; i < num_samples; i++) {
 			std::vector<float> featuresOfOneElement;
-			for(int j = 0; j < 1024; j++) {
+			for(int j = 0; j < num_features; j++) {
 				featuresOfOneElement.push_back((float)(rand()%10)/5.0);
 			}
 			features.push_back(featuresOfOneElement);
 		}
+		csvfile << num_samples << "," << "current,";
 		std::cout << "Computing kernel using current method\n";
-		std::vector<std::vector<float> > kernel1;
-		auto start = std::chrono::high_resolution_clock::now();
-		kernel1 = create_kernel(features, "euclidean", num_samples);
-		auto stop = std::chrono::high_resolution_clock::now();
-		double duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
-		duration *= 1e-9;
-        std::cout << "Time taken in seconds: " << std::fixed << duration << std::setprecision(9) << std::endl;
+		double totalTime = 0;
+		for(int i=0; i<num_executions; i++) {
+			std::vector<std::vector<float> > kernel;
+			auto start = std::chrono::high_resolution_clock::now();
+			kernel = create_kernel(features, "euclidean", num_samples);
+			auto stop = std::chrono::high_resolution_clock::now();
+			double duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+			duration *= 1e-9;
+			std::cout << "Time taken in seconds: " << std::fixed << duration << std::setprecision(9) << std::endl;
+			totalTime += duration;
+			csvfile << duration << ",";
+		}
+		double averageTime = totalTime/num_executions;
+		csvfile << averageTime << "\n";
+		csvfile << num_samples << "," << "new,";
 		std::cout << "Computing kernel using new method\n";
-		std::vector<std::vector<float> > kernel2;
-		start = std::chrono::high_resolution_clock::now();
-		kernel2 = create_square_kernel_dense(features, "euclidean");
-		stop = std::chrono::high_resolution_clock::now();
-		duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
-		duration *= 1e-9;
-        std::cout << "Time taken in seconds: " << std::fixed << duration << std::setprecision(9) << std::endl;
+		totalTime = 0;
+		for(int i=0; i<num_executions; i++) {
+			std::vector<std::vector<float> > kernel;
+			auto start = std::chrono::high_resolution_clock::now();
+			kernel = create_square_kernel_dense(features, "euclidean");
+			auto stop = std::chrono::high_resolution_clock::now();
+			double duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+			duration *= 1e-9;
+			std::cout << "Time taken in seconds: " << std::fixed << duration << std::setprecision(9) << std::endl;
+			totalTime += duration;
+			csvfile << duration << ",";
+		}
+		averageTime = totalTime/num_executions;
+		csvfile << averageTime << "\n";
+		csvfile.close();
 	}
 }
 
