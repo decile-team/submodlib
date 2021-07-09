@@ -1,0 +1,10 @@
+Num_Samples,Function,Time
+1000,fl_dense_cpp_kernel,0.610552
+1000,fl_dense_cpp_kernel_cpp,0.514718
+1000,fl_dense_py_kernel_current,0.776842
+1000,fl_dense_py_kernel_sklearn,0.150608
+1000,fl_dense_py_kernel_np_numba,0.203112
+1000,fl_dense_py_kernel_np,0.160192
+1000,fl_dense_py_kernel_fastdist,0.971421
+1000,fl_dense_py_kernel_scipy,8.982287
+1000,apricot_dense,1.280854
