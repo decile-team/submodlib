@@ -1,11 +1,11 @@
 #include <pybind11/pybind11.h>
-#include<pybind11/stl.h>
 #include "wrapper.h"
 namespace py = pybind11;
 
 PYBIND11_MODULE(submodlib_cpp, m) 
 {
     cl_FacilityLocation(m);
+    cl_FacilityLocation2(m);
     cl_FeatureBased(m);
     cl_DisparitySum(m);
     cl_DisparityMin(m);

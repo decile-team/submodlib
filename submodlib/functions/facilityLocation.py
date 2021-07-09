@@ -5,7 +5,8 @@ import scipy
 from scipy import sparse
 from .setFunction import SetFunction
 import submodlib_cpp as subcp
-from submodlib_cpp import FacilityLocation 
+from submodlib_cpp import FacilityLocation
+from submodlib_cpp import FacilityLocation2 
 from submodlib.helper import create_kernel, create_cluster_kernels
 #from memory_profiler import profile
 
@@ -73,7 +74,7 @@ class FacilityLocationFunction(SetFunction):
 	"""
 
 	#@profile
-	def __init__(self, n, mode, separate_rep=None, n_rep=None, sijs=None, data=None, data_rep=None, num_clusters=None, cluster_labels=None, metric="cosine", num_neighbors=None, create_dense_cpp_kernel_in_python=True):
+	def __init__(self, n, mode, separate_rep=None, n_rep=None, sijs=None, data=None, data_rep=None, num_clusters=None, cluster_labels=None, metric="cosine", num_neighbors=None, create_dense_cpp_kernel_in_python=True, pybind_mode="list"):
 		self.n = n
 		self.n_rep = n_rep
 		self.mode = mode
@@ -208,15 +209,38 @@ class FacilityLocationFunction(SetFunction):
 		
 		#Breaking similarity matrix to simpler native data structures for implicit pybind11 binding
 		if self.mode=="dense" and create_dense_cpp_kernel_in_python == True:
-			self.cpp_sijs = self.sijs.tolist() #break numpy ndarray to native list of list datastructure
-			
-			if type(self.cpp_sijs[0])==int or type(self.cpp_sijs[0])==float: #Its critical that we pass a list of list to pybind11
-																			 #This condition ensures the same in case of a 1D numpy array (for 1x1 sim matrix)
-				l=[]
-				l.append(self.cpp_sijs)
-				self.cpp_sijs=l
+			if pybind_mode == "list":
+				self.cpp_sijs = self.sijs.tolist() #break numpy ndarray to native list of list datastructure
+				
+				if type(self.cpp_sijs[0])==int or type(self.cpp_sijs[0])==float: #Its critical that we pass a list of list to pybind11
+																				#This condition ensures the same in case of a 1D numpy array (for 1x1 sim matrix)
+					l=[]
+					l.append(self.cpp_sijs)
+					self.cpp_sijs=l
 
-			self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs, False, self.cpp_ground_sub, self.separate_rep)
+				self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs, False, self.cpp_ground_sub, self.separate_rep)
+			# elif pybind_mode == "memoryview":
+			# 	self.cpp_obj = FacilityLocation(self.n, memoryview(self.sijs), False, self.cpp_ground_sub, self.separate_rep)
+			elif pybind_mode == "numpyarray":
+				self.cpp_obj = FacilityLocation(self.n, self.sijs, False, self.cpp_ground_sub, self.separate_rep)
+			elif pybind_mode == "array32":
+				# print("Kernel's type = ", self.sijs.dtype)
+				self.sijs.astype('float32', copy=False)
+				#self.cpp_obj = FacilityLocation2(self.n, self.sijs, False, {-1}, False);
+				self.cpp_obj = FacilityLocation2()
+				self.cpp_obj.pybind_init(self.n, self.sijs, False, {-1}, False);
+			elif pybind_mode == "array64":
+				# print("Kernel's type = ", self.sijs.dtype)
+				self.sijs.astype('float64', copy=False)
+				#self.cpp_obj = FacilityLocation2(self.n, self.sijs, False, {-1}, False);
+				self.cpp_obj = FacilityLocation2()
+				self.cpp_obj.pybind_init(self.n, self.sijs, False, {-1}, False);
+			elif pybind_mode == "array":
+				#self.cpp_obj = FacilityLocation2(self.n, self.sijs, False, {-1}, False);
+				self.cpp_obj = FacilityLocation2()
+				self.cpp_obj.pybind_init(self.n, self.sijs, False, {-1}, False);
+			else:
+				raise Exception("Invalid pybind mode!")
 		
 		if self.mode=="dense" and create_dense_cpp_kernel_in_python == False:
 			if self.separate_rep == True:

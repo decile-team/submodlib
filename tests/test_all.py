@@ -28,6 +28,7 @@ from submodlib import FacilityLocationConditionalMutualInformationFunction
 from submodlib import LogDeterminantConditionalMutualInformationFunction
 from submodlib import SetCoverConditionalMutualInformationFunction
 from submodlib import ProbabilisticSetCoverConditionalMutualInformationFunction
+import submodlib.helper as helper
 from submodlib.helper import create_kernel
 from submodlib_cpp import FeatureBased
 from submodlib_cpp import ConcaveOverModular
@@ -86,42 +87,43 @@ SCMIFunctions = ["SetCoverMutualInformation", "SetCoverConditionalGain"]
 # psc_cmi_regular - for regular tests of PSC CMI
 # psc_cmi_opt - for optimizer tests of PSC CMI
 # cpp_kernel_cpp - for checking CPP kernel creation in CPP
+# pybind_test - to check different alternatives of passing numpy array to C++
 
-num_internal_clusters = 20 #3
-num_sparse_neighbors = 100 #10 #4
-num_random = 15 #2
-num_clusters = 20 #3
-cluster_std_dev = 4 #1
-num_samples = 500 #8
-num_set = 20 #3
-num_features = 500
-metric = "euclidean"
-num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
-budget = 20
-num_concepts = 50
-num_queries = 10
-magnificationEta = 3 #1 #3
-privacyHardness = 3 #1 #3
-num_privates=5
-queryDiversityEta = 2
-
-# num_internal_clusters = 3 #3
-# num_sparse_neighbors = 5 #10 #4
-# num_random = 2 #2
-# num_clusters = 3#3
+# num_internal_clusters = 20 #3
+# num_sparse_neighbors = 100 #10 #4
+# num_random = 15 #2
+# num_clusters = 20 #3
 # cluster_std_dev = 4 #1
-# num_samples = 9
-# num_set = 3 #3
-# num_features = 2
+# num_samples = 500 #8
+# num_set = 20 #3
+# num_features = 500
 # metric = "euclidean"
 # num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
-# budget = 5
-# num_concepts = 3
-# num_queries = 2
-# magnificationEta = 2
-# privacyHardness = 2
-# num_privates = 1
+# budget = 20
+# num_concepts = 50
+# num_queries = 10
+# magnificationEta = 3 #1 #3
+# privacyHardness = 3 #1 #3
+# num_privates=5
 # queryDiversityEta = 2
+
+num_internal_clusters = 3 #3
+num_sparse_neighbors = 5 #10 #4
+num_random = 2 #2
+num_clusters = 3#3
+cluster_std_dev = 4 #1
+num_samples = 9
+num_set = 3 #3
+num_features = 2
+metric = "euclidean"
+num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
+budget = 5
+num_concepts = 3
+num_queries = 2
+magnificationEta = 2
+privacyHardness = 2
+num_privates = 1
+queryDiversityEta = 2
 
 @pytest.fixture
 def data():
@@ -512,6 +514,18 @@ def objects_dense_cpp_py_kernel(request, data):
     else:
         return None
     return obj1, obj2
+
+@pytest.fixture
+def objects_fl_pybind(data):
+    num_samples, dataArray, _, _ = data
+    K_dense = helper.create_kernel_dense_sklearn(dataArray, 'euclidean')
+    obj1 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False, pybind_mode="list")
+    # obj2 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False, pybind_mode="memoryview")
+    obj2 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False, pybind_mode="numpyarray")
+    obj3 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False, pybind_mode="array")
+    obj4 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False, pybind_mode="array32")
+    obj5 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False, pybind_mode="array64")
+    return obj1, obj2, obj3, obj4, obj5
 
 @pytest.fixture
 def object_sparse_cpp_kernel(request, data):
@@ -1415,6 +1429,68 @@ class TestAll:
         gainFast1 = objects_dense_cpp_py_kernel[0].marginalGainWithMemoization(subset, elem)
         gainFast2 = objects_dense_cpp_py_kernel[1].marginalGainWithMemoization(subset, elem)
         assert math.isclose(gainFast1, gainFast2, rel_tol=1e-05), "Mismatch between marginalGainWithMemoization() of CPP dense and PY dense"
+
+    ######### 4 Tests to check the consistency between different pybind alternatives
+
+    @pytest.mark.pybind_test
+    @pytest.mark.parametrize("objects_fl_pybind", clusteredModeFunctions, indirect=['objects_fl_pybind'])
+    def test_pybind_eval(self, data, objects_fl_pybind):
+        _, _, set1, _ = data
+        eval1 = objects_fl_pybind[0].evaluate(set1)
+        eval2 = objects_fl_pybind[1].evaluate(set1)
+        eval3 = objects_fl_pybind[2].evaluate(set1)
+        eval4 = objects_fl_pybind[3].evaluate(set1)
+        eval5 = objects_fl_pybind[4].evaluate(set1)
+        assert math.isclose(eval1, eval2, rel_tol=1e-05) and math.isclose(eval2, eval3, rel_tol=1e-05) and math.isclose(eval3, eval4, rel_tol=1e-05) and math.isclose(eval4, eval5, rel_tol=1e-05), "Mismatch between evaluate() of different pybind alternatives"
+    
+    @pytest.mark.pybind_test
+    @pytest.mark.parametrize("objects_fl_pybind", clusteredModeFunctions, indirect=['objects_fl_pybind'])
+    def test_pybind_gain(self, data, objects_fl_pybind):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        gain1 = objects_fl_pybind[0].marginalGain(subset, elem)
+        gain2 = objects_fl_pybind[1].marginalGain(subset, elem)
+        gain3 = objects_fl_pybind[2].marginalGain(subset, elem)
+        gain4 = objects_fl_pybind[3].marginalGain(subset, elem)
+        gain5 = objects_fl_pybind[4].marginalGain(subset, elem)
+        assert math.isclose(gain1, gain2, rel_tol=1e-05) and math.isclose(gain2, gain3, rel_tol=1e-05) and math.isclose(gain3, gain4, rel_tol=1e-05) and math.isclose(gain4, gain5, rel_tol=1e-05), "Mismatch between marginalGain() of different pybind alternatives"
+    
+    @pytest.mark.pybind_test
+    @pytest.mark.parametrize("objects_fl_pybind", clusteredModeFunctions, indirect=['objects_fl_pybind'])
+    def test_pybind_evalFast(self, data, objects_fl_pybind):
+        _, _, set1, _ = data
+        objects_fl_pybind[0].setMemoization(set1)
+        objects_fl_pybind[1].setMemoization(set1)
+        objects_fl_pybind[2].setMemoization(set1)
+        objects_fl_pybind[3].setMemoization(set1)
+        objects_fl_pybind[4].setMemoization(set1)
+        evalFast1 = objects_fl_pybind[0].evaluateWithMemoization(set1)
+        evalFast2 = objects_fl_pybind[1].evaluateWithMemoization(set1)
+        evalFast3 = objects_fl_pybind[2].evaluateWithMemoization(set1)
+        evalFast4 = objects_fl_pybind[3].evaluateWithMemoization(set1)
+        evalFast5= objects_fl_pybind[4].evaluateWithMemoization(set1)
+        assert math.isclose(evalFast1, evalFast2, rel_tol=1e-05) and math.isclose(evalFast2, evalFast3, rel_tol=1e-05) and math.isclose(evalFast3, evalFast4, rel_tol=1e-05) and math.isclose(evalFast4, evalFast5, rel_tol=1e-05), "Mismatch between evaluateWithMemoization() of different pybind alternatives"
+    
+    @pytest.mark.pybind_test
+    @pytest.mark.parametrize("objects_fl_pybind", clusteredModeFunctions, indirect=['objects_fl_pybind'])
+    def test_pybind_gainFast(self, data, objects_fl_pybind):
+        _, _, set1, _ = data
+        elems = random.sample(set1, num_random)
+        subset = set(elems[:-1])
+        elem = elems[-1]
+        objects_fl_pybind[0].setMemoization(subset)
+        objects_fl_pybind[1].setMemoization(subset)
+        objects_fl_pybind[2].setMemoization(subset)
+        objects_fl_pybind[3].setMemoization(subset)
+        objects_fl_pybind[4].setMemoization(subset)
+        gainFast1 = objects_fl_pybind[0].marginalGainWithMemoization(subset, elem)
+        gainFast2 = objects_fl_pybind[1].marginalGainWithMemoization(subset, elem)
+        gainFast3 = objects_fl_pybind[2].marginalGainWithMemoization(subset, elem)
+        gainFast4 = objects_fl_pybind[3].marginalGainWithMemoization(subset, elem)
+        gainFast5 = objects_fl_pybind[4].marginalGainWithMemoization(subset, elem)
+        assert math.isclose(gainFast1, gainFast2, rel_tol=1e-05) and math.isclose(gainFast2, gainFast3, rel_tol=1e-05) and math.isclose(gainFast3, gainFast4, rel_tol=1e-05) and math.isclose(gainFast4, gainFast5, rel_tol=1e-05) , "Mismatch between marginalGainWithMemoization() of different pybind alternatives"
 
     ######### 4 Tests to check the consistency between CPP sparse and Py sparse
 

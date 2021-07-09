@@ -4,7 +4,8 @@ namespace py = pybind11;
 
 void cl_helper(py::module &);
 
-void cl_FacilityLocation(py::module_ &); 
+void cl_FacilityLocation(py::module_ &);
+void cl_FacilityLocation2(py::module_ &); 
 void cl_FeatureBased(py::module_ &); 
 void cl_GraphCut(py::module_ &); 
 void cl_SetCover(py::module_ &);

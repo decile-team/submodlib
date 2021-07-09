@@ -32,6 +32,7 @@ ext_modules = [
         "cpp/optimizers/LazierThanLazyGreedyOptimizer.cpp", 
         "cpp/wrappers/wrapper.cpp", 
         "cpp/submod/FacilityLocation.cpp", "cpp/wrappers/wr_FacilityLocation.cpp", 
+        "cpp/submod/FacilityLocation2.cpp", "cpp/wrappers/wr_FacilityLocation2.cpp", 
         "cpp/submod/DisparitySum.cpp", "cpp/wrappers/wr_DisparitySum.cpp", 
         "cpp/submod/FeatureBased.cpp", "cpp/wrappers/wr_FeatureBased.cpp", 
         "cpp/submod/GraphCut.cpp", "cpp/wrappers/wr_GraphCut.cpp", 

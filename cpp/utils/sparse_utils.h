@@ -1,6 +1,7 @@
 #ifndef SPARSEUTILS_H
 #define SPARSEUTILS_H
 #include<map>
+#include<set>
 typedef long long int ll;
 
 class SparseSim 

@@ -2,7 +2,7 @@
 # Author: Vishal Kaushal
 # Run as 'python -m cProfile -o analysis.prof profiling.py' 
 # to generate profiling information for the uncommented function call
-# Analyze the profile dump by running 'snakeviz analysis.prof'
+# Analyze the profile dump by running 'snakeviz analysis.prof' or 'pyprof2calltree -k -i analysis.prof'
 
 from sklearn.datasets import make_blobs
 import random

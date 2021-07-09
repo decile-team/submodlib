@@ -7,12 +7,116 @@
 #include<iterator>
 #include<map>
 #include "../utils/helper.h"
-#include"FacilityLocation.h"
+#include"FacilityLocation2.h"
 
-FacilityLocation::FacilityLocation(){}
+FacilityLocation2::FacilityLocation2(){}
+
+//Constructor for dense mode (kenel supplied, pyarray)
+/*FacilityLocation2::FacilityLocation2(ll n_, py::array_t<float> const &denseKernel_, bool partial_, std::unordered_set<ll> const &ground_, bool separateMaster_): n(n_), mode(dense), partial(partial_), separateMaster(separateMaster_)  {
+	py::buffer_info buf = denseKernel_.request();
+	float *ptr = (float *) buf.ptr;
+	ll num_rows = buf.shape[0];
+    ll num_columns = buf.shape[1];
+	denseKernel = std::vector<std::vector<float>>(num_rows, std::vector<float>(num_columns));
+    for (size_t idx = 0; idx < num_rows; idx++) {
+        for (size_t idy = 0; idy < num_columns; idy++) {
+            denseKernel[idx][idy] = ptr[idx * num_columns + idy];
+        }
+    }
+    if (partial == true) {
+		//ground set will now be the subset provided
+		effectiveGroundSet = ground_;
+	}
+	else {
+		//create groundSet with items 0 to n-1
+		effectiveGroundSet.reserve(n);
+		for (ll i = 0; i < n; ++i){
+			effectiveGroundSet.insert(i); //each insert takes O(1) time
+		}
+	}
+	numEffectiveGroundset = effectiveGroundSet.size();
+	
+	if(separateMaster==true) {
+		//populate a different master set
+		n_master = denseKernel.size();	
+		masterSet.reserve(n_master);
+		for (ll i = 0; i < n_master; ++i) {
+			masterSet.insert(i); //each insert takes O(1) time
+		}
+	}
+	else {
+		//master set will now be same as the ground set
+		n_master=numEffectiveGroundset;
+		masterSet=effectiveGroundSet;
+	}
+	similarityWithNearestInEffectiveX.resize(n_master, 0);
+	if(partial == true) {
+		ll ind = 0;
+		//for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it) {
+		for (auto it: effectiveGroundSet) {
+			originalToPartialIndexMap[it] = ind;
+			ind += 1;
+		}
+	}
+}*/
+
+//http://people.duke.edu/~ccc14/cspy/18G_C++_Python_pybind11.html
+//https://stackoverflow.com/questions/49582252/pybind-numpy-access-2d-nd-arrays
+//https://developer.lsst.io/v/billglick-slurm-queues/coding/python_wrappers_for_cpp_with_pybind11.html
+void FacilityLocation2::pybind_init(ll n_, py::array_t<float> const &denseKernel_, bool partial_, std::unordered_set<ll> const &ground_, bool separateMaster_){
+	n = n_;
+	mode = dense;
+	partial = partial_;
+	separateMaster = separateMaster_;
+	py::buffer_info buf = denseKernel_.request();
+	float *ptr = (float *) buf.ptr;
+	ll num_rows = buf.shape[0];
+    ll num_columns = buf.shape[1];
+	denseKernel = std::vector<std::vector<float>>(num_rows, std::vector<float>(num_columns));
+    for (size_t idx = 0; idx < num_rows; idx++) {
+        for (size_t idy = 0; idy < num_columns; idy++) {
+            denseKernel[idx][idy] = ptr[idx * num_columns + idy];
+        }
+    }
+	if (partial == true) {
+		//ground set will now be the subset provided
+		effectiveGroundSet = ground_;
+	}
+	else {
+		//create groundSet with items 0 to n-1
+		effectiveGroundSet.reserve(n);
+		for (ll i = 0; i < n; ++i){
+			effectiveGroundSet.insert(i); //each insert takes O(1) time
+		}
+	}
+	numEffectiveGroundset = effectiveGroundSet.size();
+	
+	if(separateMaster==true) {
+		//populate a different master set
+		n_master = denseKernel.size();	
+		masterSet.reserve(n_master);
+		for (ll i = 0; i < n_master; ++i) {
+			masterSet.insert(i); //each insert takes O(1) time
+		}
+	}
+	else {
+		//master set will now be same as the ground set
+		n_master=numEffectiveGroundset;
+		masterSet=effectiveGroundSet;
+	}
+	similarityWithNearestInEffectiveX.resize(n_master, 0);
+	if(partial == true) {
+		ll ind = 0;
+		//for (auto it = effectiveGroundSet.begin(); it != effectiveGroundSet.end(); ++it) {
+		for (auto it: effectiveGroundSet) {
+			originalToPartialIndexMap[it] = ind;
+			ind += 1;
+		}
+	}
+}
 
 //Constructor for dense mode (kenel supplied)
-FacilityLocation::FacilityLocation(ll n_, std::vector<std::vector<float>> const &denseKernel_, bool partial_, std::unordered_set<ll> const &ground_, bool separateMaster_): n(n_), mode(dense), denseKernel(denseKernel_), partial(partial_), separateMaster(separateMaster_)  {
+FacilityLocation2::FacilityLocation2(ll n_, std::vector<std::vector<float>> const &denseKernel_, bool partial_, std::unordered_set<ll> const &ground_, bool separateMaster_): n(n_), mode(dense), denseKernel(denseKernel_), partial(partial_), separateMaster(separateMaster_)  {
 	// std::cout << "FacilityLocation Dense Constructor\n";
 	//n = n_;
 	//mode = dense;
@@ -56,10 +160,8 @@ FacilityLocation::FacilityLocation(ll n_, std::vector<std::vector<float>> const 
 	}
 }
 
-
-
 //Constructor for dense mode (kenel not supplied)
-FacilityLocation::FacilityLocation(ll n_, std::vector<std::vector<float>> &data, std::vector<std::vector<float>> &data_master, bool separateMaster_, std::string metric): n(n_), separateMaster(separateMaster_)  {
+FacilityLocation2::FacilityLocation2(ll n_, std::vector<std::vector<float>> &data, std::vector<std::vector<float>> &data_master, bool separateMaster_, std::string metric): n(n_), separateMaster(separateMaster_)  {
 	if(separateMaster == true) {
 		denseKernel = create_kernel_NS(data, data_master, metric);
 	} else {
@@ -93,8 +195,8 @@ FacilityLocation::FacilityLocation(ll n_, std::vector<std::vector<float>> &data,
 }
 
 //For sparse mode
-FacilityLocation::FacilityLocation(ll n_, std::vector<float> const &arr_val, std::vector<ll> const &arr_count, std::vector<ll> const &arr_col): n(n_), mode(sparse), partial(false), separateMaster(false) {
-	// std::cout << "FacilityLocation Sparse Constructor\n";
+FacilityLocation2::FacilityLocation2(ll n_, std::vector<float> const &arr_val, std::vector<ll> const &arr_count, std::vector<ll> const &arr_col): n(n_), mode(sparse), partial(false), separateMaster(false) {
+	// std::cout << "FacilityLocation2 Sparse Constructor\n";
 	if (arr_val.size() == 0 || arr_count.size() == 0 || arr_col.size() == 0) {
 		throw "Error: Empty/Corrupt sparse similarity kernel";
 	}
@@ -117,8 +219,8 @@ FacilityLocation::FacilityLocation(ll n_, std::vector<float> const &arr_val, std
 }
 
 //For cluster mode
-FacilityLocation::FacilityLocation(ll n_, std::vector<std::unordered_set<ll>> const &clusters_,std::vector<std::vector<std::vector<float>>> const &clusterKernels_, std::vector<ll> const &clusterIndexMap_): n(n_), mode(clustered), num_clusters(clusters_.size()), clusters(clusters_), clusterKernels(clusterKernels_), clusterIndexMap(clusterIndexMap_), partial(false), separateMaster(false) {
-	// std::cout << "FacilityLocation Clustered Constructor\n";
+FacilityLocation2::FacilityLocation2(ll n_, std::vector<std::unordered_set<ll>> const &clusters_,std::vector<std::vector<std::vector<float>>> const &clusterKernels_, std::vector<ll> const &clusterIndexMap_): n(n_), mode(clustered), num_clusters(clusters_.size()), clusters(clusters_), clusterKernels(clusterKernels_), clusterIndexMap(clusterIndexMap_), partial(false), separateMaster(false) {
+	// std::cout << "FacilityLocation2 Clustered Constructor\n";
 	//n = n_;
 	//mode = clustered;
 	//num_clusters = clusters_.size();
@@ -157,7 +259,7 @@ FacilityLocation::FacilityLocation(ll n_, std::vector<std::unordered_set<ll>> co
 	// }
 }
 
-FacilityLocation::FacilityLocation(const FacilityLocation& f)
+FacilityLocation2::FacilityLocation2(const FacilityLocation2& f)
     : n(f.n),
 	n_master(f.n_master),
 	mode(f.mode),
@@ -180,12 +282,12 @@ FacilityLocation::FacilityLocation(const FacilityLocation& f)
 
 	}
 
-FacilityLocation* FacilityLocation::clone() {
-    return new FacilityLocation(*this);
+FacilityLocation2* FacilityLocation2::clone() {
+    return new FacilityLocation2(*this);
 }
 
 //helper friend function
-// float get_max_sim_dense(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation &obj) {
+// float get_max_sim_dense(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation2 &obj) {
 // 	if(dataset_ind.size()==0) {
 // 		return 0;
 // 	}
@@ -203,7 +305,7 @@ FacilityLocation* FacilityLocation::clone() {
 // 	return m;
 // }
 
-float get_max_sim_dense(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation &obj) {
+float get_max_sim_dense(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation2 &obj) {
 	float m = 0;
     for(auto elem: dataset_ind) {
 		if(obj.denseKernel[datapoint_ind][elem] > m) {
@@ -213,7 +315,7 @@ float get_max_sim_dense(ll datapoint_ind, std::unordered_set<ll> const &dataset_
 	return m;
 }
 
-// float get_max_sim_sparse(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation &obj) {
+// float get_max_sim_sparse(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation2 &obj) {
 // 	if(dataset_ind.size()==0) {
 // 		return 0;
 // 	}
@@ -232,7 +334,7 @@ float get_max_sim_dense(ll datapoint_ind, std::unordered_set<ll> const &dataset_
 // 	return m;
 // }
 
-float get_max_sim_sparse(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation &obj) {
+float get_max_sim_sparse(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation2 &obj) {
 	float m = 0;
 	for(auto elem: dataset_ind) {
 		float temp = obj.sparseKernel.get_val(datapoint_ind, elem);
@@ -243,7 +345,7 @@ float get_max_sim_sparse(ll datapoint_ind, std::unordered_set<ll> const &dataset
 	return m;
 }
 
-// float get_max_sim_cluster(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation &obj, ll cluster_id) {
+// float get_max_sim_cluster(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation2 &obj, ll cluster_id) {
 //     if(dataset_ind.size()==0) {
 // 		return 0;
 // 	}
@@ -266,7 +368,7 @@ float get_max_sim_sparse(ll datapoint_ind, std::unordered_set<ll> const &dataset
 // 	return m;
 // }
 
-float get_max_sim_cluster(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation &obj, ll cluster_id) {
+float get_max_sim_cluster(ll datapoint_ind, std::unordered_set<ll> const &dataset_ind, FacilityLocation2 &obj, ll cluster_id) {
     float m = 0;
 	ll datapoint_ind_ = obj.clusterIndexMap[datapoint_ind];
 	for(auto elem: dataset_ind) {
@@ -278,8 +380,8 @@ float get_max_sim_cluster(ll datapoint_ind, std::unordered_set<ll> const &datase
 	return m;
 }
 
-double FacilityLocation::evaluate(std::unordered_set<ll> const &X) {
-	// std::cout << "FacilityLocation evaluate\n";
+double FacilityLocation2::evaluate(std::unordered_set<ll> const &X) {
+	// std::cout << "FacilityLocation2 evaluate\n";
 	std::unordered_set<ll> effectiveX;
 	double result=0;
 
@@ -332,8 +434,8 @@ double FacilityLocation::evaluate(std::unordered_set<ll> const &X) {
 }
 
 
-double FacilityLocation::evaluateWithMemoization(std::unordered_set<ll> const &X) { 
-	// std::cout << "FacilityLocation evaluateWithMemoization\n";
+double FacilityLocation2::evaluateWithMemoization(std::unordered_set<ll> const &X) { 
+	// std::cout << "FacilityLocation2 evaluateWithMemoization\n";
     //assumes that appropriate pre computed memoized statistics exist for effectiveX
 
 	std::unordered_set<ll> effectiveX;
@@ -374,8 +476,8 @@ double FacilityLocation::evaluateWithMemoization(std::unordered_set<ll> const &X
 }
 
 
-double FacilityLocation::marginalGain(std::unordered_set<ll> const &X, ll item) {
-	// std::cout << "FacilityLocation marginalGain\n";
+double FacilityLocation2::marginalGain(std::unordered_set<ll> const &X, ll item) {
+	// std::cout << "FacilityLocation2 marginalGain\n";
 	std::unordered_set<ll> effectiveX;
 	double gain = 0;
 
@@ -445,8 +547,8 @@ double FacilityLocation::marginalGain(std::unordered_set<ll> const &X, ll item) 
 }
 
 
-double FacilityLocation::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
-	// std::cout << "FacilityLocation marginalGainWithMemoization\n";
+double FacilityLocation2::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+	// std::cout << "FacilityLocation2 marginalGainWithMemoization\n";
 	std::unordered_set<ll> effectiveX;
 	double gain = 0;
 	if (partial == true) {
@@ -506,8 +608,8 @@ double FacilityLocation::marginalGainWithMemoization(std::unordered_set<ll> cons
 	return gain;
 }
 
-void FacilityLocation::updateMemoization(std::unordered_set<ll> const &X, ll item) {
-	// std::cout << "FacilityLocation updateMemoization\n";
+void FacilityLocation2::updateMemoization(std::unordered_set<ll> const &X, ll item) {
+	// std::cout << "FacilityLocation2 updateMemoization\n";
 	std::unordered_set<ll> effectiveX;
 
 	if (partial == true) {
@@ -556,14 +658,14 @@ void FacilityLocation::updateMemoization(std::unordered_set<ll> const &X, ll ite
 	}
 }
 
-std::unordered_set<ll> FacilityLocation::getEffectiveGroundSet() {
-	// std::cout << "FacilityLocation getEffectiveGroundSet\n";
+std::unordered_set<ll> FacilityLocation2::getEffectiveGroundSet() {
+	// std::cout << "FacilityLocation2 getEffectiveGroundSet\n";
 	return effectiveGroundSet;
 }
 
 
-std::vector<std::pair<ll, double>> FacilityLocation::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
-	// std::cout << "FacilityLocation maximize\n";
+std::vector<std::pair<ll, double>> FacilityLocation2::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
+	// std::cout << "FacilityLocation2 maximize\n";
 	if(optimizer == "NaiveGreedy") {
 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
 	} else if(optimizer == "LazyGreedy") {
@@ -578,13 +680,13 @@ std::vector<std::pair<ll, double>> FacilityLocation::maximize(std::string optimi
 }
 
 
-void FacilityLocation::cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda) {
-	// std::cout << "FacilityLocation clusterInit\n";
-	*this = FacilityLocation(n_, denseKernel_, partial, ground_, false);
+void FacilityLocation2::cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda) {
+	// std::cout << "FacilityLocation2 clusterInit\n";
+	*this = FacilityLocation2(n_, denseKernel_, partial, ground_, false);
 }
 
-void FacilityLocation::clearMemoization() {
-	// std::cout << "FacilityLocation clearMemoization\n";
+void FacilityLocation2::clearMemoization() {
+	// std::cout << "FacilityLocation2 clearMemoization\n";
 	//We could do https://stackoverflow.com/questions/55266468/whats-the-fastest-way-to-reinitialize-a-vector/55266856 to replace it with a more efficient implementation. However, clear() and assign() involve re-alloc and hence are slower. fill() also involves a loop. memset could be faster, but being at lower level, could be unsafe to use
 
     //reset similarityWithNearestInEffectiveX for dense and sparse modes
@@ -603,9 +705,9 @@ void FacilityLocation::clearMemoization() {
 	}
 }
 
-void FacilityLocation::setMemoization(std::unordered_set<ll> const &X) 
+void FacilityLocation2::setMemoization(std::unordered_set<ll> const &X) 
 {
-	// std::cout << "FacilityLocation setMemoization\n";
+	// std::cout << "FacilityLocation2 setMemoization\n";
     clearMemoization();
     std::unordered_set<ll> temp;
 	//for (auto it = X.begin(); it != X.end(); ++it)
