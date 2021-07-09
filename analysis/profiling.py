@@ -8,7 +8,7 @@ from sklearn.datasets import make_blobs
 import random
 import numpy as np
 import submodlib_cpp as subcp
-from submodlib.helper import create_kernel
+import submodlib.helper as helper
 from scipy import sparse
 from submodlib.functions.facilityLocation import FacilityLocationFunction
 from submodlib import ClusteredFunction
@@ -17,7 +17,7 @@ from apricot import FacilityLocationSelection
 #prepare data to be used in the analysis
 num_clusters = 10
 cluster_std_dev = 2
-num_samples = 1000
+num_samples = 10000
 num_neighbors = 100
 optimizer = "LazyGreedy"
 num_features = 1024
@@ -29,6 +29,25 @@ data = list(map(tuple, points))
 
 dataArray = np.array(data)
 
+########### Dense Similairty Kernel in Python sklearn
+def fl_dense_py_kernel_sklearn():
+    K_dense = helper.create_kernel_dense_sklearn(dataArray,'euclidean')
+    obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False)
+    obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+
+########### Dense Similairty Kernel in Python np_numba
+def fl_dense_py_kernel_np_numba():
+    K_dense = helper.create_kernel_dense_np_numba(dataArray,'euclidean')
+    obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False)
+    obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+
+########### Dense Similairty Kernel in Python np
+def fl_dense_py_kernel_np():
+    K_dense = helper.create_kernel_dense_np(dataArray,'euclidean')
+    obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False)
+    obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+
+
 ##### Dense similarity kernel in CPP
 def fl_dense_cpp_kernel():
     obj = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
@@ -36,7 +55,7 @@ def fl_dense_cpp_kernel():
 
 ########### Dense Similairty Kernel in Python
 def fl_dense_py_kernel():
-    _, K_dense = create_kernel(dataArray, mode='dense', metric='euclidean')
+    _, K_dense = helper.create_kernel(dataArray, mode='dense', metric='euclidean')
     obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False)
     obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 
@@ -47,7 +66,7 @@ def fl_sparse_cpp_kernel():
 
 ########### Sparse Similairty Kernel in Python
 def fl_sparse_py_kernel():
-    _, K_sparse = create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_neighbors)
+    _, K_sparse = helper.create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_neighbors)
     obj = FacilityLocationFunction(n=num_samples, mode="sparse", sijs=K_sparse, num_neighbors=num_neighbors)
     obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 
@@ -85,7 +104,7 @@ def apricot_dense():
     obj = FacilityLocationSelection(n_samples=budget, metric='euclidean', optimizer='lazy')
     obj.fit_transform(dataArray)
 
-fl_dense_cpp_kernel()
+#fl_dense_cpp_kernel()
 #fl_dense_py_kernel()
 #fl_sparse_cpp_kernel()
 #fl_sparse_py_kernel()
@@ -96,3 +115,6 @@ fl_dense_cpp_kernel()
 # fl_clustered_birch_single()
 # fl_clustered_user_single()
 #apricot_dense()
+fl_dense_py_kernel_sklearn()
+#fl_dense_py_kernel_np_numba()
+#fl_dense_py_kernel_np()
