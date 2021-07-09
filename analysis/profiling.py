@@ -115,6 +115,6 @@ def apricot_dense():
 # fl_clustered_birch_single()
 # fl_clustered_user_single()
 #apricot_dense()
-fl_dense_py_kernel_sklearn()
+#fl_dense_py_kernel_sklearn()
 #fl_dense_py_kernel_np_numba()
-#fl_dense_py_kernel_np()
+fl_dense_py_kernel_np()
