@@ -13,12 +13,12 @@ from apricot import FacilityLocationSelection
 import timeit
 import csv
 
-methods = ["fl_dense_py_kernel_np_numba_array", "apricot_dense"]
+methods = ["fl_dense_py_kernel_other_array", "apricot_dense"]
 
-def fl_dense_py_kernel_np_numba_array():
-    K_dense = helper.create_kernel(dataArray, mode="dense", metric='euclidean', method="np_numba")
+def fl_dense_py_kernel_other_array():
+    K_dense = helper.create_kernel(dataArray, mode="dense", metric='euclidean', method="other")
     obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False,pybind_mode="array")
-    obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+    obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False, show_progress=False)
 
 def apricot_dense():
     obj = FacilityLocationSelection(n_samples=budget, metric='euclidean', optimizer='lazy')
@@ -49,8 +49,8 @@ for param in params:
     dataArray = np.array(data)
 
     if first == True:
-        print("Pre compiling np_numba and apricot functions")
-        fl_dense_py_kernel_np_numba_array()
+        print("Pre compiling both, just to be fair")
+        fl_dense_py_kernel_other_array()
         apricot_dense()
         first = False
     
@@ -63,7 +63,7 @@ for param in params:
         t = round(t/num_executions,num_places)
         row.append(t)
         results_csv.append(row)
-with open("submodlib_apricot_grand4.csv", "w") as f:
+with open("submodlib_apricot_grand7.csv", "w") as f:
     writer = csv.writer(f)
     for result in results_csv:
         writer.writerow(result)
