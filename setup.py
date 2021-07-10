@@ -59,7 +59,7 @@ ext_modules = [
         "cpp/cmi/SetCoverConditionalMutualInformation.cpp", "cpp/wrappers/wr_SetCoverConditionalMutualInformation.cpp", 
         "cpp/cmi/ProbabilisticSetCoverConditionalMutualInformation.cpp", "cpp/wrappers/wr_ProbabilisticSetCoverConditionalMutualInformation.cpp", 
         "cpp/Clustered.cpp", "cpp/wrappers/wr_Clustered.cpp"],
-        extra_compile_args=['-Ofast'],
+        extra_compile_args=['-O3'],
         #include_dirs=["cpp/"],
         # Example: passing in the version to the compiled code
         #sorted(glob("cpp/submod/*.cpp")),

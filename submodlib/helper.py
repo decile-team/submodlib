@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 from scipy import sparse
 from sklearn.cluster import Birch #https://scikit-learn.org/stable/modules/clustering.html#birch
@@ -13,6 +14,7 @@ from numba import jit, config
 import pickle
 import time
 import os
+
 #from tqdm import tqdm
 #from tqdm import trange
 
@@ -180,6 +182,25 @@ def create_sparse_kernel(X, metric, num_neigh, n_jobs=1, method="sklearn"):
       
 #     else:
 #         raise Exception("ERROR: unsupported mode")
+
+#@jit(nopython=True, parallel=True)
+def create_kernel_dense_other(X, metric, X_rep=None):
+    D = None
+    if metric == 'euclidean':
+        D = pairwise_distances(X, Y=X_rep, metric='euclidean', squared=True)
+        D = np.subtract(D.max(), D, out=D)
+    elif metric == 'cosine':
+        D = pairwise_distances(X, Y=X_rep, metric="cosine")
+        D = np.subtract(1, D, out=D)
+        D = np.square(D, out=D)
+        D = np.subtract(1, D, out=D)
+        D = np.subtract(1, D, out=D)
+    if type(X_rep) != type(None):
+        assert(D.shape == (X_rep.shape[0], X.shape[0]))
+    else:
+        assert(D.shape == (X.shape[0], X.shape[0]))
+    return D
+
 
 def create_kernel_dense_rowwise(X, metric, X_rep=None):
     if type(X_rep) != type(None):

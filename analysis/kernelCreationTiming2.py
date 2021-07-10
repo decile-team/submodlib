@@ -20,7 +20,8 @@ method_dictionary = {"np_numba": "create_kernel_dense_np_numba",
                      #"sklearn_numba": "create_kernel_dense_sklearn_numba",
                      "sklearn": "create_kernel_dense_sklearn",
                      #"current_numba": "create_kernel_numba",
-                     #"current": "create_kernel"
+                     #"current": "create_kernel",
+                     "other": "create_kernel_dense_other"
 }
 
 cluster_std_dev = 2
@@ -28,12 +29,11 @@ num_executions = 3
 num_places = 6
 num_features = 1024
 
-#params = [(50, 5), (100, 10), (200, 10), (500, 10), (1000, 10), (5000, 10)]
-params = [(6000,10), (7000,10),(8000,10),(9000,10),(10000,10)]
+#params = [(50, 5), (100, 10), (200, 10), (500, 10), (1000, 10), (5000, 10), (6000,10), (7000,10),(8000,10),(9000,10),(10000,10)]
+params = [(50, 5), (100, 10), (200, 10)]
 first = True
-
+results_csv = [["Num_Samples", "Function", "Time"]]
 for param in params:
-    results_csv = [["Num_Samples", "Function", "Time"]]
     print("Parameters: ", param)
     #prepare data to be used in the analysis
     num_samples = param[0]
@@ -45,16 +45,16 @@ for param in params:
 
     if first == True:
         print("Pre compiling np_numba and fastdist functions")
-        helper.create_kernel_dense_np_numba(dataArray, 'euclidean')
+        helper.create_kernel_dense_np_numba(dataArray, metric='euclidean')
         print("Threading layer chosen: %s" % threading_layer())
-        helper.create_kernel_dense_fastdist(dataArray, 'euclidean')
+        helper.create_kernel_dense_fastdist(dataArray, metric='euclidean')
         print("Threading layer chosen: %s" % threading_layer())
         first = False
 
     for method in method_dictionary:
         print("Method: ", method)
         row=[num_samples, method]
-        func = method_dictionary[method] + "(dataArray, 'euclidean')"
+        func = method_dictionary[method] + "(dataArray, metric='euclidean')"
         #print("Calling :", func)
         setup = "from submodlib.helper import " + method_dictionary[method] + "; from __main__ import dataArray"
         #print("Setup: ", setup)
@@ -63,7 +63,7 @@ for param in params:
         row.append(t)
         results_csv.append(row)
 
-    with open("kernel_creation_timings_timeit_" + str(num_samples) + ".csv", "w") as f:
-        writer = csv.writer(f)
-        for result in results_csv:
-            writer.writerow(result)
+with open("new_kernel_creation_timings_timeit.csv", "w") as f:
+    writer = csv.writer(f)
+    for result in results_csv:
+        writer.writerow(result)

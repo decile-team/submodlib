@@ -4,14 +4,14 @@ import submodlib.helper as helper
 
 groundData =np.array( [(4.5,13.5), (5,13.5), (5.5,13.5)] )
 
-methods = ["sklearn", "fastdist", "scipy", "rowwise", "np", "np_numba"]
+methods = ["sklearn", "fastdist", "scipy", "rowwise", "np", "np_numba", "other"]
 
 for method in methods:
     print("\n***Kernel from ", method)
-    kernel = helper.create_kernel(groundData, "euclidean", method=method)
+    kernel = helper.create_kernel(groundData, metric="euclidean", method=method)
     print(kernel)
 
 for method in methods:
     print("\n***Kernel from ", method)
-    kernel = helper.create_kernel(groundData, "cosine", method=method)
+    kernel = helper.create_kernel(groundData, metric="cosine", method=method)
     print(kernel)
