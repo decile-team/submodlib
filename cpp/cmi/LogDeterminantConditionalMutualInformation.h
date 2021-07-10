@@ -48,7 +48,7 @@ class LogDeterminantConditionalMutualInformation : public SetFunction {
     std::vector<std::pair<ll, double>> maximize(std::string, ll budget,
                                                 bool stopIfZeroGain,
                                                 bool stopIfNegativeGain,
-                                                float epsilon, bool verbose);
+                                                float epsilon, bool verbose, bool showProgress);
     void clearMemoization();
     void setMemoization(std::unordered_set<ll> const &X);
     // LogDeterminantConditionalMutualInformation* clone();

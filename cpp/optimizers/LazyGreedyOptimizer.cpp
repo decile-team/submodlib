@@ -19,8 +19,8 @@ bool LazyGreedyOptimizer::equals(double val1, double val2, double eps) {
 }
 
 std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
-    SetFunction &f_obj, ll budget, bool stopIfZeroGain = false,
-    bool stopIfNegativeGain = false, bool verbose = false) {
+    SetFunction &f_obj, ll budget, bool stopIfZeroGain,
+    bool stopIfNegativeGain, bool verbose, bool showProgress) {
     //TODO: take care of handling equal guys later
 	//TODO: take care of different sizes of each items - becomes a candidate only if best and within budget, cost sensitive selection
     std::vector<std::pair<ll, double>> greedyVector;
@@ -97,23 +97,21 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
                     }
                     std::cout << "\n";
                 }
-                percent = (int)(((iter+1.0)/N)*100);
-                if (percent >= displayNext)
-                {
-                    //cout << "\r" << "[" << std::string(percent / 5, (char)254u) << std::string(100 / 5 - percent / 5, ' ') << "]";
-                    std::cerr << "\r" << "[" << std::string(percent / 5, '|') << std::string(100 / 5 - percent / 5, ' ') << "]";
-                    std::cerr << percent << "%" << " [Iteration " << iter + 1 << " of " << N << "]";
-                    std::cerr.flush();
-                    displayNext += step;
+                if(showProgress) {
+                    percent = (int)(((iter+1.0)/N)*100);
+                    if (percent >= displayNext) {
+                        //cout << "\r" << "[" << std::string(percent / 5, (char)254u) << std::string(100 / 5 - percent / 5, ' ') << "]";
+                        std::cerr << "\r" << "[" << std::string(percent / 5, '|') << std::string(100 / 5 - percent / 5, ' ') << "]";
+                        std::cerr << percent << "%" << " [Iteration " << iter + 1 << " of " << N << "]";
+                        std::cerr.flush();
+                        displayNext += step;
+                    }
+                    iter += 1;
                 }
-                iter += 1;
             }
         } else {
             maxHeap.push(std::pair<double, ll>(newMaxBound, currentMax.second));
         }
-    }
-    if(verbose) {
-        std::cout << "Done and returning\n";
     }
 	return greedyVector;
 }

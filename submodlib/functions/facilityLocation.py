@@ -70,6 +70,12 @@ class FacilityLocationFunction(SetFunction):
 	
 	num_neighbors : int, optional
 		Number of neighbors applicable for the sparse similarity kernel. Must not be provided if mode is "dense". Must be provided if either a sparse kernel is provided or is to be computed.
+	
+	create_dense_cpp_kernel_in_python : bool, optional
+		Should be set to False ONLY when a similarity kernel is not provided and a CPP kernel is desired to be created in CPP. Default is True.
+	
+	pybind_mode : string, optional
+		Specifies mode of pybind type conversion from Python to CPP. Can be one of *list*, *numpyarray* and *array*. *list* is the slowest, requiring converting numpy arrays to Python lists. *numpyarray" relies on automatic conversion. *array* leverages native data types and is the fastest. 
 
 	"""
 

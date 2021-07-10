@@ -18,7 +18,7 @@ bool StochasticGreedyOptimizer::equals(double val1, double val2, double eps) {
   }
 }
 
-std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFunction &f_obj, ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
+std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFunction &f_obj, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose, bool showProgress) {
 	//TODO: take care of handling equal guys later
 	//TODO: take care of different sizes of each items - becomes a candidate only if best and within budget, cost sensitive selection
 	std::vector<std::pair<ll, double>>greedyVector;
@@ -51,6 +51,11 @@ std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFuncti
 	ll best_id;
 	double best_val;
 	int i = 0;
+	int step = 1;
+	int displayNext = step;
+	int percent = 0;
+	int N = rem_budget;
+	int iter = 0;
 	while (rem_budget > 0) {
 		std::unordered_set<ll> randomSet;
 		while(randomSet.size() < randomSetSize) {
@@ -102,6 +107,17 @@ std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFuncti
 			        std::cout << i << " ";
 		        } 
 		        std::cout << "\n";
+			}
+			if(showProgress) {
+					percent = (int)(((iter+1.0)/N)*100);
+					if (percent >= displayNext) {
+							//cout << "\r" << "[" << std::string(percent / 5, (char)254u) << std::string(100 / 5 - percent / 5, ' ') << "]";
+							std::cerr << "\r" << "[" << std::string(percent / 5, '|') << std::string(100 / 5 - percent / 5, ' ') << "]";
+							std::cerr << percent << "%" << " [Iteration " << iter + 1 << " of " << N << "]";
+							std::cerr.flush();
+							displayNext += step;
+					}
+					iter += 1;
 			}
 		}
 		i += 1;

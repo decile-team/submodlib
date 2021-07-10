@@ -15,8 +15,8 @@ def test():
     data = list(map(tuple, points))
     xs = [x[0] for x in data]
     ys = [x[1] for x in data]
-    plt.scatter(xs, ys, s=25, color='black', label="Images")
-    plt.show()
+    #plt.scatter(xs, ys, s=25, color='black', label="Images")
+    #plt.show()
 
     dataArray = np.array(data)
 
@@ -28,18 +28,16 @@ def test():
     # obj = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
     # print("Testing DisparitySum's maximize")
 
-    #start = time.process_time()
-    #greedyList = obj.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
-    greedyList = obj.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
-    #greedyList = obj.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
-    #greedyList = obj.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
-    #print(f"Time taken by maximization = {time.process_time() - start}")
+    #greedyList = obj.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+    greedyList = obj.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+    #greedyList = obj.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+    #greedyList = obj.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
     print(f"Greedy vector: {greedyList}")
     greedyXs = [xs[x[0]] for x in greedyList]
     greedyYs = [ys[x[0]] for x in greedyList]
-    plt.scatter(xs, ys, s=25, color='black', label="Images")
-    plt.scatter(greedyXs, greedyYs, s=25, color='blue', label="Greedy Set")
-    plt.show()
+    #plt.scatter(xs, ys, s=25, color='black', label="Images")
+    #plt.scatter(greedyXs, greedyYs, s=25, color='blue', label="Greedy Set")
+    #plt.show()
 
 if __name__ == '__main__':
     test()

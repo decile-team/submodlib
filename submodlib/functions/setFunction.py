@@ -33,7 +33,7 @@ class SetFunction():
 			return 0
 		return self.cpp_obj.evaluate(X)
 
-	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon = 0.1, verbose=False):
+	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon = 0.1, verbose=False, show_progress=True):
 		"""Compute the optimal subset with maximum score for the given *budget*.
 
 		Parameters
@@ -48,6 +48,8 @@ class SetFunction():
 			Set to True if maximization should terminate as soon as the best gain in an iteration is negative. When True, this can potentially lead to optimal set of size less than the budget.
 		verbose : bool
 			Set to True to trace/debug the execution of the maximization algorithm.
+		show_progress : bool
+			Set to True to see progress a progress bar.
 
 		Returns
 		-------
@@ -58,7 +60,7 @@ class SetFunction():
 
 		if budget >= len(self.effective_ground):
 			raise Exception("Budget must be less than effective ground set size")
-		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose)
+		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, show_progress)
 	
 	def marginalGain(self, X, element):
 		"""Computes the marginal gain in score of this function when a single item (*element*) is added to a set (*X*).

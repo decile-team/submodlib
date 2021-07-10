@@ -17,7 +17,7 @@ bool NaiveGreedyOptimizer::equals(double val1, double val2, double eps) {
   }
 }
 
-std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f_obj, ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, bool verbose=false) {
+std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f_obj, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbose, bool showProgress) {
 	//TODO: take care of handling equal guys later
 	//TODO: take care of different sizes of each items - becomes a candidate only if best and within budget, cost sensitive selection
 	std::vector<std::pair<ll, double>>greedyVector;
@@ -44,6 +44,11 @@ std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f
 	f_obj.clearMemoization();
 	ll best_id;
 	double best_val;
+	int step = 1;
+	int displayNext = step;
+	int percent = 0;
+	int N = rem_budget;
+	int iter = 0;
 	while (rem_budget > 0) {
 		best_id = -1;
 		best_val = -1 * std::numeric_limits<double>::max();
@@ -79,6 +84,17 @@ std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f
 			        std::cout << i << " ";
 		        } 
 		        std::cout << "\n";
+			}
+			if(showProgress) {
+					percent = (int)(((iter+1.0)/N)*100);
+					if (percent >= displayNext) {
+							//cout << "\r" << "[" << std::string(percent / 5, (char)254u) << std::string(100 / 5 - percent / 5, ' ') << "]";
+							std::cerr << "\r" << "[" << std::string(percent / 5, '|') << std::string(100 / 5 - percent / 5, ' ') << "]";
+							std::cerr << percent << "%" << " [Iteration " << iter + 1 << " of " << N << "]";
+							std::cerr.flush();
+							displayNext += step;
+					}
+					iter += 1;
 			}
 		}
 	}

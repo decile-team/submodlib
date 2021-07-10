@@ -691,16 +691,16 @@ std::unordered_set<ll> FacilityLocation2::getEffectiveGroundSet() {
 }
 
 
-std::vector<std::pair<ll, double>> FacilityLocation2::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
+std::vector<std::pair<ll, double>> FacilityLocation2::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false, bool showProgress=true) {
 	// std::cout << "FacilityLocation2 maximize\n";
 	if(optimizer == "NaiveGreedy") {
-		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
+		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress);
 	} else if(optimizer == "LazyGreedy") {
-        return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
+        return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress);
 	} else if(optimizer == "StochasticGreedy") {
-        return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
+        return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
 	} else if(optimizer == "LazierThanLazyGreedy") {
-        return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
+        return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
 	} else {
 		std::cerr << "Invalid Optimizer" << std::endl;
 	}

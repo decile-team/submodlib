@@ -13,8 +13,8 @@ from numba import jit, config
 import pickle
 import time
 import os
-from tqdm import tqdm
-from tqdm import trange
+#from tqdm import tqdm
+#from tqdm import trange
 
 #config.THREADING_LAYER = 'default'
 
@@ -190,27 +190,32 @@ def create_kernel_dense_rowwise(X, metric, X_rep=None):
     with open(tempFile, 'ab') as f:
         if metric == "cosine":
             if type(X_rep) == type(None):
-                for i in tqdm(X):
+                #for i in tqdm(X):
+                for i in X:
                     similarity = cosine_similarity(i.reshape(1, -1), X).flatten()
                     pickle.dump(similarity, f)
             else:
-                for i in tqdm(X_rep):
+                #for i in tqdm(X_rep):
+                for i in X_rep:
                     similarity = cosine_similarity(i.reshape(1, -1), X).flatten()
                     pickle.dump(similarity, f)
         elif metric == "euclidean":
             if type(X_rep) == type(None):
-                for i in tqdm(X):
+                #for i in tqdm(X):
+                for i in X:
                     distance = euclidean_distances(i.reshape(1, -1), X).flatten()
                     pickle.dump(distance, f)
             else:
-                for i in tqdm(X_rep):
+                #for i in tqdm(X_rep):
+                for i in X_rep:
                     distance = euclidean_distances(i.reshape(1, -1), X).flatten()
                     pickle.dump(distance, f)
         else:
             raise Exception("Unsupported metric")
     with open(tempFile, 'rb') as f:
         D = []
-        for i in trange(num_rows):
+        #for i in trange(num_rows):
+        for i in range(num_rows):
             D.append(pickle.load(f))
         D = np.array(D)
         if metric == "cosine":

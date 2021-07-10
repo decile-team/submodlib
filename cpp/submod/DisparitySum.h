@@ -39,7 +39,7 @@ class DisparitySum : public SetFunction {
 	double marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item);
 	void updateMemoization(std::unordered_set<ll> const &X, ll item);
 	std::unordered_set<ll> getEffectiveGroundSet();
-	std::vector<std::pair<ll, double>> maximize(std::string, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose);
+	std::vector<std::pair<ll, double>> maximize(std::string, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose, bool showProgress);
 	void cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda);
     void clearMemoization();
 	void setMemoization(std::unordered_set<ll> const &X);
