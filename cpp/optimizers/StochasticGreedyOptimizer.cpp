@@ -109,6 +109,7 @@ std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFuncti
 		        std::cout << "\n";
 			}
 			if(showProgress) {
+				//TODO: use py::print
 					percent = (int)(((iter+1.0)/N)*100);
 					if (percent >= displayNext) {
 							//cout << "\r" << "[" << std::string(percent / 5, (char)254u) << std::string(100 / 5 - percent / 5, ' ') << "]";

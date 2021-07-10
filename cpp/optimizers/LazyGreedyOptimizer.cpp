@@ -18,6 +18,8 @@ bool LazyGreedyOptimizer::equals(double val1, double val2, double eps) {
   }
 }
 
+//TODO: perf: try emplace_back instead of push_back()
+
 std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
     SetFunction &f_obj, ll budget, bool stopIfZeroGain,
     bool stopIfNegativeGain, bool verbose, bool showProgress) {
@@ -45,6 +47,10 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
         std::cout << "\n";
     }
     f_obj.clearMemoization();
+    //TODO:performance options:
+    //1. default
+    //2. vector with reserved space
+    //3. deque
     // initialize priority queue:
     //reserve space for fast performance
     std::vector<std::pair<double, ll>> container;
@@ -98,6 +104,7 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
                     std::cout << "\n";
                 }
                 if(showProgress) {
+                    //TODO: use py::print
                     percent = (int)(((iter+1.0)/N)*100);
                     if (percent >= displayNext) {
                         //cout << "\r" << "[" << std::string(percent / 5, (char)254u) << std::string(100 / 5 - percent / 5, ' ') << "]";

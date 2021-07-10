@@ -89,41 +89,41 @@ SCMIFunctions = ["SetCoverMutualInformation", "SetCoverConditionalGain"]
 # cpp_kernel_cpp - for checking CPP kernel creation in CPP
 # pybind_test - to check different alternatives of passing numpy array to C++
 
-num_internal_clusters = 20 #3
-num_sparse_neighbors = 100 #10 #4
-num_random = 15 #2
-num_clusters = 20 #3
-cluster_std_dev = 4 #1
-num_samples = 500 #8
-num_set = 20 #3
-num_features = 500
-metric = "euclidean"
-num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
-budget = 20
-num_concepts = 50
-num_queries = 10
-magnificationEta = 3 #1 #3
-privacyHardness = 3 #1 #3
-num_privates=5
-queryDiversityEta = 2
-
-# num_internal_clusters = 3 #3
-# num_sparse_neighbors = 5 #10 #4
-# num_random = 2 #2
-# num_clusters = 3#3
+# num_internal_clusters = 20 #3
+# num_sparse_neighbors = 100 #10 #4
+# num_random = 15 #2
+# num_clusters = 20 #3
 # cluster_std_dev = 4 #1
-# num_samples = 9
-# num_set = 3 #3
-# num_features = 2
+# num_samples = 500 #8
+# num_set = 20 #3
+# num_features = 500
 # metric = "euclidean"
 # num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
-# budget = 5
-# num_concepts = 3
-# num_queries = 2
-# magnificationEta = 2
-# privacyHardness = 2
-# num_privates = 1
+# budget = 20
+# num_concepts = 50
+# num_queries = 10
+# magnificationEta = 3 #1 #3
+# privacyHardness = 3 #1 #3
+# num_privates=5
 # queryDiversityEta = 2
+
+num_internal_clusters = 3 #3
+num_sparse_neighbors = 5 #10 #4
+num_random = 2 #2
+num_clusters = 3#3
+cluster_std_dev = 4 #1
+num_samples = 9
+num_set = 3 #3
+num_features = 2
+metric = "euclidean"
+num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
+budget = 5
+num_concepts = 3
+num_queries = 2
+magnificationEta = 2
+privacyHardness = 2
+num_privates = 1
+queryDiversityEta = 2
 
 @pytest.fixture
 def data():
