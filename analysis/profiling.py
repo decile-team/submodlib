@@ -55,7 +55,7 @@ def fl_dense_cpp_kernel():
 
 ########### Dense Similairty Kernel in Python
 def fl_dense_py_kernel():
-    _, K_dense = helper.create_kernel(dataArray, mode='dense', metric='euclidean')
+    K_dense = helper.create_kernel(dataArray, mode='dense', metric='euclidean')
     obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False)
     obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 
@@ -66,7 +66,7 @@ def fl_sparse_cpp_kernel():
 
 ########### Sparse Similairty Kernel in Python
 def fl_sparse_py_kernel():
-    _, K_sparse = helper.create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_neighbors)
+    K_sparse = helper.create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_neighbors)
     obj = FacilityLocationFunction(n=num_samples, mode="sparse", sijs=K_sparse, num_neighbors=num_neighbors)
     obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 

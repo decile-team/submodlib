@@ -7,8 +7,14 @@ from sklearn.cluster import Birch #https://scikit-learn.org/stable/modules/clust
 from scipy.spatial import distance_matrix
 from scipy.spatial.distance import cdist
 from scipy.spatial.distance import pdist
+from scipy.spatial.distance import squareform
 from fastdist import fastdist
 from numba import jit, config
+import pickle
+import time
+import os
+from tqdm import tqdm
+from tqdm import trange
 
 #config.THREADING_LAYER = 'default'
 
@@ -92,63 +98,29 @@ def cos_sim_rectangle_numba(A, B):
     p2=np.sqrt(np.sum(B**2,axis=1))[np.newaxis,:]
     return num/(p1*p2)
 
-def create_kernel(X, metric, mode="dense", num_neigh=-1, n_jobs=1, X_rep=None):
-    #print(type(X_rep))
-    if type(X_rep)!=type(None) and mode=="sparse":
-        raise Exception("ERROR: sparse mode not allowed when using rectangular kernel")
-
-    if type(X_rep)!=type(None) and num_neigh!=-1:
-        raise Exception("ERROR: num_neigh can't be specified when using rectangular kernel")
-
-    if num_neigh==-1 and type(X_rep)==type(None):
-        num_neigh=np.shape(X)[0] #default is total no of datapoints
-
+def create_sparse_kernel(X, metric, num_neigh, n_jobs=1, method="sklearn"):
     if num_neigh>np.shape(X)[0]:
         raise Exception("ERROR: num of neighbors can't be more than no of datapoints")
-    
-    if mode in ['dense', 'sparse']:
-        dense=None
-        D=None
-        if metric=="euclidean":
-            if type(X_rep)==type(None):
-                D = euclidean_distances(X)
-            else:
-                D = euclidean_distances(X_rep, X)
-            gamma = 1/np.shape(X)[1]
-            dense = np.exp(-D * gamma) #Obtaining Similarity from distance
-        else:
-            if metric=="cosine":
-                if type(X_rep)==type(None):
-                    dense = cosine_similarity(X)
-                else:
-                    dense = cosine_similarity(X_rep, X)
-            else:
-                raise Exception("ERROR: unsupported metric")
-        
-        #nbrs = NearestNeighbors(n_neighbors=2, metric='precomputed', n_jobs=n_jobs).fit(D)
-        dense_ = None
-        if type(X_rep)==type(None):
-            nbrs = NearestNeighbors(n_neighbors=num_neigh, metric=metric, n_jobs=n_jobs).fit(X)
-            _, ind = nbrs.kneighbors(X)
-            ind_l = [(index[0],x) for index, x in np.ndenumerate(ind)]
-            row, col = zip(*ind_l)
-            mat = np.zeros(np.shape(dense))
-            mat[row, col]=1
-            dense_ = dense*mat #Only retain similarity of nearest neighbours
-        else:
-            dense_ = dense
-
-        if mode=='dense': 
-            if num_neigh!=-1:       
-                return num_neigh, dense_
-            else:
-                return dense_ #num_neigh is not returned because its not a sensible value in case of rectangular kernel
-        else:
-            sparse_csr = sparse.csr_matrix(dense_)
-            return num_neigh, sparse_csr
-      
+    dense = None
+    if method == "sklearn":
+        dense = create_kernel_dense_sklearn(X, metric)
+    elif method == "np_numba":
+        dense = create_kernel_dense_np_numba(X, metric)
     else:
-        raise Exception("ERROR: unsupported mode")
+        raise Exception("For creating sparse kernel, only 'sklearn' and 'np_numba' methods are supported")
+    #nbrs = NearestNeighbors(n_neighbors=2, metric='precomputed', n_jobs=n_jobs).fit(D)
+    dense_ = None
+    if num_neigh==-1:
+        num_neigh=np.shape(X)[0] #default is total no of datapoints
+    nbrs = NearestNeighbors(n_neighbors=num_neigh, metric=metric, n_jobs=n_jobs).fit(X)
+    _, ind = nbrs.kneighbors(X)
+    ind_l = [(index[0],x) for index, x in np.ndenumerate(ind)]
+    row, col = zip(*ind_l)
+    mat = np.zeros(np.shape(dense))
+    mat[row, col]=1
+    dense_ = dense*mat #Only retain similarity of nearest neighbours
+    sparse_csr = sparse.csr_matrix(dense_)
+    return sparse_csr
 
 # @jit(nopython=True, cache=True, parallel=True)
 # def create_kernel_numba(X, metric, mode="dense", num_neigh=-1, n_jobs=1, X_rep=None):
@@ -209,6 +181,47 @@ def create_kernel(X, metric, mode="dense", num_neigh=-1, n_jobs=1, X_rep=None):
 #     else:
 #         raise Exception("ERROR: unsupported mode")
 
+def create_kernel_dense_rowwise(X, metric, X_rep=None):
+    if type(X_rep) != type(None):
+        num_rows = X_rep.shape[0]
+    else:
+        num_rows = X.shape[0]
+    tempFile = 'kernel'+str(time.time())
+    with open(tempFile, 'ab') as f:
+        if metric == "cosine":
+            if type(X_rep) == type(None):
+                for i in tqdm(X):
+                    similarity = cosine_similarity(i.reshape(1, -1), X).flatten()
+                    pickle.dump(similarity, f)
+            else:
+                for i in tqdm(X_rep):
+                    similarity = cosine_similarity(i.reshape(1, -1), X).flatten()
+                    pickle.dump(similarity, f)
+        elif metric == "euclidean":
+            if type(X_rep) == type(None):
+                for i in tqdm(X):
+                    distance = euclidean_distances(i.reshape(1, -1), X).flatten()
+                    pickle.dump(distance, f)
+            else:
+                for i in tqdm(X_rep):
+                    distance = euclidean_distances(i.reshape(1, -1), X).flatten()
+                    pickle.dump(distance, f)
+        else:
+            raise Exception("Unsupported metric")
+    with open(tempFile, 'rb') as f:
+        D = []
+        for i in trange(num_rows):
+            D.append(pickle.load(f))
+        D = np.array(D)
+        if metric == "cosine":
+            dense = D
+        elif metric == "euclidean":
+            gamma = 1/np.shape(X)[1]
+            dense = np.exp(-D * gamma)
+    os.remove(tempFile)
+    assert(dense.shape == (num_rows, X.shape[0]))
+    return dense
+
 def create_kernel_dense_sklearn(X, metric, X_rep=None):
     dense=None
     D=None
@@ -219,14 +232,17 @@ def create_kernel_dense_sklearn(X, metric, X_rep=None):
             D = euclidean_distances(X_rep, X)
         gamma = 1/np.shape(X)[1]
         dense = np.exp(-D * gamma) #Obtaining Similarity from distance
-    else:
-        if metric=="cosine":
-            if type(X_rep)==type(None):
-                dense = cosine_similarity(X)
-            else:
-                dense = cosine_similarity(X_rep, X)
+    elif metric=="cosine":
+        if type(X_rep)==type(None):
+            dense = cosine_similarity(X)
         else:
-            raise Exception("ERROR: unsupported metric")
+            dense = cosine_similarity(X_rep, X)
+    else:
+        raise Exception("ERROR: unsupported metric")
+    if type(X_rep) != type(None):
+        assert(dense.shape == (X_rep.shape[0], X.shape[0]))
+    else:
+        assert(dense.shape == (X.shape[0], X.shape[0]))
     return dense
 
 # @jit(nopython=True, cache=True, parallel=True)
@@ -260,17 +276,20 @@ def create_kernel_dense_scipy(X, metric, X_rep=None):
             D = distance_matrix(X_rep, X)
         gamma = 1/np.shape(X)[1]
         dense = np.exp(-D * gamma) #Obtaining Similarity from distance
-    else:
-        if metric=="cosine":
-            if type(X_rep)==type(None):
-                D = pdist(X, metric="cosine")
-                dense = squareform(D, checks=False)
-                dense = 1-dense
-            else:
-                dense = cdist(X_rep, X, metric="cosine")
-                dense = 1-dense
+    elif metric=="cosine":
+        if type(X_rep)==type(None):
+            D = pdist(X, metric="cosine")
+            dense = squareform(D, checks=False)
+            dense = 1-dense
         else:
-            raise Exception("ERROR: unsupported metric")
+            dense = cdist(X_rep, X, metric="cosine")
+            dense = 1-dense
+    else:
+        raise Exception("ERROR: unsupported metric")
+    if type(X_rep) != type(None):
+        assert(dense.shape == (X_rep.shape[0], X.shape[0]))
+    else:
+        assert(dense.shape == (X.shape[0], X.shape[0]))
     return dense
 
 # @jit(nopython=True, cache=True, parallel=True)
@@ -307,15 +326,19 @@ def create_kernel_dense_fastdist(X, metric, X_rep=None):
             D = fastdist.matrix_to_matrix_distance(X_rep, X, fastdist.euclidean, "euclidean")
         gamma = 1/np.shape(X)[1]
         dense = np.exp(-D * gamma) #Obtaining Similarity from distance
-    else:
-        if metric=="cosine":
-            if type(X_rep)==type(None):
-                D = fastdist.matrix_pairwise_distance(X, fastdist.cosine, "cosine", return_matrix=True)
-            else:
-                D = fastdist.matrix_to_matrix_distance(X_rep, X, fastdist.cosine, "cosine")
-            dense = 1-D
+    elif metric=="cosine":
+        if type(X_rep)==type(None):
+            D = fastdist.matrix_pairwise_distance(X, fastdist.cosine, "cosine", return_matrix=True)
         else:
-            raise Exception("ERROR: unsupported metric")
+            D = fastdist.matrix_to_matrix_distance(X_rep, X, fastdist.cosine, "cosine")
+        #dense = 1-D
+        dense = D
+    else:
+        raise Exception("ERROR: unsupported metric")
+    if type(X_rep) != type(None):
+        assert(dense.shape == (X_rep.shape[0], X.shape[0]))
+    else:
+        assert(dense.shape == (X.shape[0], X.shape[0]))
     return dense
 
 def create_kernel_dense_np(X, metric, X_rep=None):
@@ -328,29 +351,32 @@ def create_kernel_dense_np(X, metric, X_rep=None):
             D = euc_dis(X_rep, X)
         gamma = 1/np.shape(X)[1]
         dense = np.exp(-D * gamma) #Obtaining Similarity from distance
-    else:
-        if metric=="cosine":
-            if type(X_rep)==type(None):
-                dense = cos_sim(X)
-            else:
-                dense = cos_sim(X_rep, X)
+    elif metric=="cosine":
+        if type(X_rep)==type(None):
+            dense = cos_sim_square(X)
         else:
-            raise Exception("ERROR: unsupported metric")
+            dense = cos_sim_rectangle(X_rep, X)
+    else:
+        raise Exception("ERROR: unsupported metric")
+    if type(X_rep) != type(None):
+        assert(dense.shape == (X_rep.shape[0], X.shape[0]))
+    else:
+        assert(dense.shape == (X.shape[0], X.shape[0]))
     return dense
 
 @jit(nopython=True, parallel=True)
-def create_kernel_dense_np_numba(X, metric):
+def create_kernel_dense_np_numba(X, metric, X_rep=None):
     dense=None
     D=None
     if metric=="euclidean":
         D = euc_dis_numba(X, X)
         gamma = 1/np.shape(X)[1]
         dense = np.exp(-D * gamma) #Obtaining Similarity from distance
+    elif metric=="cosine":
+        dense = cos_sim_square_numba(X)
     else:
-        if metric=="cosine":
-            dense = cos_sim_square_numba(X)
-        else:
-            raise Exception("ERROR: unsupported metric")
+        raise Exception("ERROR: unsupported metric")
+    assert(dense.shape == (X.shape[0], X.shape[0]))
     return dense
 
 @jit(nopython=True, cache=True, parallel=True)
@@ -361,11 +387,14 @@ def create_kernel_dense_np_numba_rectangular(X, metric, X_rep):
         D = euc_dis_numba(X_rep, X)
         gamma = 1/np.shape(X)[1]
         dense = np.exp(-D * gamma) #Obtaining Similarity from distance
+    elif metric=="cosine":
+        dense = cos_sim_rectangle_numba(X_rep, X)
     else:
-        if metric=="cosine":
-            dense = cos_sim_rectangle_numba(X_rep, X)
-        else:
-            raise Exception("ERROR: unsupported metric")
+        raise Exception("ERROR: unsupported metric")
+    if type(X_rep) != type(None):
+        assert(dense.shape == (X_rep.shape[0], X.shape[0]))
+    else:
+        assert(dense.shape == (X.shape[0], X.shape[0]))
     return dense
 
 def create_cluster_kernels(X, metric, cluster_lab=None, num_cluster=None, onlyClusters=False): #Here cluster_lab is a list which specifies custom cluster mapping of a datapoint to a cluster
@@ -425,4 +454,20 @@ def create_cluster_kernels(X, metric, cluster_lab=None, num_cluster=None, onlyCl
             l_kernel[c_ID][i,j]=val
             
     return l_cluster, l_kernel, l_ind
-        
+
+def create_kernel(X, metric, mode="dense", num_neigh=-1, n_jobs=1, X_rep=None, method="sklearn"):
+    if type(X_rep) != type(None):
+        assert(X_rep.shape[1] == X.shape[1])
+    if mode == "dense":
+        dense = None
+        if method == "np_numba" and type(X_rep) != type(None):
+            dense = create_kernel_dense_np_numba_rectangular(X, metric, X_rep)
+        else:
+            dense = globals()['create_kernel_dense_'+method](X, metric, X_rep)
+        return dense
+    elif mode == "sparse":
+        if type(X_rep) != type(None):
+            raise Exception("Sparse mode is not supported for separate X_rep")
+        return create_sparse_kernel(X, metric, num_neigh, n_jobs, method)
+    else:
+        raise Exception("ERROR: unsupported mode")

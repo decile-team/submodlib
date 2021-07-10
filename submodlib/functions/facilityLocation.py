@@ -74,7 +74,7 @@ class FacilityLocationFunction(SetFunction):
 	"""
 
 	#@profile
-	def __init__(self, n, mode, separate_rep=None, n_rep=None, sijs=None, data=None, data_rep=None, num_clusters=None, cluster_labels=None, metric="cosine", num_neighbors=None, create_dense_cpp_kernel_in_python=True, pybind_mode="list"):
+	def __init__(self, n, mode, separate_rep=None, n_rep=None, sijs=None, data=None, data_rep=None, num_clusters=None, cluster_labels=None, metric="cosine", num_neighbors=None, create_dense_cpp_kernel_in_python=True, pybind_mode="array"):
 		self.n = n
 		self.n_rep = n_rep
 		self.mode = mode
@@ -242,20 +242,20 @@ class FacilityLocationFunction(SetFunction):
 			else:
 				raise Exception("Invalid pybind mode!")
 		
-		if self.mode=="dense" and create_dense_cpp_kernel_in_python == False:
+		elif self.mode=="dense" and create_dense_cpp_kernel_in_python == False:
 			if self.separate_rep == True:
 				self.cpp_obj = FacilityLocation(self.n, self.data.tolist(), self.data_rep.tolist(), True, self.metric)
 			else:
 				self.cpp_obj = FacilityLocation(self.n, self.data.tolist(), [[0.]], False, self.metric)
 		
-		if self.mode=="sparse": #break scipy sparse matrix to native component lists (for csr implementation)
+		elif self.mode=="sparse": #break scipy sparse matrix to native component lists (for csr implementation)
 			self.cpp_sijs = {}
 			self.cpp_sijs['arr_val'] = self.sijs.data.tolist() #contains non-zero values in matrix (row major traversal)
 			self.cpp_sijs['arr_count'] = self.sijs.indptr.tolist() #cumulitive count of non-zero elements upto but not including current row
 			self.cpp_sijs['arr_col'] = self.sijs.indices.tolist() #contains col index corrosponding to non-zero values in arr_val
 			self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs['arr_val'], self.cpp_sijs['arr_count'], self.cpp_sijs['arr_col'])
 		
-		if self.mode=="clustered":
+		elif self.mode=="clustered":
 			l_temp = []
 			#TODO: this for loop can be optimized
 			for el in self.cluster_sijs:

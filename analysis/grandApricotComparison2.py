@@ -27,7 +27,7 @@ def fl_dense_cpp_kernel_cpp():
 
 ########### Dense Similairty Kernel in Python current
 def fl_dense_py_kernel_current():
-    _, K_dense = helper.create_kernel(dataArray, mode='dense', metric='euclidean')
+    K_dense = helper.create_kernel(dataArray, mode='dense', metric='euclidean')
     obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False)
     obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 

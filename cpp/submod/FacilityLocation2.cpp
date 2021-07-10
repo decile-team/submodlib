@@ -558,17 +558,35 @@ double FacilityLocation2::marginalGainWithMemoization(std::unordered_set<ll> con
 		effectiveX = X;
 	}
 	if (effectiveX.find(item)!=effectiveX.end()) {
+		//item is already present
 		return 0;
 	}
-	if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+	if (partial && (effectiveGroundSet.find(item)==effectiveGroundSet.end())) {
         return 0;
     }
 	if (mode == dense) {
 		//for (auto it = masterSet.begin(); it != masterSet.end(); ++it) {
-		for (auto ind: masterSet) {
-			//ll ind = *it;
-			if (denseKernel[ind][item] > similarityWithNearestInEffectiveX[(partial)?originalToPartialIndexMap[ind]:ind]) {
-				gain += (denseKernel[ind][item] - similarityWithNearestInEffectiveX[(partial)?originalToPartialIndexMap[ind]:ind]);
+		if (partial) {
+			for (auto ind : masterSet) {
+				// ll ind = *it;
+				if (denseKernel[ind][item] >
+					similarityWithNearestInEffectiveX
+						[originalToPartialIndexMap[ind]]) {
+					gain +=
+						(denseKernel[ind][item] -
+							similarityWithNearestInEffectiveX
+								[originalToPartialIndexMap[ind]]);
+				}
+			}
+		} else {
+			for (auto ind : masterSet) {
+				// ll ind = *it;
+				if (denseKernel[ind][item] >
+					similarityWithNearestInEffectiveX[ind]) {
+					gain +=
+						(denseKernel[ind][item] -
+							similarityWithNearestInEffectiveX[ind]);
+				}
 			}
 		}
 	} else if (mode == sparse) {
@@ -622,15 +640,24 @@ void FacilityLocation2::updateMemoization(std::unordered_set<ll> const &X, ll it
 	if (effectiveX.find(item)!=effectiveX.end()) {
 		return;
 	}
-	if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+	if (partial && (effectiveGroundSet.find(item)==effectiveGroundSet.end())) {
         return;
     }
 	if (mode == dense) {
 		//for (auto it = masterSet.begin(); it != masterSet.end(); ++it) {
-		for (auto ind: masterSet) {
-			//ll ind = *it;
-			if (denseKernel[ind][item] > similarityWithNearestInEffectiveX[(partial)?originalToPartialIndexMap[ind]:ind]) {
-				similarityWithNearestInEffectiveX[(partial)?originalToPartialIndexMap[ind]:ind] = denseKernel[ind][item];
+		if(partial) {
+			for (auto ind: masterSet) {
+				//ll ind = *it;
+				if (denseKernel[ind][item] > similarityWithNearestInEffectiveX[originalToPartialIndexMap[ind]]) {
+					similarityWithNearestInEffectiveX[originalToPartialIndexMap[ind]] = denseKernel[ind][item];
+				}
+			}
+		} else {
+			for (auto ind: masterSet) {
+				//ll ind = *it;
+				if (denseKernel[ind][item] > similarityWithNearestInEffectiveX[ind]) {
+					similarityWithNearestInEffectiveX[ind] = denseKernel[ind][item];
+				}
 			}
 		}
 	} else if (mode == sparse) {

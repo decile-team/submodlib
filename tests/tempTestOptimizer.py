@@ -20,18 +20,18 @@ def test():
 
     dataArray = np.array(data)
 
-    # from submodlib.functions.facilityLocation import FacilityLocationFunction
-    # obj = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
-    #print("Testing FacilityLocation's maximize")
+    from submodlib.functions.facilityLocation import FacilityLocationFunction
+    obj = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
+    print("Testing FacilityLocation's maximize")
 
-    from submodlib.functions.disparitySum import DisparitySumFunction
-    obj = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
-    print("Testing DisparitySum's maximize")
+    # from submodlib.functions.disparitySum import DisparitySumFunction
+    # obj = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric="euclidean")
+    # print("Testing DisparitySum's maximize")
 
     #start = time.process_time()
     #greedyList = obj.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
-    #greedyList = obj.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
-    greedyList = obj.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
+    greedyList = obj.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
+    #greedyList = obj.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
     #greedyList = obj.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=True)
     #print(f"Time taken by maximization = {time.process_time() - start}")
     print(f"Greedy vector: {greedyList}")

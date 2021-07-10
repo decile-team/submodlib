@@ -46,7 +46,11 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
     }
     f_obj.clearMemoization();
     // initialize priority queue:
-    std::priority_queue<std::pair<double, ll>> maxHeap;
+    //reserve space for fast performance
+    std::vector<std::pair<double, ll>> container;
+    container.reserve(groundSet.size());
+    std::priority_queue<std::pair<double, ll>, std::vector<std::pair<double, ll>>, std::less<std::pair<double, ll>>> maxHeap(std::less<std::pair<double, ll>>(), move(container));
+    //std::priority_queue<std::pair<double, ll>> maxHeap;
     // for each element in the ground set
     for (auto elem : groundSet) {
         // store <elem, marginalGainWithMemoization(greedySet, elem)> in
@@ -55,6 +59,11 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
             f_obj.marginalGainWithMemoization(greedySet, elem), elem));
     }
     if(verbose) std::cout << "Max heap constructed\n";
+    int step = 1;
+	int displayNext = step;
+	int percent = 0;
+    int N = rem_budget;
+    int iter = 0;
     while (rem_budget > 0) {
         std::pair<double, ll> currentMax = maxHeap.top();
         maxHeap.pop();
@@ -88,10 +97,23 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
                     }
                     std::cout << "\n";
                 }
+                percent = (int)(((iter+1.0)/N)*100);
+                if (percent >= displayNext)
+                {
+                    //cout << "\r" << "[" << std::string(percent / 5, (char)254u) << std::string(100 / 5 - percent / 5, ' ') << "]";
+                    std::cerr << "\r" << "[" << std::string(percent / 5, '|') << std::string(100 / 5 - percent / 5, ' ') << "]";
+                    std::cerr << percent << "%" << " [Iteration " << iter + 1 << " of " << N << "]";
+                    std::cerr.flush();
+                    displayNext += step;
+                }
+                iter += 1;
             }
         } else {
             maxHeap.push(std::pair<double, ll>(newMaxBound, currentMax.second));
         }
     }
-		return greedyVector;
+    if(verbose) {
+        std::cout << "Done and returning\n";
+    }
+	return greedyVector;
 }

@@ -66,7 +66,7 @@ print("Timing the dense and sparse kernel creations in Python and C++...")
 
 row = []
 def py_dense_kernel():
-    _, K_dense = create_kernel(dataArray, mode='dense', metric='euclidean')
+    K_dense = create_kernel(dataArray, mode='dense', metric='euclidean')
     return K_dense
 # t_obj1 = timeit.Timer('py_dense_kernel()', 'from __main__ import py_dense_kernel')
 # t = t_obj1.timeit(number = 1)
@@ -93,7 +93,7 @@ results_csv.append(row)
 
 row=[]
 def py_sparse_kernel():
-    _, K_sparse = create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_neighbors)
+    K_sparse = create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_neighbors)
     return K_sparse
 t, pySparseKernel = timeit.timeit('py_sparse_kernel()', 'from __main__ import py_sparse_kernel', number=num_executions)
 row.append(("py_sparse_kernel", round(t/num_executions,num_places)))

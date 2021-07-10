@@ -89,41 +89,41 @@ SCMIFunctions = ["SetCoverMutualInformation", "SetCoverConditionalGain"]
 # cpp_kernel_cpp - for checking CPP kernel creation in CPP
 # pybind_test - to check different alternatives of passing numpy array to C++
 
-# num_internal_clusters = 20 #3
-# num_sparse_neighbors = 100 #10 #4
-# num_random = 15 #2
-# num_clusters = 20 #3
-# cluster_std_dev = 4 #1
-# num_samples = 500 #8
-# num_set = 20 #3
-# num_features = 500
-# metric = "euclidean"
-# num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
-# budget = 20
-# num_concepts = 50
-# num_queries = 10
-# magnificationEta = 3 #1 #3
-# privacyHardness = 3 #1 #3
-# num_privates=5
-# queryDiversityEta = 2
-
-num_internal_clusters = 3 #3
-num_sparse_neighbors = 5 #10 #4
-num_random = 2 #2
-num_clusters = 3#3
+num_internal_clusters = 20 #3
+num_sparse_neighbors = 100 #10 #4
+num_random = 15 #2
+num_clusters = 20 #3
 cluster_std_dev = 4 #1
-num_samples = 9
-num_set = 3 #3
-num_features = 2
+num_samples = 500 #8
+num_set = 20 #3
+num_features = 500
 metric = "euclidean"
 num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
-budget = 5
-num_concepts = 3
-num_queries = 2
-magnificationEta = 2
-privacyHardness = 2
-num_privates = 1
+budget = 20
+num_concepts = 50
+num_queries = 10
+magnificationEta = 3 #1 #3
+privacyHardness = 3 #1 #3
+num_privates=5
 queryDiversityEta = 2
+
+# num_internal_clusters = 3 #3
+# num_sparse_neighbors = 5 #10 #4
+# num_random = 2 #2
+# num_clusters = 3#3
+# cluster_std_dev = 4 #1
+# num_samples = 9
+# num_set = 3 #3
+# num_features = 2
+# metric = "euclidean"
+# num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
+# budget = 5
+# num_concepts = 3
+# num_queries = 2
+# magnificationEta = 2
+# privacyHardness = 2
+# num_privates = 1
+# queryDiversityEta = 2
 
 @pytest.fixture
 def data():
@@ -434,9 +434,9 @@ def object_cmi_dense_cpp_kernel(request, data_queries_privates):
 @pytest.fixture
 def object_mi_dense_py_kernel(request, data_queries):
     num_data, num_q, imageData, queryData, _ = data_queries
-    _, imageKernel = create_kernel(imageData, mode="dense", metric=metric)
+    imageKernel = create_kernel(imageData, mode="dense", metric=metric)
     queryKernel = create_kernel(queryData, mode="dense", metric=metric, X_rep=imageData)
-    _, queryQueryKernel = create_kernel(queryData, mode="dense", metric=metric)
+    queryQueryKernel = create_kernel(queryData, mode="dense", metric=metric)
     if request.param == "FacilityLocationMutualInformation":
         obj = FacilityLocationMutualInformationFunction(n=num_data, num_queries=num_q, data_sijs=imageKernel, query_sijs=queryKernel, magnificationEta=magnificationEta)
     elif request.param == "FacilityLocationVariantMutualInformation":
@@ -460,11 +460,11 @@ def object_mi_dense_py_kernel(request, data_queries):
 @pytest.fixture
 def object_cmi_dense_py_kernel(request, data_queries_privates):
     num_data, num_q, num_p, imageData, queryData, privateData, _ = data_queries_privates
-    _, imageKernel = create_kernel(imageData, mode="dense", metric=metric)
+    imageKernel = create_kernel(imageData, mode="dense", metric=metric)
     queryKernel = create_kernel(queryData, mode="dense", metric=metric, X_rep=imageData)
     privateKernel = create_kernel(privateData, mode="dense", metric=metric, X_rep=imageData)
-    _, queryQueryKernel = create_kernel(queryData, mode="dense", metric=metric)
-    _, privatePrivateKernel = create_kernel(privateData, mode="dense", metric=metric)
+    queryQueryKernel = create_kernel(queryData, mode="dense", metric=metric)
+    privatePrivateKernel = create_kernel(privateData, mode="dense", metric=metric)
     queryPrivateKernel = create_kernel(privateData, mode="dense", metric=metric, X_rep=queryData)
     if request.param == "FacilityLocationConditionalMutualInformation":
         obj = FacilityLocationConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, data_sijs=imageKernel, query_sijs=queryKernel, private_sijs=privateKernel,magnificationEta=magnificationEta, privacyHardness=privacyHardness)
@@ -477,7 +477,7 @@ def object_cmi_dense_py_kernel(request, data_queries_privates):
 @pytest.fixture
 def object_dense_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    _, K_dense = create_kernel(dataArray, mode='dense', metric='euclidean')
+    K_dense = create_kernel(dataArray, mode='dense', metric='euclidean')
     if request.param == "FacilityLocation":
         obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False)
     elif request.param == "DisparitySum":
@@ -495,7 +495,7 @@ def object_dense_py_kernel(request, data):
 @pytest.fixture
 def objects_dense_cpp_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    _, K_dense = create_kernel(dataArray, mode='dense',metric='euclidean')
+    K_dense = create_kernel(dataArray, mode='dense',metric='euclidean')
     if request.param == "FacilityLocation":
         obj1 = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
         obj2 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False)
@@ -547,7 +547,7 @@ def object_sparse_cpp_kernel(request, data):
 @pytest.fixture
 def object_sparse_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    _, K_sparse = create_kernel(dataArray, mode='sparse',metric='euclidean', num_neigh=num_sparse_neighbors)
+    K_sparse = create_kernel(dataArray, mode='sparse',metric='euclidean', num_neigh=num_sparse_neighbors)
     if request.param == "FacilityLocation":
         obj = FacilityLocationFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors)
     elif request.param == "DisparitySum":
@@ -565,7 +565,7 @@ def object_sparse_py_kernel(request, data):
 @pytest.fixture
 def objects_sparse_cpp_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    _, K_sparse = create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_sparse_neighbors)
+    K_sparse = create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_sparse_neighbors)
     if request.param == "FacilityLocation":
         obj1 = FacilityLocationFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors)
         obj2 = FacilityLocationFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors)

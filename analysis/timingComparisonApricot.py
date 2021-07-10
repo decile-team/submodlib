@@ -24,7 +24,7 @@ def inner(_it, _timer{init}):
 
 def py_dense_kernel(dataArray):
     #print("Calling py dense kernel with ", dataArray.shape[0], " elements in ground set")
-    _, K_dense = create_kernel(dataArray, mode='dense', metric='euclidean')
+    K_dense = create_kernel(dataArray, mode='dense', metric='euclidean')
     return K_dense
 
 def cpp_dense_kernel(dataArray):
@@ -37,7 +37,7 @@ def cpp_dense_kernel(dataArray):
     return sijs
 
 def py_sparse_kernel(dataArray, num_neighbors):
-    _, K_sparse = create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_neighbors)
+    K_sparse = create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_neighbors)
     return K_sparse
 
 def cpp_sparse_kernel(dataArray, num_neighbors):

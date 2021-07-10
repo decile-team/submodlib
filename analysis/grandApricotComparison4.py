@@ -1,7 +1,7 @@
-# grandApricotComparison3.py
+# grandApricotComparison4.py
 # Author: Vishal Kaushal
 # Run as 'python grandApricotComparison3.py' to compare performance of 
-# different alternatives of pybind type conversions listed in "methods" including apricot
+# submodlib with apricot
 # Uses python's timeit module
 
 from sklearn.datasets import make_blobs
@@ -13,31 +13,11 @@ from apricot import FacilityLocationSelection
 import timeit
 import csv
 
-methods = ["fl_dense_py_kernel_np_numba_list", "fl_dense_py_kernel_np_numba_numpyarray", "fl_dense_py_kernel_np_numba_array", "fl_dense_py_kernel_np_numba_array32", "fl_dense_py_kernel_np_numba_array64", "apricot_dense"]
-
-def fl_dense_py_kernel_np_numba_list():
-    K_dense = helper.create_kernel_dense_np_numba(dataArray,'euclidean')
-    obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False,pybind_mode="list")
-    obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-
-def fl_dense_py_kernel_np_numba_numpyarray():
-    K_dense = helper.create_kernel_dense_np_numba(dataArray,'euclidean')
-    obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False,pybind_mode="numpyarray")
-    obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+methods = ["fl_dense_py_kernel_np_numba_array", "apricot_dense"]
 
 def fl_dense_py_kernel_np_numba_array():
-    K_dense = helper.create_kernel_dense_np_numba(dataArray,'euclidean')
+    K_dense = helper.create_kernel(dataArray, mode="dense", metric='euclidean', method="np_numba")
     obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False,pybind_mode="array")
-    obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-
-def fl_dense_py_kernel_np_numba_array32():
-    K_dense = helper.create_kernel_dense_np_numba(dataArray,'euclidean')
-    obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False,pybind_mode="array32")
-    obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-
-def fl_dense_py_kernel_np_numba_array64():
-    K_dense = helper.create_kernel_dense_np_numba(dataArray,'euclidean')
-    obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False,pybind_mode="array64")
     obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
 
 def apricot_dense():
@@ -70,11 +50,9 @@ for param in params:
 
     if first == True:
         print("Pre compiling np_numba and apricot functions")
-        fl_dense_py_kernel_np_numba_list()
+        fl_dense_py_kernel_np_numba_array()
         apricot_dense()
         first = False
-    
-    #K_dense = helper.create_kernel_dense_np_numba(dataArray,'euclidean')
     
     for method in methods:
         print("Method: ", method)
@@ -85,7 +63,7 @@ for param in params:
         t = round(t/num_executions,num_places)
         row.append(t)
         results_csv.append(row)
-with open("submodlib_apricot_grand3.csv", "w") as f:
+with open("submodlib_apricot_grand4.csv", "w") as f:
     writer = csv.writer(f)
     for result in results_csv:
         writer.writerow(result)
