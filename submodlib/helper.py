@@ -9,7 +9,7 @@ from scipy.spatial import distance_matrix
 from scipy.spatial.distance import cdist
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
-from fastdist import fastdist
+#from fastdist import fastdist
 from numba import jit, config
 import pickle
 import time
@@ -342,30 +342,30 @@ def create_kernel_dense_scipy(X, metric, X_rep=None):
 #             raise Exception("ERROR: unsupported metric")
 #     return dense
 
-def create_kernel_dense_fastdist(X, metric, X_rep=None):
-    dense=None
-    D=None
-    if metric=="euclidean":
-        if type(X_rep)==type(None):
-            D = fastdist.matrix_pairwise_distance(X, fastdist.euclidean, "euclidean", return_matrix=True)
-        else:
-            D = fastdist.matrix_to_matrix_distance(X_rep, X, fastdist.euclidean, "euclidean")
-        gamma = 1/np.shape(X)[1]
-        dense = np.exp(-D * gamma) #Obtaining Similarity from distance
-    elif metric=="cosine":
-        if type(X_rep)==type(None):
-            D = fastdist.matrix_pairwise_distance(X, fastdist.cosine, "cosine", return_matrix=True)
-        else:
-            D = fastdist.matrix_to_matrix_distance(X_rep, X, fastdist.cosine, "cosine")
-        #dense = 1-D
-        dense = D
-    else:
-        raise Exception("ERROR: unsupported metric")
-    if type(X_rep) != type(None):
-        assert(dense.shape == (X_rep.shape[0], X.shape[0]))
-    else:
-        assert(dense.shape == (X.shape[0], X.shape[0]))
-    return dense
+# def create_kernel_dense_fastdist(X, metric, X_rep=None):
+#     dense=None
+#     D=None
+#     if metric=="euclidean":
+#         if type(X_rep)==type(None):
+#             D = fastdist.matrix_pairwise_distance(X, fastdist.euclidean, "euclidean", return_matrix=True)
+#         else:
+#             D = fastdist.matrix_to_matrix_distance(X_rep, X, fastdist.euclidean, "euclidean")
+#         gamma = 1/np.shape(X)[1]
+#         dense = np.exp(-D * gamma) #Obtaining Similarity from distance
+#     elif metric=="cosine":
+#         if type(X_rep)==type(None):
+#             D = fastdist.matrix_pairwise_distance(X, fastdist.cosine, "cosine", return_matrix=True)
+#         else:
+#             D = fastdist.matrix_to_matrix_distance(X_rep, X, fastdist.cosine, "cosine")
+#         #dense = 1-D
+#         dense = D
+#     else:
+#         raise Exception("ERROR: unsupported metric")
+#     if type(X_rep) != type(None):
+#         assert(dense.shape == (X_rep.shape[0], X.shape[0]))
+#     else:
+#         assert(dense.shape == (X.shape[0], X.shape[0]))
+#     return dense
 
 def create_kernel_dense_np(X, metric, X_rep=None):
     dense=None
