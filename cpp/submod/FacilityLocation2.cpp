@@ -72,28 +72,34 @@ void FacilityLocation2::pybind_init(ll n_, py::array_t<float> const &denseKernel
 	float *ptr = (float *) buf.ptr;
 	ll num_rows = buf.shape[0];
     ll num_columns = buf.shape[1];
+	//std::cout << "num_rows=" << num_rows << " num_columns="<<num_columns<<"\n";
 	denseKernel = std::vector<std::vector<float>>(num_rows, std::vector<float>(num_columns));
     for (size_t idx = 0; idx < num_rows; idx++) {
         for (size_t idy = 0; idy < num_columns; idy++) {
             denseKernel[idx][idy] = ptr[idx * num_columns + idy];
         }
     }
+	// std::cout << "kernel created\n";
 	if (partial == true) {
 		//ground set will now be the subset provided
 		effectiveGroundSet = ground_;
 	}
 	else {
+		// std::cout<<"before groundset\n";
 		//create groundSet with items 0 to n-1
 		effectiveGroundSet.reserve(n);
 		for (ll i = 0; i < n; ++i){
 			effectiveGroundSet.insert(i); //each insert takes O(1) time
 		}
+		// std::cout<<"after groundset\n";
 	}
 	numEffectiveGroundset = effectiveGroundSet.size();
 	
 	if(separateMaster==true) {
 		//populate a different master set
-		n_master = denseKernel.size();	
+		// std::cout << "before n_master\n";	
+		n_master = denseKernel.size();
+		// std::cout << "n_master = " << n_master << "\n";	
 		masterSet.reserve(n_master);
 		for (ll i = 0; i < n_master; ++i) {
 			masterSet.insert(i); //each insert takes O(1) time

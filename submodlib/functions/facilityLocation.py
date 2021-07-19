@@ -75,7 +75,7 @@ class FacilityLocationFunction(SetFunction):
 		Should be set to False ONLY when a similarity kernel is not provided and a CPP kernel is desired to be created in CPP. Default is True.
 	
 	pybind_mode : string, optional
-		Specifies mode of pybind type conversion from Python to CPP. Can be one of *list*, *numpyarray* and *array*. *list* is the slowest, requiring converting numpy arrays to Python lists. *numpyarray" relies on automatic conversion. *array* leverages native data types and is the fastest. 
+		Specifies mode of pybind type conversion from Python to CPP. Can be one of *list*, *numpyarray* and *array*. *list* is the slowest, requiring converting numpy arrays to Python lists. *numpyarray" relies on automatic conversion. *array* leverages native data types and is the fastest. Default is "array".
 
 	"""
 
@@ -182,7 +182,7 @@ class FacilityLocationFunction(SetFunction):
 				else:
 					if self.separate_rep==True: #mode in this case will always be dense
 						if create_dense_cpp_kernel_in_python == True:
-						    self.sijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_rep.tolist(), self.metric))
+							self.sijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_rep.tolist(), self.metric))
 					else:
 						if self.mode == "dense":
 							if self.num_neighbors  is not None:
@@ -234,17 +234,17 @@ class FacilityLocationFunction(SetFunction):
 				self.sijs.astype('float32', copy=False)
 				#self.cpp_obj = FacilityLocation2(self.n, self.sijs, False, {-1}, False);
 				self.cpp_obj = FacilityLocation2()
-				self.cpp_obj.pybind_init(self.n, self.sijs, False, {-1}, False);
+				self.cpp_obj.pybind_init(self.n, self.sijs, False, {-1}, self.separate_rep);
 			elif pybind_mode == "array64":
 				# print("Kernel's type = ", self.sijs.dtype)
 				self.sijs.astype('float64', copy=False)
 				#self.cpp_obj = FacilityLocation2(self.n, self.sijs, False, {-1}, False);
 				self.cpp_obj = FacilityLocation2()
-				self.cpp_obj.pybind_init(self.n, self.sijs, False, {-1}, False);
+				self.cpp_obj.pybind_init(self.n, self.sijs, False, {-1}, self.separate_rep);
 			elif pybind_mode == "array":
 				#self.cpp_obj = FacilityLocation2(self.n, self.sijs, False, {-1}, False);
 				self.cpp_obj = FacilityLocation2()
-				self.cpp_obj.pybind_init(self.n, self.sijs, False, {-1}, False);
+				self.cpp_obj.pybind_init(self.n, self.sijs, False, {-1}, self.separate_rep);
 			else:
 				raise Exception("Invalid pybind mode!")
 		
@@ -278,5 +278,3 @@ class FacilityLocationFunction(SetFunction):
 		#self.cpp_ground_sub=self.cpp_obj.getEffectiveGroundSet()
 		#self.ground_sub=self.cpp_ground_sub
 		self.effective_ground = self.cpp_obj.getEffectiveGroundSet()
-
-	

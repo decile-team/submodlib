@@ -28,6 +28,9 @@ class LogDeterminantFunction(SetFunction):
 
 	.. note::
 			DPP requires computing the determinant and is :math:`\\mathcal{O}(n^3)` where :math:`n` is the size of the ground set.
+	
+	.. note::
+			The implementation follows Fast Greedy MAP Inference as presented in :cite:`chen2018fast`
 
 	Parameters
 	----------
@@ -38,7 +41,7 @@ class LogDeterminantFunction(SetFunction):
 		Can be "dense" or "sparse". It specifies whether the Log Determinant function should operate in dense mode (using a dense similarity kernel) or sparse mode (using a sparse similarity kernel).
 
 	lambdaVal : float
-		Addition to :math:`s_{ii} (1)` so that :math:`\\log` doesn't become 0 
+		Value to add to :math:`s_{ii} (i.e. 1)` so that :math:`\\log` doesn't become 0.
 	
 	sijs : numpy.ndarray or scipy.sparse.csr.csr_matrix, optional
 		Similarity kernel (dense or sparse) between the elements of the ground set, to be used for getting :math:`L` as defined above. Shape of dense kernel must be n X n. When not provided, it is computed internally in C++ based on the following additional parameters.

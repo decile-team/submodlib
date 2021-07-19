@@ -33,31 +33,33 @@ from submodlib.helper import create_kernel
 from submodlib_cpp import FeatureBased
 from submodlib_cpp import ConcaveOverModular
 
+#TODO: add test cases for rectangular kernels
+
 #allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "DisparityMin", "LogDeterminant"]
-allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "DisparityMin"]
-#allKernelFunctions = ["LogDeterminant"]
+#allKernelFunctions = ["FacilityLocation", "DisparitySum", "GraphCut", "DisparityMin"]
+allKernelFunctions = ["LogDeterminant"]
 
 #allKernelMIFunctions = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation", "FacilityLocationConditionalGain", "LogDeterminantConditionalGain"]
-allKernelMIFunctions = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "FacilityLocationConditionalGain"]
-#allKernelMIFunctions = ["LogDeterminantMutualInformation", "LogDeterminantConditionalGain"]
+#allKernelMIFunctions = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "FacilityLocationConditionalGain"]
+allKernelMIFunctions = ["LogDeterminantMutualInformation", "LogDeterminantConditionalGain"]
 
 #allKernelCMIFunctions = ["FacilityLocationConditionalMutualInformation", "LogDeterminantConditionalMutualInformation"]
-allKernelCMIFunctions = ["FacilityLocationConditionalMutualInformation"]
-#allKernelCMIFunctions = ["LogDeterminantConditionalMutualInformation"]
+#allKernelCMIFunctions = ["FacilityLocationConditionalMutualInformation"]
+allKernelCMIFunctions = ["LogDeterminantConditionalMutualInformation"]
 
 clusteredModeFunctions = ["FacilityLocation"]
 
 #optimizerTests = ["FacilityLocation", "GraphCut", "LogDeterminant"]
-optimizerTests = ["FacilityLocation", "GraphCut"]
-#optimizerTests = ["LogDeterminant"]
+#optimizerTests = ["FacilityLocation", "GraphCut"]
+optimizerTests = ["LogDeterminant"]
 
 #optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "LogDeterminantMutualInformation", "FacilityLocationConditionalGain", "LogDeterminantConditionalGain"]
-optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "FacilityLocationConditionalGain"]
-#optimizerMITests = ["LogDeterminantMutualInformation", "LogDeterminantConditionalGain"]
+#optimizerMITests = ["FacilityLocationMutualInformation", "FacilityLocationVariantMutualInformation", "ConcaveOverModular", "GraphCutMutualInformation", "GraphCutConditionalGain", "FacilityLocationConditionalGain"]
+optimizerMITests = ["LogDeterminantMutualInformation", "LogDeterminantConditionalGain"]
 
 #optimizerCMITests = ["FacilityLocationConditionalMutualInformation", "LogDeterminantConditionalMutualInformation"]
-optimizerCMITests = ["FacilityLocationConditionalMutualInformation"]
-#optimizerCMITests = ["LogDeterminantConditionalMutualInformation"]
+#optimizerCMITests = ["FacilityLocationConditionalMutualInformation"]
+optimizerCMITests = ["LogDeterminantConditionalMutualInformation"]
 
 probSCMIFunctions = ["ProbabilisticSetCoverConditionalGain", "ProbabilisticSetCoverMutualInformation"]
 
@@ -89,41 +91,43 @@ SCMIFunctions = ["SetCoverMutualInformation", "SetCoverConditionalGain"]
 # cpp_kernel_cpp - for checking CPP kernel creation in CPP
 # pybind_test - to check different alternatives of passing numpy array to C++
 
-# num_internal_clusters = 20 #3
-# num_sparse_neighbors = 100 #10 #4
-# num_random = 15 #2
-# num_clusters = 20 #3
-# cluster_std_dev = 4 #1
-# num_samples = 500 #8
-# num_set = 20 #3
-# num_features = 500
-# metric = "euclidean"
-# num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
-# budget = 20
-# num_concepts = 50
-# num_queries = 10
-# magnificationEta = 3 #1 #3
-# privacyHardness = 3 #1 #3
-# num_privates=5
-# queryDiversityEta = 2
-
-num_internal_clusters = 3 #3
-num_sparse_neighbors = 5 #10 #4
-num_random = 2 #2
-num_clusters = 3#3
+num_internal_clusters = 20 #3
+num_sparse_neighbors = 100 #10 #4
+num_random = 15 #2
+num_clusters = 20 #3
 cluster_std_dev = 4 #1
-num_samples = 9
-num_set = 3 #3
-num_features = 2
+num_samples = 500 #8
+num_set = 20 #3
+num_features = 500
 metric = "euclidean"
 num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
-budget = 5
-num_concepts = 3
-num_queries = 2
-magnificationEta = 2
-privacyHardness = 2
-num_privates = 1
+budget = 20
+num_concepts = 50
+num_queries = 10
+magnificationEta = 1 #3 #1 #3
+privacyHardness = 1 #3 #1 #3
+num_privates=5
 queryDiversityEta = 2
+logDetLambdaVal = 1
+
+# num_internal_clusters = 3 #3
+# num_sparse_neighbors = 5 #10 #4
+# num_random = 2 #2
+# num_clusters = 3#3
+# cluster_std_dev = 4 #1
+# num_samples = 9
+# num_set = 3 #3
+# num_features = 2
+# metric = "euclidean"
+# num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
+# budget = 5
+# num_concepts = 3
+# num_queries = 2
+# magnificationEta = 2
+# privacyHardness = 2
+# num_privates = 1
+# queryDiversityEta = 2
+# logDetLambdaVal = 1
 
 @pytest.fixture
 def data():
@@ -383,7 +387,7 @@ def object_dense_cpp_kernel(request, data):
     elif request.param == "GraphCut":
         obj = GraphCutFunction(n=num_samples, mode="dense", lambdaVal=1, data=dataArray, metric=metric)
     elif request.param == "LogDeterminant":
-        obj = LogDeterminantFunction(n=num_samples, mode="dense", lambdaVal=1, data=dataArray, metric=metric)
+        obj = LogDeterminantFunction(n=num_samples, mode="dense", lambdaVal=logDetLambdaVal, data=dataArray, metric=metric)
     else:
         return None
     return obj
@@ -413,9 +417,9 @@ def object_mi_dense_cpp_kernel(request, data_queries):
     elif request.param == "FacilityLocationConditionalGain":
         obj = FacilityLocationConditionalGainFunction(n=num_data, num_privates=num_q, data=imageData, privateData=queryData, metric=metric, privacyHardness=privacyHardness)
     elif request.param == "LogDeterminantMutualInformation":
-        obj = LogDeterminantMutualInformationFunction(n=num_data, num_queries=num_q, data=imageData, queryData=queryData, metric=metric, lambdaVal=1, magnificationEta=magnificationEta)
+        obj = LogDeterminantMutualInformationFunction(n=num_data, num_queries=num_q, data=imageData, queryData=queryData, metric=metric, lambdaVal=logDetLambdaVal, magnificationEta=magnificationEta)
     elif request.param == "LogDeterminantConditionalGain":
-        obj = LogDeterminantConditionalGainFunction(n=num_data, num_privates=num_q, data=imageData, privateData=queryData, metric=metric, lambdaVal=1, privacyHardness=privacyHardness)
+        obj = LogDeterminantConditionalGainFunction(n=num_data, num_privates=num_q, data=imageData, privateData=queryData, metric=metric, lambdaVal=logDetLambdaVal, privacyHardness=privacyHardness)
     else:
         return None
     return obj
@@ -426,7 +430,7 @@ def object_cmi_dense_cpp_kernel(request, data_queries_privates):
     if request.param == "FacilityLocationConditionalMutualInformation":
         obj = FacilityLocationConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, data=imageData, queryData=queryData, privateData=privateData, metric=metric, magnificationEta=magnificationEta, privacyHardness=privacyHardness)
     elif request.param == "LogDeterminantConditionalMutualInformation":
-        obj = LogDeterminantConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, data=imageData, queryData=queryData, privateData=privateData, metric=metric, lambdaVal=1, magnificationEta=magnificationEta, privacyHardness=privacyHardness)
+        obj = LogDeterminantConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, data=imageData, queryData=queryData, privateData=privateData, metric=metric, lambdaVal=logDetLambdaVal, magnificationEta=magnificationEta, privacyHardness=privacyHardness)
     else:
         return None
     return obj
@@ -450,9 +454,9 @@ def object_mi_dense_py_kernel(request, data_queries):
     elif request.param == "FacilityLocationConditionalGain":
         obj = FacilityLocationConditionalGainFunction(n=num_data, num_privates=num_q, data_sijs=imageKernel, private_sijs=queryKernel, privacyHardness=privacyHardness)
     elif request.param == "LogDeterminantMutualInformation":
-        obj = LogDeterminantMutualInformationFunction(n=num_data, num_queries=num_q, data_sijs=imageKernel, query_sijs=queryKernel, query_query_sijs=queryQueryKernel, lambdaVal=1, magnificationEta=magnificationEta)
+        obj = LogDeterminantMutualInformationFunction(n=num_data, num_queries=num_q, data_sijs=imageKernel, query_sijs=queryKernel, query_query_sijs=queryQueryKernel, lambdaVal=logDetLambdaVal, magnificationEta=magnificationEta)
     elif request.param == "LogDeterminantConditionalGain":
-        obj = LogDeterminantConditionalGainFunction(n=num_data, num_privates=num_q, data_sijs=imageKernel, private_sijs=queryKernel, private_private_sijs=queryQueryKernel, lambdaVal=1, privacyHardness=privacyHardness)
+        obj = LogDeterminantConditionalGainFunction(n=num_data, num_privates=num_q, data_sijs=imageKernel, private_sijs=queryKernel, private_private_sijs=queryQueryKernel, lambdaVal=logDetLambdaVal, privacyHardness=privacyHardness)
     else:
         return None
     return obj
@@ -469,7 +473,7 @@ def object_cmi_dense_py_kernel(request, data_queries_privates):
     if request.param == "FacilityLocationConditionalMutualInformation":
         obj = FacilityLocationConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, data_sijs=imageKernel, query_sijs=queryKernel, private_sijs=privateKernel,magnificationEta=magnificationEta, privacyHardness=privacyHardness)
     elif request.param == "LogDeterminantConditionalMutualInformation":
-        obj = LogDeterminantConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, data_sijs=imageKernel, query_sijs=queryKernel, query_query_sijs=queryQueryKernel, private_sijs=privateKernel, private_private_sijs=privatePrivateKernel, query_private_sijs=queryPrivateKernel, lambdaVal=1, magnificationEta=magnificationEta, privacyHardness=privacyHardness)
+        obj = LogDeterminantConditionalMutualInformationFunction(n=num_data, num_queries=num_q, num_privates=num_p, data_sijs=imageKernel, query_sijs=queryKernel, query_query_sijs=queryQueryKernel, private_sijs=privateKernel, private_private_sijs=privatePrivateKernel, query_private_sijs=queryPrivateKernel, lambdaVal=logDetLambdaVal, magnificationEta=magnificationEta, privacyHardness=privacyHardness)
     else:
         return None
     return obj
@@ -487,7 +491,7 @@ def object_dense_py_kernel(request, data):
     elif request.param == "GraphCut":
         obj = GraphCutFunction(n=num_samples, mode="dense", lambdaVal=1, ggsijs=K_dense)
     elif request.param == "LogDeterminant":
-        obj = LogDeterminantFunction(n=num_samples, mode="dense", lambdaVal=1, data=dataArray, metric=metric)
+        obj = LogDeterminantFunction(n=num_samples, mode="dense", lambdaVal=logDetLambdaVal, data=dataArray, metric=metric)
     else:
         return None
     return obj
@@ -509,8 +513,8 @@ def objects_dense_cpp_py_kernel(request, data):
         obj1 = GraphCutFunction(n=num_samples, mode="dense", lambdaVal=1, data=dataArray, metric=metric)
         obj2 = GraphCutFunction(n=num_samples, mode="dense", lambdaVal=1, ggsijs=K_dense)
     elif request.param == "LogDeterminant":
-        obj1 = LogDeterminantFunction(n=num_samples, mode="dense", data=dataArray, metric=metric, lambdaVal=1)
-        obj2 = LogDeterminantFunction(n=num_samples, mode="dense", sijs = K_dense, lambdaVal=1)
+        obj1 = LogDeterminantFunction(n=num_samples, mode="dense", data=dataArray, metric=metric, lambdaVal=logDetLambdaVal)
+        obj2 = LogDeterminantFunction(n=num_samples, mode="dense", sijs = K_dense, lambdaVal=logDetLambdaVal)
     else:
         return None
     return obj1, obj2
@@ -539,7 +543,7 @@ def object_sparse_cpp_kernel(request, data):
     elif request.param == "GraphCut":
         obj = GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors)
     elif request.param == "LogDeterminant":
-        obj = LogDeterminantFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full, lambdaVal=1)
+        obj = LogDeterminantFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full, lambdaVal=logDetLambdaVal)
     else:
         return None
     return obj
@@ -557,7 +561,7 @@ def object_sparse_py_kernel(request, data):
     elif request.param == "GraphCut":
         obj = GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, ggsijs=K_sparse, num_neighbors=num_sparse_neighbors)
     elif request.param == "LogDeterminant":
-        obj = LogDeterminantFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full, lambdaVal=1)
+        obj = LogDeterminantFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full, lambdaVal=logDetLambdaVal)
     else:
         return None
     return obj
@@ -579,8 +583,8 @@ def objects_sparse_cpp_py_kernel(request, data):
         obj1= GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors)
         obj2 = GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, ggsijs=K_sparse, num_neighbors=num_sparse_neighbors)
     elif request.param == "LogDeterminant":
-        obj1 = LogDeterminantFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full, lambdaVal=1)
-        obj2 = LogDeterminantFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full, lambdaVal=1)
+        obj1 = LogDeterminantFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full, lambdaVal=logDetLambdaVal)
+        obj2 = LogDeterminantFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full, lambdaVal=logDetLambdaVal)
     else:
         return None
     return obj1, obj2
