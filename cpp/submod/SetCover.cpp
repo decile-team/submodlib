@@ -24,12 +24,12 @@ double SetCover::evaluate(std::unordered_set<ll> const &X) {
 
 	std::unordered_set<int> conceptsCovered;
 	for(auto elem: X) {
-		for(auto concept: coverSet[elem]) {
-			conceptsCovered.insert(concept);
+		for(auto con: coverSet[elem]) {
+			conceptsCovered.insert(con);
 		}
 	}
-	for(auto concept: conceptsCovered) {
-		result += conceptWeights[concept];
+	for(auto con: conceptsCovered) {
+		result += conceptWeights[con];
 	}
 
 	return result;
@@ -41,8 +41,8 @@ double SetCover::evaluateWithMemoization(std::unordered_set<ll> const &X) {
 		return 0;
 	}
 	
-	for(auto concept: conceptsCoveredByX) {
-		result += conceptWeights[concept];
+	for(auto con: conceptsCoveredByX) {
+		result += conceptWeights[con];
 	}
 	return result;
 }
@@ -55,13 +55,13 @@ double SetCover::marginalGain(std::unordered_set<ll> const &X, ll item) {
 	}
     std::unordered_set<int> conceptsCovered;
 	for(auto elem: X) {
-		for(auto concept: coverSet[elem]) {
-			conceptsCovered.insert(concept);
+		for(auto con: coverSet[elem]) {
+			conceptsCovered.insert(con);
 		}
 	}
-	for(auto concept: coverSet[item]) {
-        if(conceptsCovered.find(concept) == conceptsCovered.end()) {
-            gain += conceptWeights[concept];
+	for(auto con: coverSet[item]) {
+        if(conceptsCovered.find(con) == conceptsCovered.end()) {
+            gain += conceptWeights[con];
 		}
 	}
 	return gain;
@@ -74,10 +74,10 @@ double SetCover::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll
 		return 0;
 	}
 	//std::cout << "Concepts covered by " << item << " = {";
-	for(auto concept: coverSet[item]) {
+	for(auto con: coverSet[item]) {
 		//std::cout << concept << ", ";
-        if(conceptsCoveredByX.find(concept) == conceptsCoveredByX.end()) {
-            gain += conceptWeights[concept];
+        if(conceptsCoveredByX.find(con) == conceptsCoveredByX.end()) {
+            gain += conceptWeights[con];
 		}
 	}
 	//std::cout << "}\n";
@@ -89,8 +89,8 @@ void SetCover::updateMemoization(std::unordered_set<ll> const &X, ll item) {
 	if (X.find(item)!=X.end()) {
 		return;
 	}
-	for(auto concept: coverSet[item]) {
-		conceptsCoveredByX.insert(concept);
+	for(auto con: coverSet[item]) {
+		conceptsCoveredByX.insert(con);
 	}
 }
 
