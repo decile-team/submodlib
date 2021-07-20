@@ -38,7 +38,7 @@ bool LazierThanLazyGreedyOptimizer::equals(double val1, double val2,
 //     std::cout << "]\n";
 // }
 
-bool printSortedSet(std::set<std::pair<double, ll>, classcomp> &sortedSet) {
+void printSortedSet(std::set<std::pair<double, ll>, classcomp> &sortedSet) {
     std::cout << "[";
     for (auto it = sortedSet.begin(); it != sortedSet.end();
          it++) {

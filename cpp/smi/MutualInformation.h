@@ -9,6 +9,7 @@
 
 class MutualInformation : public SetFunction {
    protected:
+    ll n;
     SetFunction& f;
     double val_fQ;
     SetFunction *fAUQ;
@@ -24,11 +25,11 @@ class MutualInformation : public SetFunction {
     double marginalGainWithMemoization(std::unordered_set<ll> const &X,
                                        ll item);
     void updateMemoization(std::unordered_set<ll> const &X, ll item);
-    //std::unordered_set<ll> getEffectiveGroundSet();
-    //std::vector<std::pair<ll, double>> maximize(std::string, ll budget,
-                                                // bool stopIfZeroGain,
-                                                // bool stopIfNegativeGain,
-                                                // float epsilon, bool verbose);
+    std::unordered_set<ll> getEffectiveGroundSet();
+    std::vector<std::pair<ll, double>> maximize(std::string, ll budget,
+                                                bool stopIfZeroGain,
+                                                bool stopIfNegativeGain,
+                                                float epsilon, bool verbose, bool showProgress);
     void clearMemoization();
     void setMemoization(std::unordered_set<ll> const &X);
     // MutualInformation* clone();
