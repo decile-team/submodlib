@@ -93,7 +93,14 @@ For a more detailed discussion on all possible usage patterns, please see [Diffe
 
 # Modelling Capabilities of Different Functions
 
-We demonstrate the representational power and modeling capabilities of different functions in [this](https://github.com/decile-team/submodlib/blob/master/tutorials/Representational%20Power%20of%20Different%20Functions.ipynb) notebook.
+We demonstrate the representational power and modeling capabilities of different functions qualitatively in the following Google Colab notebooks:
+    * [Modelling capabilities of regular submodular functions](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Modelling_Capabilities_of_Regular_Submod_Functions.ipynb)
+    * [Modelling capabilities of submodular mutual information (SMI) functions](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Modelling_Capabilities_of_SMI_Functions.ipynb)
+    * [Modelling capabilities of conditional gain (CG) functions](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Modelling_Capabilities_of_CG_Functions.ipynb)
+    * [Modelling capabilities of conditional mutual information (CMI) functions](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Modelling_Capabilities_of_CMI_Functions.ipynb)
+
+[This notebook](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Quantitative_Analysis_and_Effect_of_Parameters.ipynb) contains a quantitative analysis of performance of different functions and role of the parameterization in aspects like query-coverage, query-relevance, privacy-irrelevance and diversity for different SMI, CG and CMI functions.
+
 
 # Optimizers 
 
@@ -101,7 +108,37 @@ We demonstrate the representational power and modeling capabilities of different
 * [LazyGreedy](https://submodlib.readthedocs.io/en/latest/optimizers/lazyGreedy.html)
 * [StochasticGreedy](https://submodlib.readthedocs.io/en/latest/optimizers/stochasticGreedy.html)
 * [LazierThanLazyGreedy](https://submodlib.readthedocs.io/en/latest/optimizers/lazierThanLazyGreedy.html)
-* [This](https://github.com/decile-team/submodlib/blob/master/tutorials/Optimizers.ipynb) notebook demonstrates the use and comparison of different optimizers
+* [This notebook](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Optimizers.ipynb) demonstrates the use and comparison of different optimizers.
+
+# Sample Application (Image collection summarization)
+
+* [This notebook](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Image_Collection_Summarization.ipynb) contains demonstration of using submodlib for an image collection summarization application.
+
+# Timing Analysis
+
+To gauge the performance of submodlib, selection by Facility Location was performed on a randomly generated dataset of 1024-dimensional points. Specifically the following code was run for the number of data points ranging from 50 to 10000.
+
+```
+K_dense = helper.create_kernel(dataArray, mode="dense", metric='euclidean', method="other")
+obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs=K_dense, separate_rep=False,pybind_mode="array")
+obj.maximize(budget=budget,optimizer=optimizer, stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False, show_progress=False)
+```
+
+The above code was timed using Python's timeit module averaged across three executions each. We report the following numbers:
+
+| Number of data points      | Time taken (in seconds) |
+| ----------- | ----------- |
+| 50 | 0.00043|
+| 100  |	0.001074|
+| 200  |	0.003024|
+| 500  |	0.016555|
+| 1000  |	0.081773|
+| 5000	| 2.469303|
+| 6000	| 3.563144|
+| 7000	| 4.667065|
+| 8000	| 6.174047|
+| 9000	| 8.010674|
+| 10000	| 9.417298|
 
 # Contributors
 
