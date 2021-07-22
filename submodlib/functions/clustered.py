@@ -67,8 +67,8 @@ class ClusteredFunction(SetFunction):
 		if self.mode not in ['single', 'multi']:
 			raise Exception("ERROR: Incorrect mode. Must be one of 'single' or 'multi'")
 
-		if self.metric not in ['euclidean', 'cosine']:
-			raise Exception("ERROR: Unsupported metric")
+		# if self.metric not in ['euclidean', 'cosine']:
+		# 	raise Exception("ERROR: Unsupported metric")
 
 		if type(self.cluster_lab) != type(None) and (self.num_clusters  is None or self.num_clusters <= 0):
 			raise Exception("ERROR: Positive number of clusters must be provided when cluster_lab is provided")

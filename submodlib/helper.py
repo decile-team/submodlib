@@ -117,7 +117,7 @@ def create_sparse_kernel(X, metric, num_neigh, n_jobs=1, method="sklearn"):
     nbrs = NearestNeighbors(n_neighbors=num_neigh, metric=metric, n_jobs=n_jobs).fit(X)
     _, ind = nbrs.kneighbors(X)
     ind_l = [(index[0],x) for index, x in np.ndenumerate(ind)]
-    row, col = zip(*ind_l)
+    row, col = zip(*ind_l)   #unzipping
     mat = np.zeros(np.shape(dense))
     mat[row, col]=1
     dense_ = dense*mat #Only retain similarity of nearest neighbours
@@ -195,6 +195,8 @@ def create_kernel_dense_other(X, metric, X_rep=None):
         D = np.square(D, out=D)
         D = np.subtract(1, D, out=D)
         D = np.subtract(1, D, out=D)
+    else:
+        raise Exception("Unsupported metric for this method of kernel creation")
     if type(X_rep) != type(None):
         assert(D.shape == (X_rep.shape[0], X.shape[0]))
     else:
@@ -231,15 +233,26 @@ def create_kernel_dense_rowwise(X, metric, X_rep=None):
                 for i in X_rep:
                     distance = euclidean_distances(i.reshape(1, -1), X).flatten()
                     pickle.dump(distance, f)
+        elif metric == "dot":
+            if type(X_rep) == type(None):
+                #for i in tqdm(X):
+                for i in X:
+                    similarity = np.dot(i.reshape(1, -1), X.T).flatten()
+                    pickle.dump(similarity, f)
+            else:
+                #for i in tqdm(X_rep):
+                for i in X_rep:
+                    similarity = np.dot(i.reshape(1, -1), X.T).flatten()
+                    pickle.dump(similarity, f)
         else:
-            raise Exception("Unsupported metric")
+            raise Exception("Unsupported metric for this method of kernel creation")
     with open(tempFile, 'rb') as f:
         D = []
         #for i in trange(num_rows):
         for i in range(num_rows):
             D.append(pickle.load(f))
         D = np.array(D)
-        if metric == "cosine":
+        if metric == "cosine" or metric == "dot":
             dense = D
         elif metric == "euclidean":
             gamma = 1/np.shape(X)[1]
@@ -263,8 +276,13 @@ def create_kernel_dense_sklearn(X, metric, X_rep=None):
             dense = cosine_similarity(X)
         else:
             dense = cosine_similarity(X_rep, X)
+    elif metric == "dot":
+        if type(X_rep)==type(None):
+            dense = np.matmul(X, X.T)
+        else:
+            dense = np.matmul(X_rep, X.T)
     else:
-        raise Exception("ERROR: unsupported metric")
+        raise Exception("ERROR: unsupported metric for this method of kernel creation")
     if type(X_rep) != type(None):
         assert(dense.shape == (X_rep.shape[0], X.shape[0]))
     else:
@@ -382,6 +400,11 @@ def create_kernel_dense_np(X, metric, X_rep=None):
             dense = cos_sim_square(X)
         else:
             dense = cos_sim_rectangle(X_rep, X)
+    elif metric=="dot":
+        if type(X_rep)==type(None):
+            dense = np.matmul(X, X.T)
+        else:
+            dense = np.matmul(X_rep, X.T)
     else:
         raise Exception("ERROR: unsupported metric")
     if type(X_rep) != type(None):
@@ -400,6 +423,8 @@ def create_kernel_dense_np_numba(X, metric, X_rep=None):
         dense = np.exp(-D * gamma) #Obtaining Similarity from distance
     elif metric=="cosine":
         dense = cos_sim_square_numba(X)
+    # elif metric=="dot":
+    #     dense = np.matmul(X, X.T)
     else:
         raise Exception("ERROR: unsupported metric")
     assert(dense.shape == (X.shape[0], X.shape[0]))
@@ -415,8 +440,10 @@ def create_kernel_dense_np_numba_rectangular(X, metric, X_rep):
         dense = np.exp(-D * gamma) #Obtaining Similarity from distance
     elif metric=="cosine":
         dense = cos_sim_rectangle_numba(X_rep, X)
+    elif metric=="dot":
+        dense = np.matmul(X_rep, X.T)
     else:
-        raise Exception("ERROR: unsupported metric")
+        raise Exception("ERROR: unsupported metric for this method of kernel creation")
     if type(X_rep) != type(None):
         assert(dense.shape == (X_rep.shape[0], X.shape[0]))
     else:
@@ -465,11 +492,10 @@ def create_cluster_kernels(X, metric, cluster_lab=None, num_cluster=None, onlyCl
         D = euclidean_distances(X)
         gamma = 1/np.shape(X)[1]
         M = np.exp(-D * gamma) #Obtaining Similarity from distance
+    elif metric=="cosine":
+        M = cosine_similarity(X)
     else:
-        if metric=="cosine":
-            M = cosine_similarity(X)
-        else:
-            raise Exception("ERROR: unsupported metric")
+        raise Exception("ERROR: unsupported metric")
     
     #Create kernel for each cluster using the bigger kernel
     for ind, val in np.ndenumerate(M): 

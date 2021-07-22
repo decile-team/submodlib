@@ -125,8 +125,16 @@ std::vector<std::vector<float>> create_kernel(std::vector<std::vector<float>> &X
 	{
 		for (ll c = r; c < n; ++c)
 		{
-			s = metric == "euclidean" ? euclidean_similarity(X[r], X[c]) : cosine_similarity(X[r], X[c]);
-			
+			// s = metric == "euclidean" ? euclidean_similarity(X[r], X[c]) : cosine_similarity(X[r], X[c]);
+			if (metric == "euclidean") {
+				s = euclidean_similarity(X[r], X[c]);
+			} else if (metric == "cosine") {
+				s = cosine_similarity(X[r], X[c]);
+			} else if (metric == "dot") {
+				s = dot_prod(X[r], X[c]);
+			} else {
+				throw "Unsupported metric for kernel creation in CPP";
+			}
 			update_heap(v_h, num_neigh, r, c, s);
 			if(r!=c)
 			{
@@ -172,10 +180,17 @@ std::vector<std::vector<float>> create_kernel_NS(std::vector<std::vector<float>>
 	{
 		for(int c=0;c<X_ground.size();++c)
 		{
-			k_dense[r][c]= metric == "euclidean" ? euclidean_similarity(X_master[r], X_ground[c]) : cosine_similarity(X_master[r], X_ground[c]);
+			if (metric == "euclidean") {
+				k_dense[r][c]=euclidean_similarity(X_master[r], X_ground[c]);
+			} else if (metric == "cosine") {
+				k_dense[r][c]=cosine_similarity(X_master[r], X_ground[c]);
+			} else if (metric == "dot") {
+				k_dense[r][c]=dot_prod(X_master[r], X_ground[c]);
+			} else {
+				throw "Unsupported metric for kernel computation in CPP";
+			}
 		}
 	}
-
 	return k_dense;
 	
 }
@@ -208,7 +223,17 @@ std::vector<std::vector<float>> create_square_kernel_dense(std::vector<std::vect
 				k_dense[c][r] = sim;
 			}
 		}
-    }
+    } else if (metric == "dot") {
+		for (int r = 0; r < n_ground; ++r) {
+			for (int c = r; c < n_ground; ++c) {
+				sim = dot_prod(X_ground[r], X_ground[c]);
+				k_dense[r][c] = sim;
+				k_dense[c][r] = sim;
+			}
+		}
+    } else {
+		throw "Unsupported metric for kernel computation in CPP";
+	}
 	return k_dense;
 }
 

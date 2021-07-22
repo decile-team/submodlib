@@ -60,12 +60,7 @@ LogDeterminant::LogDeterminant(
             memoizedD.push_back(sqrt(denseKernel[i][i] + lambda));
         }
     }
-    // std::cout << "MemoizedC: [";
-    // for(auto temp: memoizedC) {
-    //     std::cout << temp << ", ";
-    // }
-    // std::cout << "]\n";
-    // std::cout << "MemoizedD: [";
+    // std::cout << "LogDet Constructor: MemoizedD: [";
     // for(auto temp: memoizedD) {
     //     std::cout << temp << ", ";
     // }
@@ -191,10 +186,12 @@ double LogDeterminant::marginalGainWithMemoization(
     if (mode == dense) {
         if (effectiveX.size() == 0) {
             gain = log(memoizedD[itemIndex] * memoizedD[itemIndex]);
+            // std::cout << "Gain on empty set = " << gain << "\n";
         } else if (effectiveX.size() == 1) {
             ll prevItemIndex = (partial)?originalToPartialIndexMap[prevItem]:prevItem;
             double e = denseKernel[prevItem][item] / memoizedD[prevItemIndex];
             gain = log(memoizedD[itemIndex] * memoizedD[itemIndex] - e * e);
+            // std::cout << "Gain on set of size 1 = " << gain << "\n";
         } else {
             ll prevItemIndex = (partial)?originalToPartialIndexMap[prevItem]:prevItem;
             // std::cout << "prevItemIndex = " << prevItemIndex << "\n";
@@ -204,7 +201,7 @@ double LogDeterminant::marginalGainWithMemoization(
             // std::cout << "e = " << e << "\n";
             // std::cout << "memoizedD[itemIndex] * memoizedD[itemIndex] = " << memoizedD[itemIndex] * memoizedD[itemIndex] << "\n";
             gain = log(memoizedD[itemIndex] * memoizedD[itemIndex] - e * e);
-            // std::cout << "gain = " << gain << "\n";
+            // std::cout << "gain (3rd condition) = " << gain << "\n";
         }
     } else if (mode == sparse) {
         if (effectiveX.size() == 0) {
@@ -412,11 +409,33 @@ void LogDeterminant::clearMemoization() {
 
 void LogDeterminant::setMemoization(std::unordered_set<ll> const &X) {
 
-    //TODO: this implementation is wrong. for updateMemoization to work correctly, the items should be added in context of greedy maximization and not arbitrarily
+    //TODO: this implementation is probably wrong. I guess for updateMemoization to work correctly, the items should be added in context of greedy maximization and not arbitrarily
     // std::cout << "LogDeterminant setMemoization\n";
     clearMemoization();
     std::unordered_set<ll> temp;
-    // for (auto it = X.begin(); it != X.end(); ++it)
+    // ll best_id;
+	// double best_val;
+    // for(int count = 0; count < X.size(); count++) {
+    //     best_id = -1;
+    //     best_val = -1 * std::numeric_limits<double>::max();
+    //     for (auto i: X) {
+    //         if (temp.find(i) != temp.end()) { 
+    //             //if this datapoint has already been included in temp, skip it
+    //             continue;
+    //         }
+    //         double gain = marginalGainWithMemoization(temp, i);
+    //         if (std::isnan(gain)) {
+    //             throw "Gain turned out to be NAN";
+    //         }
+    //         if (gain > best_val) {
+    //             best_id = i;
+    //             best_val = gain;
+    //         }
+    //     }
+    //     updateMemoization(temp, best_id);
+    //     temp.insert(best_id);
+    // }
+    
     for (auto elem : X) {
         // std::cout << "Memoization for adding " << elem << " to {";
         // for (auto tmp: temp) {
