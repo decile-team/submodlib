@@ -91,51 +91,60 @@ SCMIFunctions = ["SetCoverMutualInformation", "SetCoverConditionalGain"]
 # cpp_kernel_cpp - for checking CPP kernel creation in CPP
 # pybind_test - to check different alternatives of passing numpy array to C++
 
-num_internal_clusters = 20 #3
-num_sparse_neighbors = 100 #10 #4
-num_random = 15 #2
-num_clusters = 20 #3
-cluster_std_dev = 4 #1
-num_samples = 500 #8
-num_set = 20 #3
-num_features = 500
-metric = "euclidean"
-num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
-budget = 20
-num_concepts = 50
-num_queries = 10
-magnificationEta = 1 #3 #1 #3
-privacyHardness = 1 #3 #1 #3
-num_privates=5
-queryDiversityEta = 1
-logDetLambdaVal = 1
-
-# num_internal_clusters = 3 #3
-# num_sparse_neighbors = 5 #10 #4
-# num_random = 2 #2
-# num_clusters = 3#3
+# num_internal_clusters = 20 #3
+# num_sparse_neighbors = 100 #10 #4
+# num_random = 15 #2
+# num_clusters = 20 #3
 # cluster_std_dev = 4 #1
-# num_samples = 9
-# num_set = 3 #3
-# num_features = 2
-# metric = "euclidean"
+# num_samples = 500 #8
+# num_set = 20 #3
+# num_features = 500
 # num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
-# budget = 5
-# num_concepts = 3
-# num_queries = 2
-# magnificationEta = 2
-# privacyHardness = 2
-# num_privates = 1
-# queryDiversityEta = 2
+# budget = 20
+# num_concepts = 50
+# num_queries = 10
+# magnificationEta = 1 #3 #1 #3
+# privacyHardness = 1 #3 #1 #3
+# num_privates=5
+# queryDiversityEta = 1
 # logDetLambdaVal = 1
+# metric = "euclidean"
+# metric_disp_sparse = "euclidean"
+# minbound = -10
+# maxbound = 10
+
+num_internal_clusters = 3 #3
+num_sparse_neighbors = 5 #10 #4
+num_random = 2 #2
+num_clusters = 3#3
+cluster_std_dev = 4 #1
+num_samples = 9
+num_set = 3 #3
+num_features = 2
+num_sparse_neighbors_full = num_sparse_neighbors #fixed sparseKernel asymmetric issue and hence this works for DisparitySum also now
+budget = 5
+num_concepts = 3
+num_queries = 2
+magnificationEta = 2
+privacyHardness = 2
+num_privates = 1
+queryDiversityEta = 2
+logDetLambdaVal = 1
+metric = "euclidean"
+metric_disp_sparse = "euclidean"
+minbound = 50
+maxbound = 200
+
 
 @pytest.fixture
 def data():
-    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
+    random.seed(1)
+    np.random.seed(1)
+    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, center_box=(minbound,maxbound), cluster_std=cluster_std_dev, return_centers=True, random_state=4)
     data = list(map(tuple, points))
 
     # get num_set data points belonging to cluster#1
-    random.seed(1)
+    #random.seed(1)
     cluster1Indices = [index for index, val in enumerate(cluster_ids) if val == 1]
     subset1 = random.sample(cluster1Indices, num_set)
     set1 = set(subset1[:-1])
@@ -153,11 +162,13 @@ def data():
 
 @pytest.fixture
 def data_with_clusters():
-    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
+    random.seed(1)
+    np.random.seed(1)
+    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, center_box=(minbound,maxbound), cluster_std=cluster_std_dev, return_centers=True, random_state=4)
     data = list(map(tuple, points))
 
     # get num_set data points belonging to cluster#1
-    random.seed(1)
+    # random.seed(1)
     cluster1Indices = [index for index, val in enumerate(cluster_ids) if val == 1]
     subset1 = random.sample(cluster1Indices, num_set)
     set1 = set(subset1[:-1])
@@ -176,12 +187,15 @@ def data_with_clusters():
 
 @pytest.fixture
 def data_queries():
-    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
+    random.seed(1)
+    np.random.seed(1)
+    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, center_box=(minbound,maxbound), cluster_std=cluster_std_dev, return_centers=True, random_state=4)
     
     pointsMinusQuery = list(map(tuple, points)) 
 
     queries = []
     query_features = []
+    # random.seed(1)
     random_clusters = random.sample(range(num_clusters), num_queries)
     for c in range(num_queries): #select 10 query points
         crand = random_clusters[c]
@@ -191,7 +205,7 @@ def data_queries():
         pointsMinusQuery.remove(tuple(points[q_ind]))
     
     # get a subset with num_set data points
-    random.seed(1)
+    # random.seed(1)
     set1 = set(random.sample(range(num_samples-num_queries), num_set))
 
     imageData = np.array(pointsMinusQuery)
@@ -201,7 +215,9 @@ def data_queries():
 
 @pytest.fixture
 def data_queries_privates():
-    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
+    random.seed(1)
+    np.random.seed(1)
+    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, center_box=(minbound,maxbound), cluster_std=cluster_std_dev, return_centers=True, random_state=4)
     
     pointsMinusQueryPrivate = list(map(tuple, points)) 
 
@@ -209,6 +225,7 @@ def data_queries_privates():
     query_features = []
     privates = []
     private_features = []
+    # random.seed(1)
     random_clusters = random.sample(range(num_clusters), num_queries + num_privates)
     for c in range(num_queries + num_privates): 
         if c < num_queries:
@@ -225,7 +242,7 @@ def data_queries_privates():
             pointsMinusQueryPrivate.remove(tuple(points[p_ind]))
         
     # get a subset with num_set data points
-    random.seed(1)
+    # random.seed(1)
     set1 = set(random.sample(range(num_samples-num_queries), num_set))
 
     imageData = np.array(pointsMinusQueryPrivate)
@@ -237,11 +254,13 @@ def data_queries_privates():
 
 @pytest.fixture
 def data_features_log():
-    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
+    random.seed(1)
+    np.random.seed(1)
+    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, center_box=(minbound,maxbound), cluster_std=cluster_std_dev, return_centers=True, random_state=4)
     features = list(map(tuple, points))
 
     # get num_set data points belonging to cluster#1
-    random.seed(1)
+    # random.seed(1)
     cluster1Indices = [index for index, val in enumerate(cluster_ids) if val == 1]
     subset1 = random.sample(cluster1Indices, num_set)
     set1 = set(subset1[:-1])
@@ -252,11 +271,13 @@ def data_features_log():
 
 @pytest.fixture
 def data_features_sqrt():
-    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
+    random.seed(1)
+    np.random.seed(1)
+    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, center_box=(minbound,maxbound), cluster_std=cluster_std_dev, return_centers=True, random_state=4)
     features = list(map(tuple, points))
 
     # get num_set data points belonging to cluster#1
-    random.seed(1)
+    # random.seed(1)
     cluster1Indices = [index for index, val in enumerate(cluster_ids) if val == 1]
     subset1 = random.sample(cluster1Indices, num_set)
     set1 = set(subset1[:-1])
@@ -267,11 +288,13 @@ def data_features_sqrt():
 
 @pytest.fixture
 def data_features_inverse():
-    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, cluster_std=cluster_std_dev, return_centers=True, random_state=4)
+    random.seed(1)
+    np.random.seed(1)
+    points, cluster_ids, centers = make_blobs(n_samples=num_samples, centers=num_clusters, n_features=num_features, center_box=(minbound,maxbound), cluster_std=cluster_std_dev, return_centers=True, random_state=4)
     features = list(map(tuple, points))
 
     # get num_set data points belonging to cluster#1
-    random.seed(1)
+    # random.seed(1)
     cluster1Indices = [index for index, val in enumerate(cluster_ids) if val == 1]
     subset1 = random.sample(cluster1Indices, num_set)
     set1 = set(subset1[:-1])
@@ -283,22 +306,27 @@ def data_features_inverse():
 
 @pytest.fixture
 def data_concepts():
-    cover_set = []
-    np.random.seed(1)
     random.seed(1)
+    np.random.seed(1)
+    cover_set = []
+    # np.random.seed(1)
+    # random.seed(1)
     concept_weights = np.random.rand(num_concepts).tolist()
     for i in range(num_samples):
         cover_set.append(set(random.sample(list(range(num_concepts)), random.randint(0,num_concepts))))
     obj = SetCoverFunction(n=num_samples, cover_set=cover_set, num_concepts=num_concepts, concept_weights=concept_weights)
+    # random.seed(1)
     subset1 = random.sample(list(range(num_samples)), num_set)
     set1 = set(subset1[:-1])
     return (obj, set1)
 
 @pytest.fixture
 def data_prob_concepts():
-    probs = []
-    np.random.seed(1)
     random.seed(1)
+    np.random.seed(1)
+    probs = []
+    # np.random.seed(1)
+    # random.seed(1)
     concept_weights = np.random.rand(num_concepts).tolist()
     for i in range(num_samples):
         probs.append(np.random.rand(num_concepts).tolist())
@@ -309,9 +337,11 @@ def data_prob_concepts():
 
 @pytest.fixture
 def data_mi_prob_concepts(request):
-    probs = []
-    np.random.seed(1)
     random.seed(1)
+    np.random.seed(1)
+    probs = []
+    # np.random.seed(1)
+    # random.seed(1)
     concept_weights = np.random.rand(num_concepts).tolist()
     for i in range(num_samples):
         probs.append(np.random.rand(num_concepts).tolist())
@@ -326,9 +356,11 @@ def data_mi_prob_concepts(request):
 
 @pytest.fixture
 def data_mi_concepts(request):
-    cover_set = []
-    np.random.seed(1)
     random.seed(1)
+    np.random.seed(1)
+    cover_set = []
+    # np.random.seed(1)
+    # random.seed(1)
     concept_weights = np.random.rand(num_concepts).tolist()
     for i in range(num_samples):
         cover_set.append(set(random.sample(list(range(num_concepts)), random.randint(0,num_concepts))))
@@ -343,9 +375,11 @@ def data_mi_concepts(request):
 
 @pytest.fixture
 def data_cmi_concepts():
-    cover_set = []
-    np.random.seed(1)
     random.seed(1)
+    np.random.seed(1)
+    cover_set = []
+    # np.random.seed(1)
+    # random.seed(1)
     concept_weights = np.random.rand(num_concepts).tolist()
     for i in range(num_samples):
         cover_set.append(set(random.sample(list(range(num_concepts)), random.randint(0,num_concepts))))
@@ -360,9 +394,11 @@ def data_cmi_concepts():
 
 @pytest.fixture
 def data_cmi_prob_concepts():
-    probs = []
-    np.random.seed(1)
     random.seed(1)
+    np.random.seed(1)
+    probs = []
+    # np.random.seed(1)
+    # random.seed(1)
     concept_weights = np.random.rand(num_concepts).tolist()
     for i in range(num_samples):
         probs.append(np.random.rand(num_concepts).tolist())
@@ -381,9 +417,9 @@ def object_dense_cpp_kernel(request, data):
     if request.param == "FacilityLocation":
         obj = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
     elif request.param == "DisparitySum":
-        obj = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
+        obj = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric=metric_disp_sparse)
     elif request.param == "DisparityMin":
-        obj = DisparityMinFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
+        obj = DisparityMinFunction(n=num_samples, mode="dense", data=dataArray, metric=metric_disp_sparse)
     elif request.param == "GraphCut":
         obj = GraphCutFunction(n=num_samples, mode="dense", lambdaVal=1, data=dataArray, metric=metric)
     elif request.param == "LogDeterminant":
@@ -481,17 +517,19 @@ def object_cmi_dense_py_kernel(request, data_queries_privates):
 @pytest.fixture
 def object_dense_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    K_dense = create_kernel(dataArray, mode='dense', metric='euclidean')
+    K_dense = create_kernel(dataArray, mode='dense', metric=metric)
     if request.param == "FacilityLocation":
         obj = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False)
     elif request.param == "DisparitySum":
+        K_dense = create_kernel(dataArray, mode='dense', metric=metric_disp_sparse)
         obj = DisparitySumFunction(n=num_samples, mode="dense", sijs = K_dense)
     elif request.param == "DisparityMin":
+        K_dense = create_kernel(dataArray, mode='dense', metric=metric_disp_sparse)
         obj = DisparityMinFunction(n=num_samples, mode="dense", sijs = K_dense)
     elif request.param == "GraphCut":
         obj = GraphCutFunction(n=num_samples, mode="dense", lambdaVal=1, ggsijs=K_dense)
     elif request.param == "LogDeterminant":
-        obj = LogDeterminantFunction(n=num_samples, mode="dense", lambdaVal=logDetLambdaVal, data=dataArray, metric=metric)
+        obj = LogDeterminantFunction(n=num_samples, mode="dense", lambdaVal=logDetLambdaVal, sijs=K_dense)
     else:
         return None
     return obj
@@ -499,15 +537,17 @@ def object_dense_py_kernel(request, data):
 @pytest.fixture
 def objects_dense_cpp_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    K_dense = create_kernel(dataArray, mode='dense',metric='euclidean')
+    K_dense = create_kernel(dataArray, mode='dense',metric=metric)
     if request.param == "FacilityLocation":
         obj1 = FacilityLocationFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
         obj2 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False)
     elif request.param == "DisparitySum":
-        obj1 = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
+        obj1 = DisparitySumFunction(n=num_samples, mode="dense", data=dataArray, metric=metric_disp_sparse)
+        K_dense = create_kernel(dataArray, mode='dense',metric=metric_disp_sparse)
         obj2 = DisparitySumFunction(n=num_samples, mode="dense", sijs = K_dense)
     elif request.param == "DisparityMin":
-        obj1 = DisparityMinFunction(n=num_samples, mode="dense", data=dataArray, metric=metric)
+        obj1 = DisparityMinFunction(n=num_samples, mode="dense", data=dataArray, metric=metric_disp_sparse)
+        K_dense = create_kernel(dataArray, mode='dense',metric=metric_disp_sparse)
         obj2 = DisparityMinFunction(n=num_samples, mode="dense", sijs = K_dense)
     elif request.param == "GraphCut":
         obj1 = GraphCutFunction(n=num_samples, mode="dense", lambdaVal=1, data=dataArray, metric=metric)
@@ -522,7 +562,7 @@ def objects_dense_cpp_py_kernel(request, data):
 @pytest.fixture
 def objects_fl_pybind(data):
     num_samples, dataArray, _, _ = data
-    K_dense = helper.create_kernel_dense_sklearn(dataArray, 'euclidean')
+    K_dense = helper.create_kernel_dense_sklearn(dataArray, metric)
     obj1 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False, pybind_mode="list")
     # obj2 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False, pybind_mode="memoryview")
     obj2 = FacilityLocationFunction(n=num_samples, mode="dense", sijs = K_dense, separate_rep=False, pybind_mode="numpyarray")
@@ -537,9 +577,9 @@ def object_sparse_cpp_kernel(request, data):
     if request.param == "FacilityLocation":
         obj = FacilityLocationFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors)
     elif request.param == "DisparitySum":
-        obj = DisparitySumFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full)
+        obj = DisparitySumFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric_disp_sparse, num_neighbors=num_sparse_neighbors_full)
     elif request.param == "DisparityMin":
-        obj = DisparityMinFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full)
+        obj = DisparityMinFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric_disp_sparse, num_neighbors=num_sparse_neighbors_full)
     elif request.param == "GraphCut":
         obj = GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors)
     elif request.param == "LogDeterminant":
@@ -551,7 +591,7 @@ def object_sparse_cpp_kernel(request, data):
 @pytest.fixture
 def object_sparse_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    K_sparse = create_kernel(dataArray, mode='sparse',metric='euclidean', num_neigh=num_sparse_neighbors)
+    K_sparse = create_kernel(dataArray, mode='sparse',metric=metric_disp_sparse, num_neigh=num_sparse_neighbors)
     if request.param == "FacilityLocation":
         obj = FacilityLocationFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors)
     elif request.param == "DisparitySum":
@@ -569,21 +609,21 @@ def object_sparse_py_kernel(request, data):
 @pytest.fixture
 def objects_sparse_cpp_py_kernel(request, data):
     num_samples, dataArray, _, _ = data
-    K_sparse = create_kernel(dataArray, mode='sparse', metric='euclidean', num_neigh=num_sparse_neighbors)
+    K_sparse = create_kernel(dataArray, mode='sparse', metric=metric_disp_sparse, num_neigh=num_sparse_neighbors)
     if request.param == "FacilityLocation":
-        obj1 = FacilityLocationFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors)
+        obj1 = FacilityLocationFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric_disp_sparse, num_neighbors=num_sparse_neighbors)
         obj2 = FacilityLocationFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors)
     elif request.param == "DisparitySum":
-        obj1 = DisparitySumFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full)
+        obj1 = DisparitySumFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric_disp_sparse, num_neighbors=num_sparse_neighbors_full)
         obj2 = DisparitySumFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full)
     elif request.param == "DisparityMin":
-        obj1 = DisparityMinFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full)
+        obj1 = DisparityMinFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric_disp_sparse, num_neighbors=num_sparse_neighbors_full)
         obj2 = DisparityMinFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full)
     elif request.param == "GraphCut":
-        obj1= GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors)
+        obj1= GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, data=dataArray, metric=metric_disp_sparse, num_neighbors=num_sparse_neighbors)
         obj2 = GraphCutFunction(n=num_samples, mode="sparse", lambdaVal=1, ggsijs=K_sparse, num_neighbors=num_sparse_neighbors)
     elif request.param == "LogDeterminant":
-        obj1 = LogDeterminantFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric, num_neighbors=num_sparse_neighbors_full, lambdaVal=logDetLambdaVal)
+        obj1 = LogDeterminantFunction(n=num_samples, mode="sparse", data=dataArray, metric=metric_disp_sparse, num_neighbors=num_sparse_neighbors_full, lambdaVal=logDetLambdaVal)
         obj2 = LogDeterminantFunction(n=num_samples, mode="sparse", sijs = K_sparse, num_neighbors=num_sparse_neighbors_full, lambdaVal=logDetLambdaVal)
     else:
         return None
@@ -593,7 +633,7 @@ def objects_sparse_cpp_py_kernel(request, data):
 def object_clustered_mode_birch(request, data):
     num_samples, dataArray, _, _ = data
     if request.param == "FacilityLocation":
-        obj = FacilityLocationFunction(n=num_samples, mode="clustered", data=dataArray, metric=metric, num_clusters=num_internal_clusters)
+        obj = FacilityLocationFunction(n=num_samples, mode="clustered", data=dataArray, metric=metric_disp_sparse, num_clusters=num_internal_clusters)
     else:
         return None
     return obj
@@ -602,7 +642,7 @@ def object_clustered_mode_birch(request, data):
 def object_clustered_mode_user(request, data_with_clusters):
     num_samples, dataArray, _, _, cluster_ids = data_with_clusters
     if request.param == "FacilityLocation":
-        obj = FacilityLocationFunction(n=num_samples, mode="clustered", cluster_labels=cluster_ids.tolist(), data=dataArray, metric=metric, num_clusters=num_internal_clusters)
+        obj = FacilityLocationFunction(n=num_samples, mode="clustered", cluster_labels=cluster_ids.tolist(), data=dataArray, metric=metric_disp_sparse, num_clusters=num_internal_clusters)
     else:
         return None
     return obj
@@ -610,40 +650,40 @@ def object_clustered_mode_user(request, data_with_clusters):
 @pytest.fixture
 def object_clustered_birch_multi(request, data):
     num_samples, dataArray, _, _ = data
-    obj = ClusteredFunction(n=num_samples, mode="multi", f_name=request.param, metric='euclidean', data=dataArray, num_clusters=num_internal_clusters)
+    obj = ClusteredFunction(n=num_samples, mode="multi", f_name=request.param, metric=metric_disp_sparse, data=dataArray, num_clusters=num_internal_clusters)
     return obj
 
 @pytest.fixture
 def object_clustered_user_multi(request, data_with_clusters):
     num_samples, dataArray, _, _, cluster_ids = data_with_clusters
-    obj = ClusteredFunction(n=num_samples, mode="multi", f_name=request.param, metric='euclidean', data=dataArray, num_clusters=num_internal_clusters, cluster_lab=cluster_ids.tolist())
+    obj = ClusteredFunction(n=num_samples, mode="multi", f_name=request.param, metric=metric_disp_sparse, data=dataArray, num_clusters=num_internal_clusters, cluster_lab=cluster_ids.tolist())
     return obj
 
 @pytest.fixture
 def object_clustered_birch_single(request, data):
     num_samples, dataArray, _, _ = data
-    obj = ClusteredFunction(n=num_samples, mode="single", f_name=request.param, metric='euclidean', data=dataArray, num_clusters=num_internal_clusters)
+    obj = ClusteredFunction(n=num_samples, mode="single", f_name=request.param, metric=metric_disp_sparse, data=dataArray, num_clusters=num_internal_clusters)
     return obj
 
 @pytest.fixture
 def object_clustered_user_single(request, data_with_clusters):
     num_samples, dataArray, _, _, cluster_ids = data_with_clusters
-    obj = ClusteredFunction(n=num_samples, mode="single", f_name=request.param, metric='euclidean', data=dataArray, num_clusters=num_internal_clusters, cluster_lab=cluster_ids.tolist())
+    obj = ClusteredFunction(n=num_samples, mode="single", f_name=request.param, metric=metric_disp_sparse, data=dataArray, num_clusters=num_internal_clusters, cluster_lab=cluster_ids.tolist())
     return obj
 
 @pytest.fixture
 def objects_single_multi_user(request, data_with_clusters):
     num_samples, dataArray, _, _, cluster_ids = data_with_clusters
-    obj1 = ClusteredFunction(n=num_samples, mode="multi", f_name=request.param, metric='euclidean', data=dataArray, num_clusters=num_internal_clusters, cluster_lab=cluster_ids.tolist())
-    obj2 = ClusteredFunction(n=num_samples, mode="single", f_name=request.param, metric='euclidean', data=dataArray, num_clusters=num_internal_clusters, cluster_lab=cluster_ids.tolist())
+    obj1 = ClusteredFunction(n=num_samples, mode="multi", f_name=request.param, metric=metric_disp_sparse, data=dataArray, num_clusters=num_internal_clusters, cluster_lab=cluster_ids.tolist())
+    obj2 = ClusteredFunction(n=num_samples, mode="single", f_name=request.param, metric=metric_disp_sparse, data=dataArray, num_clusters=num_internal_clusters, cluster_lab=cluster_ids.tolist())
     return obj1, obj2
 
 @pytest.fixture
 def objects_mode_clustered_user(request, data_with_clusters):
     num_samples, dataArray, _, _, cluster_ids = data_with_clusters
     if request.param == "FacilityLocation":
-        obj1 = FacilityLocationFunction(n=num_samples, mode="clustered", cluster_labels=cluster_ids.tolist(), data=dataArray, metric=metric, num_clusters=num_internal_clusters)
-        obj2 = ClusteredFunction(n=num_samples, mode="multi", f_name='FacilityLocation', metric='euclidean', data=dataArray, num_clusters=num_internal_clusters, cluster_lab=cluster_ids.tolist())
+        obj1 = FacilityLocationFunction(n=num_samples, mode="clustered", cluster_labels=cluster_ids.tolist(), data=dataArray, metric=metric_disp_sparse, num_clusters=num_internal_clusters)
+        obj2 = ClusteredFunction(n=num_samples, mode="multi", f_name='FacilityLocation', metric=metric_disp_sparse, data=dataArray, num_clusters=num_internal_clusters, cluster_lab=cluster_ids.tolist())
     else:
         return None
     return obj1, obj2
@@ -651,16 +691,16 @@ def objects_mode_clustered_user(request, data_with_clusters):
 @pytest.fixture
 def objects_single_multi_birch(request, data):
     num_samples, dataArray, _, _ = data
-    obj1 = ClusteredFunction(n=num_samples, mode="multi", f_name=request.param, metric='euclidean', data=dataArray, num_clusters=num_internal_clusters)
-    obj2 = ClusteredFunction(n=num_samples, mode="single", f_name=request.param, metric='euclidean', data=dataArray, num_clusters=num_internal_clusters)
+    obj1 = ClusteredFunction(n=num_samples, mode="multi", f_name=request.param, metric=metric_disp_sparse, data=dataArray, num_clusters=num_internal_clusters)
+    obj2 = ClusteredFunction(n=num_samples, mode="single", f_name=request.param, metric=metric_disp_sparse, data=dataArray, num_clusters=num_internal_clusters)
     return obj1, obj2
 
 @pytest.fixture
 def objects_mode_clustered_birch(request, data):
     num_samples, dataArray, _, _ = data
     if request.param == "FacilityLocation":
-        obj1 = FacilityLocationFunction(n=num_samples, mode="clustered", data=dataArray, metric=metric, num_clusters=num_internal_clusters)
-        obj2 = ClusteredFunction(n=num_samples, mode="multi", f_name='FacilityLocation', metric='euclidean', data=dataArray, num_clusters=num_internal_clusters)
+        obj1 = FacilityLocationFunction(n=num_samples, mode="clustered", data=dataArray, metric=metric_disp_sparse, num_clusters=num_internal_clusters)
+        obj2 = ClusteredFunction(n=num_samples, mode="multi", f_name='FacilityLocation', metric=metric_disp_sparse, data=dataArray, num_clusters=num_internal_clusters)
     else:
         return None
     return obj1, obj2
@@ -1718,22 +1758,23 @@ class TestAll:
 
     ######## Tests for optimizers ################
     @pytest.mark.opt_regular
-    @pytest.mark.parametrize("object_dense_cpp_kernel", optimizerTests, indirect=['object_dense_cpp_kernel'])
-    def test_naive_lazy(self, object_dense_cpp_kernel):
-        greedyListNaive = object_dense_cpp_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        greedyListLazy = object_dense_cpp_kernel.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+    @pytest.mark.parametrize("object_dense_py_kernel", optimizerTests, indirect=['object_dense_py_kernel'])
+    def test_naive_lazy(self, object_dense_py_kernel):
+        greedyListNaive = object_dense_py_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_dense_py_kernel.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         naiveGains = [x[1] for x in greedyListNaive]
         lazyGains = [x[1] for x in greedyListLazy]
-        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        # assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.opt_regular
-    @pytest.mark.parametrize("object_dense_cpp_kernel", optimizerTests, indirect=['object_dense_cpp_kernel'])
-    def test_stochastic_lazierThanLazy(self, object_dense_cpp_kernel):
-        greedyListStochastic = object_dense_cpp_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        greedyListLazierThanLazy = object_dense_cpp_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+    @pytest.mark.parametrize("object_dense_py_kernel", optimizerTests, indirect=['object_dense_py_kernel'])
+    def test_stochastic_lazierThanLazy(self, object_dense_py_kernel):
+        greedyListStochastic = object_dense_py_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazierThanLazy = object_dense_py_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
-        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ######## Optimizers test for FeatureBased Logarithmic #####################
     @pytest.mark.fb_opt
@@ -1743,7 +1784,8 @@ class TestAll:
         greedyListLazy = object_fb.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         naiveGains = [x[1] for x in greedyListNaive]
         lazyGains = [x[1] for x in greedyListLazy]
-        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        # assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.fb_opt
     def test_fb_log_optimizer_stochastic_lazierThanLazy(self, data_features_log):
@@ -1752,7 +1794,7 @@ class TestAll:
         greedyListLazierThanLazy = object_fb.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
-        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 regular tests for FeatureBased Logarithmic Function #######################
     @pytest.mark.fb_regular
@@ -1822,7 +1864,8 @@ class TestAll:
         greedyListLazy = object_fb.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         naiveGains = [x[1] for x in greedyListNaive]
         lazyGains = [x[1] for x in greedyListLazy]
-        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        # assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.fb_opt
     def test_fb_sqrt_optimizer_stochastic_lazierThanLazy(self, data_features_sqrt):
@@ -1831,7 +1874,7 @@ class TestAll:
         greedyListLazierThanLazy = object_fb.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
-        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 regular tests for FeatureBased SquareRoot Function #######################
     @pytest.mark.fb_regular
@@ -1901,7 +1944,8 @@ class TestAll:
         greedyListLazy = object_fb.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         naiveGains = [x[1] for x in greedyListNaive]
         lazyGains = [x[1] for x in greedyListLazy]
-        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        # assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.fb_opt
     def test_fb_inverse_optimizer_stochastic_lazierThanLazy(self, data_features_inverse):
@@ -1910,7 +1954,7 @@ class TestAll:
         greedyListLazierThanLazy = object_fb.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
-        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 regular tests for FeatureBased Inverse Function #######################
     @pytest.mark.fb_regular
@@ -1980,7 +2024,7 @@ class TestAll:
         greedyListLazy = object_sc.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         naiveGains = [x[1] for x in greedyListNaive]
         lazyGains = [x[1] for x in greedyListLazy]
-        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.sc_opt
     def test_sc_optimizer_stochastic_lazierThanLazy(self, data_concepts):
@@ -1989,7 +2033,7 @@ class TestAll:
         greedyListLazierThanLazy = object_sc.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
-        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 regular tests for SetCover Function #######################
     @pytest.mark.sc_regular
@@ -2060,7 +2104,7 @@ class TestAll:
         greedyListLazy = object_scmi.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         naiveGains = [x[1] for x in greedyListNaive]
         lazyGains = [x[1] for x in greedyListLazy]
-        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.sc_mi_opt
     @pytest.mark.parametrize("data_mi_concepts", SCMIFunctions, indirect=['data_mi_concepts'])
@@ -2070,7 +2114,7 @@ class TestAll:
         greedyListLazierThanLazy = object_scmi.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
-        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 regular tests for SetCover MI Function #######################
     @pytest.mark.sc_mi_regular
@@ -2150,7 +2194,7 @@ class TestAll:
         greedyListLazy = object_psc.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         naiveGains = [x[1] for x in greedyListNaive]
         lazyGains = [x[1] for x in greedyListLazy]
-        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.psc_opt
     def test_psc_optimizer_stochastic_lazierThanLazy(self, data_prob_concepts):
@@ -2159,7 +2203,7 @@ class TestAll:
         greedyListLazierThanLazy = object_psc.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
-        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 regular tests for ProbabilisticSetCover Function #######################
     @pytest.mark.psc_regular
@@ -2235,7 +2279,7 @@ class TestAll:
         greedyListLazy = object_pscmi.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         naiveGains = [x[1] for x in greedyListNaive]
         lazyGains = [x[1] for x in greedyListLazy]
-        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.psc_mi_opt
     @pytest.mark.parametrize("data_mi_prob_concepts", probSCMIFunctions, indirect=['data_mi_prob_concepts'])
@@ -2245,7 +2289,7 @@ class TestAll:
         greedyListLazierThanLazy = object_pscmi.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
-        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 regular tests for ProbabilisticSetCover MI Function #######################
     @pytest.mark.psc_mi_regular
@@ -2451,22 +2495,22 @@ class TestAll:
 
     ######## Tests for MI optimizers ################
     @pytest.mark.mi_opt_regular
-    @pytest.mark.parametrize("object_mi_dense_cpp_kernel", optimizerMITests, indirect=['object_mi_dense_cpp_kernel'])
-    def test_mi_naive_lazy(self, object_mi_dense_cpp_kernel):
-        greedyListNaive = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        greedyListLazy = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+    @pytest.mark.parametrize("object_mi_dense_py_kernel", optimizerMITests, indirect=['object_mi_dense_py_kernel'])
+    def test_mi_naive_lazy(self, object_mi_dense_py_kernel):
+        greedyListNaive = object_mi_dense_py_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_mi_dense_py_kernel.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         naiveGains = [x[1] for x in greedyListNaive]
         lazyGains = [x[1] for x in greedyListLazy]
-        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.mi_opt_regular
-    @pytest.mark.parametrize("object_mi_dense_cpp_kernel", optimizerMITests, indirect=['object_mi_dense_cpp_kernel'])
-    def test_mi_stochastic_lazierThanLazy(self, object_mi_dense_cpp_kernel):
-        greedyListStochastic = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        greedyListLazierThanLazy = object_mi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+    @pytest.mark.parametrize("object_mi_dense_py_kernel", optimizerMITests, indirect=['object_mi_dense_py_kernel'])
+    def test_mi_stochastic_lazierThanLazy(self, object_mi_dense_py_kernel):
+        greedyListStochastic = object_mi_dense_py_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazierThanLazy = object_mi_dense_py_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
-        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 tests for CMI dense cpp kernel #######################
     @pytest.mark.cmi_regular
@@ -2530,7 +2574,8 @@ class TestAll:
         subset.remove(elem)
         simpleGain = object_cmi_dense_cpp_kernel.marginalGain(subset, elem)
         fastGain = object_cmi_dense_cpp_kernel.marginalGainWithMemoization(subset, elem)
-        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+        # assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+        assert naiveGain == pytest.approx(simpleGain) and simpleGain == pytest.approx(fastGain), "Mismatch between naive, simple and fast margins"
 
     ############ 6 tests for dense python kernel #######################
 
@@ -2597,26 +2642,27 @@ class TestAll:
         subset.remove(elem)
         simpleGain = object_cmi_dense_py_kernel.marginalGain(subset, elem)
         fastGain = object_cmi_dense_py_kernel.marginalGainWithMemoization(subset, elem)
-        assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+        # assert math.isclose(naiveGain, simpleGain, rel_tol=1e-05) and math.isclose(simpleGain, fastGain, rel_tol=1e-05), "Mismatch between naive, simple and fast margins"
+        assert naiveGain == pytest.approx(simpleGain) and simpleGain == pytest.approx(fastGain), "Mismatch between naive, simple and fast margins"
 
     ######## Tests for CMI optimizers ################
     @pytest.mark.cmi_opt_regular
-    @pytest.mark.parametrize("object_cmi_dense_cpp_kernel", optimizerCMITests, indirect=['object_cmi_dense_cpp_kernel'])
-    def test_cmi_naive_lazy(self, object_cmi_dense_cpp_kernel):
-        greedyListNaive = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        greedyListLazy = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+    @pytest.mark.parametrize("object_cmi_dense_py_kernel", optimizerCMITests, indirect=['object_cmi_dense_py_kernel'])
+    def test_cmi_naive_lazy(self, object_cmi_dense_py_kernel):
+        greedyListNaive = object_cmi_dense_py_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazy = object_cmi_dense_py_kernel.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         naiveGains = [x[1] for x in greedyListNaive]
         lazyGains = [x[1] for x in greedyListLazy]
-        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.cmi_opt_regular
-    @pytest.mark.parametrize("object_cmi_dense_cpp_kernel", optimizerCMITests, indirect=['object_cmi_dense_cpp_kernel'])
-    def test_cmi_stochastic_lazierThanLazy(self, object_cmi_dense_cpp_kernel):
-        greedyListStochastic = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
-        greedyListLazierThanLazy = object_cmi_dense_cpp_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+    @pytest.mark.parametrize("object_cmi_dense_py_kernel", optimizerCMITests, indirect=['object_cmi_dense_py_kernel'])
+    def test_cmi_stochastic_lazierThanLazy(self, object_cmi_dense_py_kernel):
+        greedyListStochastic = object_cmi_dense_py_kernel.maximize(budget=budget, optimizer='StochasticGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListLazierThanLazy = object_cmi_dense_py_kernel.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
-        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
     
 
     ######## Optimizers test for SetCoverCMI #####################
@@ -2627,7 +2673,7 @@ class TestAll:
         greedyListLazy = object_sccmi.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         naiveGains = [x[1] for x in greedyListNaive]
         lazyGains = [x[1] for x in greedyListLazy]
-        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.sc_cmi_opt
     def test_sc_cmi_optimizer_stochastic_lazierThanLazy(self, data_cmi_concepts):
@@ -2636,7 +2682,7 @@ class TestAll:
         greedyListLazierThanLazy = object_sccmi.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
-        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 regular tests for SetCover CMI Function #######################
     @pytest.mark.sc_cmi_regular
@@ -2710,7 +2756,7 @@ class TestAll:
         greedyListLazy = object_psccmi.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         naiveGains = [x[1] for x in greedyListNaive]
         lazyGains = [x[1] for x in greedyListLazy]
-        assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy and lazyGreedy"
     
     @pytest.mark.psc_cmi_opt
     def test_psc_cmi_optimizer_stochastic_lazierThanLazy(self, data_cmi_prob_concepts):
@@ -2719,7 +2765,7 @@ class TestAll:
         greedyListLazierThanLazy = object_psccmi.maximize(budget=budget, optimizer='LazierThanLazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
-        assert stochasticGains == lazierThanLazyGains, "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+        assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
 
     ############ 6 regular tests for ProbabilisticSetCover CMI Function #######################
     @pytest.mark.psc_cmi_regular
