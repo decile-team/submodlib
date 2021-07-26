@@ -16,7 +16,11 @@
     * submodular mutual information functions
     * conditional gain functions
     * conditional mutual information functions
-* Supports **different types of optimizers** - naive greedy, lazy (accelerated) greedy, stochastic (random) greedy, lazier than lazy greedy
+* Supports **different types of optimizers** 
+    * naive greedy
+    * lazy (accelerated) greedy
+    * stochastic (random) greedy
+    * lazier than lazy greedy
 * Combines the **best of Python's ease of use and C++'s efficiency**
 * **Rich API** which gives a variety of options to the user. See [this](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Different_Options_for_Usage.ipynb) notebook for an example of different usage patterns
 * De-coupled function and optimizer paradigm makes it **suitable for a wide-variety of tasks** 
