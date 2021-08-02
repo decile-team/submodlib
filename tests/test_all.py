@@ -1779,7 +1779,6 @@ class TestAll:
 
     ####### Sanity check of cost sensitive versions #############
     @pytest.mark.opt_regular
-    @pytest.mark.single
     @pytest.mark.parametrize("object_dense_py_kernel", optimizerTests, indirect=['object_dense_py_kernel'])
     def test_naive_naive_cost(self, object_dense_py_kernel):
         costs = [1]*num_samples
