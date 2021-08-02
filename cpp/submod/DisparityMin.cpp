@@ -283,20 +283,20 @@ std::unordered_set<ll> DisparityMin::getEffectiveGroundSet() {
     return effectiveGroundSet;
 }
 
-std::vector<std::pair<ll, double>> DisparityMin::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false, bool showProgress=true) {
-	// std::cout << "DisparityMin maximize\n";
-	if(optimizer == "NaiveGreedy") {
-		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress);
-	} else if(optimizer == "LazyGreedy") {
-        throw "Being non submodular, DisparityMin doesn't support LazyGreedy maximization";
-	} else if(optimizer == "StochasticGreedy") {
-        return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
-	} else if(optimizer == "LazierThanLazyGreedy") {
-        throw "Being non submodular, DisparityMin doesn't support LazierThanLazyGreedy maximization";
-	} else {
-		throw "Invalid optimizer";
-	}
-}
+// std::vector<std::pair<ll, double>> DisparityMin::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false, bool showProgress=true) {
+// 	// std::cout << "DisparityMin maximize\n";
+// 	if(optimizer == "NaiveGreedy") {
+// 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress);
+// 	} else if(optimizer == "LazyGreedy") {
+//         throw "Being non submodular, DisparityMin doesn't support LazyGreedy maximization";
+// 	} else if(optimizer == "StochasticGreedy") {
+//         return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
+// 	} else if(optimizer == "LazierThanLazyGreedy") {
+//         throw "Being non submodular, DisparityMin doesn't support LazierThanLazyGreedy maximization";
+// 	} else {
+// 		throw "Invalid optimizer";
+// 	}
+// }
 
 void DisparityMin::cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda) {
 	// std::cout << "DisparityMin clusterInit\n";

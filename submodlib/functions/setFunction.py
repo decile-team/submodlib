@@ -33,7 +33,7 @@ class SetFunction():
 			return 0
 		return self.cpp_obj.evaluate(X)
 
-	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon = 0.1, verbose=False, show_progress=True):
+	def maximize(self, budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, epsilon = 0.1, verbose=False, show_progress=True, costs=None, costSensitiveGreedy=False):
 		"""Compute the optimal subset with maximum score for the given *budget*.
 
 		Parameters
@@ -46,10 +46,16 @@ class SetFunction():
 			Set to True if maximization should terminate as soon as gain of adding any other item becomes zero. When True, size of optimal set can thus be potentially less than the budget.
 		stopIfNegativeGain : bool
 			Set to True if maximization should terminate as soon as the best gain in an iteration is negative. When True, this can potentially lead to optimal set of size less than the budget.
+		epsilon : float
+			Used by :ref:`optimizers.stochastic-greedy` and :ref:`optimizers.lazier-than-lazy-greedy` to compute the size of the random set.
 		verbose : bool
 			Set to True to trace/debug the execution of the maximization algorithm.
 		show_progress : bool
 			Set to True to see progress a progress bar.
+		costs : list, optional
+			List containing cost of each element of the ground set. Cost contributes to the budget. When *costSensitiveGreedy* is set to True, the marginal gain is divided by the cost to identify the next best element to add in every iteration. Default is None which means all ground set elements have cost = 1. It is possible to specify *costs* and yet have *costSensitiveGreedy* set to False. This would correspond use regular marginal gains, but the budget gets filled as per the costs of selected items. 
+		costSensitiveGreedy : bool, optional
+			When set to True, the next best candidate in every iteration is decided based on their marginal gain divided by cost. When True, it is mandatory to provide *costs*. Defaults to False.
 
 		Returns
 		-------
@@ -60,7 +66,14 @@ class SetFunction():
 
 		if budget >= len(self.effective_ground):
 			raise Exception("Budget must be less than effective ground set size")
-		return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, show_progress)
+		if type(costs) == type(None):
+			return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, show_progress, [], costSensitiveGreedy)
+		else:
+			if len(costs) != self.n:
+				raise Exception("Mismtach between length of costs and number of elements in the groundset")
+			return self.cpp_obj.maximize(optimizer, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, show_progress, costs, costSensitiveGreedy)
+
+		
 	
 	def marginalGain(self, X, element):
 		"""Computes the marginal gain in score of this function when a single item (*element*) is added to a set (*X*).

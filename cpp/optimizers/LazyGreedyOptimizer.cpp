@@ -22,9 +22,8 @@ bool LazyGreedyOptimizer::equals(double val1, double val2, double eps) {
 
 std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
     SetFunction &f_obj, ll budget, bool stopIfZeroGain,
-    bool stopIfNegativeGain, bool verbose, bool showProgress) {
+    bool stopIfNegativeGain, bool verbose, bool showProgress, const std::vector<int>& costs, bool costSensitiveGreedy) {
     //TODO: take care of handling equal guys later
-	//TODO: take care of different sizes of each items - becomes a candidate only if best and within budget, cost sensitive selection
     std::vector<std::pair<ll, double>> greedyVector;
     greedyVector.reserve(budget);
     std::unordered_set<ll> greedySet;
@@ -39,6 +38,12 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
         std::cout << "\n";
         std::cout << "Num elements in groundset = " << groundSet.size()
                   << std::endl;
+        std::cout << "Costs:" << std::endl;
+		for(int i: costs) {
+			std::cout << i << " ";
+		}
+		std::cout << "\n";
+		std::cout << "Cost sensitive greedy: " << costSensitiveGreedy << "\n";
         std::cout << "Starting the lazy greedy algorithm\n";
         std::cout << "Initial greedy set:" << std::endl;
         for (int i : greedySet) {
@@ -57,68 +62,196 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
     container.reserve(groundSet.size());
     std::priority_queue<std::pair<double, ll>, std::vector<std::pair<double, ll>>, std::less<std::pair<double, ll>>> maxHeap(std::less<std::pair<double, ll>>(), move(container));
     //std::priority_queue<std::pair<double, ll>> maxHeap;
-    // for each element in the ground set
-    for (auto elem : groundSet) {
-        // store <elem, marginalGainWithMemoization(greedySet, elem)> in
-        // priority-queue (max-heap)
-        maxHeap.push(std::pair<double, ll>(
-            f_obj.marginalGainWithMemoization(greedySet, elem), elem));
+    if(costSensitiveGreedy) {
+        // for each element in the ground set
+        for (auto elem : groundSet) {
+            // store <elem, marginalGainWithMemoization(greedySet, elem)> in
+            // priority-queue (max-heap)
+            maxHeap.push(std::pair<double, ll>(
+                (f_obj.marginalGainWithMemoization(greedySet, elem))/costs[elem], elem));
+        }
+    } else {
+        // for each element in the ground set
+        for (auto elem : groundSet) {
+            // store <elem, marginalGainWithMemoization(greedySet, elem)> in
+            // priority-queue (max-heap)
+            maxHeap.push(std::pair<double, ll>(
+                f_obj.marginalGainWithMemoization(greedySet, elem), elem));
+        }
     }
+    
     if(verbose) std::cout << "Max heap constructed\n";
     int step = 1;
 	int displayNext = step;
 	int percent = 0;
     int N = rem_budget;
     int iter = 0;
-    while (rem_budget > 0) {
-        std::pair<double, ll> currentMax = maxHeap.top();
-        maxHeap.pop();
-        if(verbose) std::cout << "currentMax element: " << currentMax.second <<" and its uper bound: " << currentMax.first << "\n";
-        double newMaxBound =
-            f_obj.marginalGainWithMemoization(greedySet, currentMax.second);
-        if(verbose) {
-            std::cout << "newMaxBound: " << newMaxBound <<"\n";
-            std::cout << "nextBest element: " << maxHeap.top().second <<"and its bound: " << maxHeap.top().first << "\n";
-        }
-        if (newMaxBound >= maxHeap.top().first) {
-            // add currentMax.first to greedy set after checking stop conditions
-            if ((newMaxBound < 0 && stopIfNegativeGain) ||
-                (equals(newMaxBound, 0, 1e-5) && stopIfZeroGain)) {
-                break;
-            } else {
-                f_obj.updateMemoization(greedySet, currentMax.second);
-                greedySet.insert(
-                    currentMax
-                        .second);  // greedily insert the best datapoint index
-                                   // of current iteration of while loop
-                greedyVector.push_back(
-                    std::pair<ll, double>(currentMax.second, newMaxBound));
-                rem_budget -= 1;
-                if (verbose) {
-                    std::cout << "Added element " << currentMax.second
-                              << " and the gain is " << newMaxBound << "\n";
-                    std::cout << "Updated greedySet: ";
-                    for (int i : greedySet) {
-                        std::cout << i << " ";
-                    }
-                    std::cout << "\n";
-                }
-                if(showProgress) {
-                    //TODO: use py::print
-                    percent = (int)(((iter+1.0)/N)*100);
-                    if (percent >= displayNext) {
-                        //cout << "\r" << "[" << std::string(percent / 5, (char)254u) << std::string(100 / 5 - percent / 5, ' ') << "]";
-                        std::cerr << "\r" << "[" << std::string(percent / 5, '|') << std::string(100 / 5 - percent / 5, ' ') << "]";
-                        std::cerr << percent << "%" << " [Iteration " << iter + 1 << " of " << N << "]";
-                        std::cerr.flush();
-                        displayNext += step;
-                    }
-                    iter += 1;
-                }
+    if(costs.size()==0 && !costSensitiveGreedy) {
+        while (rem_budget > 0) {
+            std::pair<double, ll> currentMax = maxHeap.top();
+            maxHeap.pop();
+            if(verbose) std::cout << "currentMax element: " << currentMax.second <<" and its uper bound: " << currentMax.first << "\n";
+            double newMaxBound =
+                f_obj.marginalGainWithMemoization(greedySet, currentMax.second);
+            if(verbose) {
+                std::cout << "newMaxBound: " << newMaxBound <<"\n";
+                std::cout << "nextBest element: " << maxHeap.top().second <<"and its bound: " << maxHeap.top().first << "\n";
             }
-        } else {
-            maxHeap.push(std::pair<double, ll>(newMaxBound, currentMax.second));
+            if (newMaxBound >= maxHeap.top().first) {
+                // add currentMax.first to greedy set after checking stop conditions
+                if ((newMaxBound < 0 && stopIfNegativeGain) ||
+                    (equals(newMaxBound, 0, 1e-5) && stopIfZeroGain)) {
+                    break;
+                } else {
+                    f_obj.updateMemoization(greedySet, currentMax.second);
+                    greedySet.insert(
+                        currentMax
+                            .second);  // greedily insert the best datapoint index
+                                    // of current iteration of while loop
+                    greedyVector.push_back(
+                        std::pair<ll, double>(currentMax.second, newMaxBound));
+                    rem_budget -= 1;
+                    if (verbose) {
+                        std::cout << "Added element " << currentMax.second
+                                << " and the gain is " << newMaxBound << "\n";
+                        std::cout << "Updated greedySet: ";
+                        for (int i : greedySet) {
+                            std::cout << i << " ";
+                        }
+                        std::cout << "\n";
+                    }
+                    if(showProgress) {
+                        //TODO: use py::print
+                        percent = (int)(((iter+1.0)/N)*100);
+                        if (percent >= displayNext) {
+                            //cout << "\r" << "[" << std::string(percent / 5, (char)254u) << std::string(100 / 5 - percent / 5, ' ') << "]";
+                            std::cerr << "\r" << "[" << std::string(percent / 5, '|') << std::string(100 / 5 - percent / 5, ' ') << "]";
+                            std::cerr << percent << "%" << " [Iteration " << iter + 1 << " of " << N << "]";
+                            std::cerr.flush();
+                            displayNext += step;
+                        }
+                        iter += 1;
+                    }
+                }
+            } else {
+                maxHeap.push(std::pair<double, ll>(newMaxBound, currentMax.second));
+            }
         }
+    } else if(costs.size()!= 0 && !costSensitiveGreedy) {
+        while (rem_budget > 0) {
+            std::pair<double, ll> currentMax = maxHeap.top();
+            maxHeap.pop();
+            if(verbose) std::cout << "currentMax element: " << currentMax.second <<" and its uper bound: " << currentMax.first << "\n";
+            if(costs[currentMax.second] > rem_budget) {
+                //can't add this guy to the greedy set as remaining budget is not sufficient
+                //discard it
+                continue;
+            }
+            double newMaxBound =
+                f_obj.marginalGainWithMemoization(greedySet, currentMax.second);
+            if(verbose) {
+                std::cout << "newMaxBound: " << newMaxBound <<"\n";
+                std::cout << "nextBest element: " << maxHeap.top().second <<"and its bound: " << maxHeap.top().first << "\n";
+            }
+            if (newMaxBound >= maxHeap.top().first) {
+                // add currentMax.first to greedy set after checking stop conditions
+                if ((newMaxBound < 0 && stopIfNegativeGain) ||
+                    (equals(newMaxBound, 0, 1e-5) && stopIfZeroGain)) {
+                    break;
+                } else {
+                    f_obj.updateMemoization(greedySet, currentMax.second);
+                    greedySet.insert(
+                        currentMax
+                            .second);  // greedily insert the best datapoint index
+                                    // of current iteration of while loop
+                    greedyVector.push_back(
+                        std::pair<ll, double>(currentMax.second, newMaxBound));
+                    rem_budget -= costs[currentMax.second];
+                    if (verbose) {
+                        std::cout << "Added element " << currentMax.second
+                                << " and the gain is " << newMaxBound << "\n";
+                        std::cout << "Updated greedySet: ";
+                        for (int i : greedySet) {
+                            std::cout << i << " ";
+                        }
+                        std::cout << "\n";
+                    }
+                    if(showProgress) {
+                        //TODO: use py::print
+                        percent = (int)(((iter+1.0)/N)*100);
+                        if (percent >= displayNext) {
+                            //cout << "\r" << "[" << std::string(percent / 5, (char)254u) << std::string(100 / 5 - percent / 5, ' ') << "]";
+                            std::cerr << "\r" << "[" << std::string(percent / 5, '|') << std::string(100 / 5 - percent / 5, ' ') << "]";
+                            std::cerr << percent << "%" << " [Iteration " << iter + 1 << " of " << N << "]";
+                            std::cerr.flush();
+                            displayNext += step;
+                        }
+                        iter += 1;
+                    }
+                }
+            } else {
+                maxHeap.push(std::pair<double, ll>(newMaxBound, currentMax.second));
+            }
+        }
+    } else if(costs.size()!= 0 && costSensitiveGreedy) {
+        while (rem_budget > 0) {
+            std::pair<double, ll> currentMax = maxHeap.top();
+            maxHeap.pop();
+            if(verbose) std::cout << "currentMax element: " << currentMax.second <<" and its uper bound: " << currentMax.first << "\n";
+            if(costs[currentMax.second] > rem_budget) {
+                //can't add this guy to the greedy set as remaining budget is not sufficient
+                //discard it
+                continue;
+            }
+            double newMaxBound =
+                (f_obj.marginalGainWithMemoization(greedySet, currentMax.second))/costs[currentMax.second];
+            if(verbose) {
+                std::cout << "newMaxBound: " << newMaxBound <<"\n";
+                std::cout << "nextBest element: " << maxHeap.top().second <<"and its bound: " << maxHeap.top().first << "\n";
+            }
+            if (newMaxBound >= maxHeap.top().first) {
+                // add currentMax.first to greedy set after checking stop conditions
+                if ((newMaxBound < 0 && stopIfNegativeGain) ||
+                    (equals(newMaxBound, 0, 1e-5) && stopIfZeroGain)) {
+                    break;
+                } else {
+                    f_obj.updateMemoization(greedySet, currentMax.second);
+                    greedySet.insert(
+                        currentMax
+                            .second);  // greedily insert the best datapoint index
+                                    // of current iteration of while loop
+                    greedyVector.push_back(
+                        std::pair<ll, double>(currentMax.second, newMaxBound));
+                    rem_budget -= costs[currentMax.second];
+                    if (verbose) {
+                        std::cout << "Added element " << currentMax.second
+                                << " and the gain is " << newMaxBound << "\n";
+                        std::cout << "Updated greedySet: ";
+                        for (int i : greedySet) {
+                            std::cout << i << " ";
+                        }
+                        std::cout << "\n";
+                    }
+                    if(showProgress) {
+                        //TODO: use py::print
+                        percent = (int)(((iter+1.0)/N)*100);
+                        if (percent >= displayNext) {
+                            //cout << "\r" << "[" << std::string(percent / 5, (char)254u) << std::string(100 / 5 - percent / 5, ' ') << "]";
+                            std::cerr << "\r" << "[" << std::string(percent / 5, '|') << std::string(100 / 5 - percent / 5, ' ') << "]";
+                            std::cerr << percent << "%" << " [Iteration " << iter + 1 << " of " << N << "]";
+                            std::cerr.flush();
+                            displayNext += step;
+                        }
+                        iter += 1;
+                    }
+                }
+            } else {
+                maxHeap.push(std::pair<double, ll>(newMaxBound, currentMax.second));
+            }
+        }
+    } else {
+        throw "Must specify costs for costSensitiveGreedy variant";
     }
+    
 	return greedyVector;
 }

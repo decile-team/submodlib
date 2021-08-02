@@ -339,28 +339,28 @@ std::unordered_set<ll> LogDeterminant::getEffectiveGroundSet() {
     return effectiveGroundSet;
 }
 
-std::vector<std::pair<ll, double>> LogDeterminant::maximize(
-    std::string optimizer, ll budget, bool stopIfZeroGain = false,
-    bool stopIfNegativeGain = false, float epsilon = 0.1,
-    bool verbose = false, bool showProgress=true) {
-    // std::cout << "LogDeterminant maximize\n";
-    if (optimizer == "NaiveGreedy") {
-        return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain,
-                                               stopIfNegativeGain, verbose, showProgress);
-    } else if (optimizer == "LazyGreedy") {
-        return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain,
-                                              stopIfNegativeGain, verbose, showProgress);
-    } else if (optimizer == "StochasticGreedy") {
-        return StochasticGreedyOptimizer().maximize(
-            *this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon,
-            verbose, showProgress);
-    } else if (optimizer == "LazierThanLazyGreedy") {
-        return LazierThanLazyGreedyOptimizer().maximize(
-            *this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
-    } else {
-        throw "Invalid optimizer";
-    }
-}
+// std::vector<std::pair<ll, double>> LogDeterminant::maximize(
+//     std::string optimizer, ll budget, bool stopIfZeroGain = false,
+//     bool stopIfNegativeGain = false, float epsilon = 0.1,
+//     bool verbose = false, bool showProgress=true) {
+//     // std::cout << "LogDeterminant maximize\n";
+//     if (optimizer == "NaiveGreedy") {
+//         return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain,
+//                                                stopIfNegativeGain, verbose, showProgress);
+//     } else if (optimizer == "LazyGreedy") {
+//         return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain,
+//                                               stopIfNegativeGain, verbose, showProgress);
+//     } else if (optimizer == "StochasticGreedy") {
+//         return StochasticGreedyOptimizer().maximize(
+//             *this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon,
+//             verbose, showProgress);
+//     } else if (optimizer == "LazierThanLazyGreedy") {
+//         return LazierThanLazyGreedyOptimizer().maximize(
+//             *this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
+//     } else {
+//         throw "Invalid optimizer";
+//     }
+// }
 
 void LogDeterminant::cluster_init(
     ll n_, std::vector<std::vector<float>> const &denseKernel_,

@@ -90,6 +90,7 @@ SCMIFunctions = ["SetCoverMutualInformation", "SetCoverConditionalGain"]
 # psc_cmi_opt - for optimizer tests of PSC CMI
 # cpp_kernel_cpp - for checking CPP kernel creation in CPP
 # pybind_test - to check different alternatives of passing numpy array to C++
+# single - makr any specific tests to run using this marker
 
 # num_internal_clusters = 20 #3
 # num_sparse_neighbors = 100 #10 #4
@@ -1775,6 +1776,31 @@ class TestAll:
         stochasticGains = [x[1] for x in greedyListStochastic]
         lazierThanLazyGains = [x[1] for x in greedyListLazierThanLazy]
         assert stochasticGains == pytest.approx(lazierThanLazyGains), "Mismatch between stochasticGreedy and lazierThanLazyGreedy"
+
+    ####### Sanity check of cost sensitive versions #############
+    @pytest.mark.opt_regular
+    @pytest.mark.single
+    @pytest.mark.parametrize("object_dense_py_kernel", optimizerTests, indirect=['object_dense_py_kernel'])
+    def test_naive_naive_cost(self, object_dense_py_kernel):
+        costs = [1]*num_samples
+        greedyListNaive1 = object_dense_py_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False)
+        greedyListNaive2 = object_dense_py_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False, costs = costs, costSensitiveGreedy=True)
+        naiveGains1 = [x[1] for x in greedyListNaive1]
+        naiveGains2 = [x[1] for x in greedyListNaive2]
+        # assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains1 == pytest.approx(naiveGains2), "Mismatch between cost sensitive and cost agnostic versions of naive greedy"
+    
+    @pytest.mark.opt_regular
+    @pytest.mark.parametrize("object_dense_py_kernel", optimizerTests, indirect=['object_dense_py_kernel'])
+    def test_naive_lazy_cost(self, object_dense_py_kernel):
+        costs = random.choices(range(1,6), k=num_samples)
+        greedyListNaive = object_dense_py_kernel.maximize(budget=budget, optimizer='NaiveGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False, costs=costs, costSensitiveGreedy=True)
+        greedyListLazy = object_dense_py_kernel.maximize(budget=budget, optimizer='LazyGreedy', stopIfZeroGain=False, stopIfNegativeGain=False, verbose=False, costs=costs, costSensitiveGreedy=True)
+        naiveGains = [x[1] for x in greedyListNaive]
+        lazyGains = [x[1] for x in greedyListLazy]
+        # assert naiveGains == lazyGains, "Mismatch between naiveGreedy and lazyGreedy"
+        assert naiveGains == pytest.approx(lazyGains), "Mismatch between naiveGreedy cost sensitive and lazyGreedy cost sensitive"
+    
 
     ######## Optimizers test for FeatureBased Logarithmic #####################
     @pytest.mark.fb_opt

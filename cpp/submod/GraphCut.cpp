@@ -286,20 +286,20 @@ std::unordered_set<ll> GraphCut::getEffectiveGroundSet() {
 }
 
 
-std::vector<std::pair<ll, double>> GraphCut::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false, bool showProgress=true) {
-	// std::cout << "GraphCut maximize\n";
-	if(optimizer == "NaiveGreedy") {
-		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress);
-	} else if(optimizer == "LazyGreedy") {
-        return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress);
-	} else if(optimizer == "StochasticGreedy") {
-        return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
-	} else if(optimizer == "LazierThanLazyGreedy") {
-        return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
-	} else {
-		throw "Error: Invalid Optimizer";
-	}
-}
+// std::vector<std::pair<ll, double>> GraphCut::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false, bool showProgress=true) {
+// 	// std::cout << "GraphCut maximize\n";
+// 	if(optimizer == "NaiveGreedy") {
+// 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress);
+// 	} else if(optimizer == "LazyGreedy") {
+//         return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress);
+// 	} else if(optimizer == "StochasticGreedy") {
+//         return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
+// 	} else if(optimizer == "LazierThanLazyGreedy") {
+//         return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
+// 	} else {
+// 		throw "Error: Invalid Optimizer";
+// 	}
+// }
 
 
 void GraphCut::cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda_) {
