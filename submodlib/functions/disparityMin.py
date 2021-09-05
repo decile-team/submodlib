@@ -32,7 +32,7 @@ class DisparityMinFunction(SetFunction):
 		Can be "dense" or "sparse". It specifies whether the Disparity-Min function should operate in dense mode (using a dense similarity kernel) or sparse mode (using a sparse similarity kernel).
 	
 	sijs : numpy.ndarray or scipy.sparse.csr.csr_matrix, optional
-		Similarity kernel (dense or sparse) between the elements of the ground set, to be used for getting :math:`s_{ij}` entries as defined above. Shape of dense kernel must be n X n. When not provided, it is computed internally in C++ based on the following additional parameters.
+		Similarity kernel (dense or sparse) between the elements of the ground set, to be used for getting :math:`s_{ij}` entries as defined above. Shape of dense kernel must be n X n. When not provided, it is computed internally in C++ based on the following additional parameters. **The implementation requires this similarity kernel to be normalized, i.e. entries must be strictly in [0,1].**
 
 	data : numpy.ndarray, optional
 		Matrix of shape n X num_features containing the ground set data elements. data[i] should contain the num-features dimensional features of element i. Used to compute the similarity kernel. It is optional (and is ignored if provided) if sijs has been provided.
@@ -63,8 +63,8 @@ class DisparityMinFunction(SetFunction):
 		if self.mode not in ['dense', 'sparse']:
 			raise Exception("ERROR: Incorrect mode. Must be one of 'dense' or 'sparse'")
 		
-		if self.metric not in ['euclidean', 'cosine']:
-			raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
+		# if self.metric not in ['euclidean', 'cosine']:
+		# 	raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
 
 		if type(self.sijs) != type(None): # User has provided similarity kernel
 			if type(self.sijs) == scipy.sparse.csr.csr_matrix:

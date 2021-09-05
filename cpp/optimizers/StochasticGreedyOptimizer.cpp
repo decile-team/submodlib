@@ -18,7 +18,7 @@ bool StochasticGreedyOptimizer::equals(double val1, double val2, double eps) {
   }
 }
 
-std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFunction &f_obj, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose, bool showProgress) {
+std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFunction &f_obj, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose, bool showProgress, const std::vector<int>& costs, bool costSensitiveGreedy) {
 	//TODO: take care of handling equal guys later
 	//TODO: take care of different sizes of each items - becomes a candidate only if best and within budget, cost sensitive selection
 	std::vector<std::pair<ll, double>>greedyVector;

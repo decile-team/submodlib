@@ -162,20 +162,20 @@ void ConcaveOverModular::updateMemoization(std::unordered_set<ll> const &X, ll i
     }
 }
 
-std::vector<std::pair<ll, double>> ConcaveOverModular::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false, bool showProgress=true) {
-	// std::cout << "ConcaveOverModular maximize\n";
-	if(optimizer == "NaiveGreedy") {
-		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress);
-	} else if(optimizer == "LazyGreedy") {
-        return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress);
-	} else if(optimizer == "StochasticGreedy") {
-        return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
-	} else if(optimizer == "LazierThanLazyGreedy") {
-        return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
-	} else {
-		std::cerr << "Invalid Optimizer" << std::endl;
-	}
-}
+// std::vector<std::pair<ll, double>> ConcaveOverModular::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false, bool showProgress=true) {
+// 	// std::cout << "ConcaveOverModular maximize\n";
+// 	if(optimizer == "NaiveGreedy") {
+// 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress);
+// 	} else if(optimizer == "LazyGreedy") {
+//         return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress);
+// 	} else if(optimizer == "StochasticGreedy") {
+//         return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
+// 	} else if(optimizer == "LazierThanLazyGreedy") {
+//         return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose, showProgress);
+// 	} else {
+// 		std::cerr << "Invalid Optimizer" << std::endl;
+// 	}
+// }
 
 std::unordered_set<ll> ConcaveOverModular::getEffectiveGroundSet() {
 	std::unordered_set<ll> effectiveGroundSet;

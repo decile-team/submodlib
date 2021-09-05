@@ -119,8 +119,8 @@ class FacilityLocationFunction(SetFunction):
 		if self.mode not in ['dense', 'sparse', 'clustered']:
 			raise Exception("ERROR: Incorrect mode. Must be one of 'dense', 'sparse' or 'clustered'")
 		
-		if self.metric not in ['euclidean', 'cosine']:
-			raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
+		# if self.metric not in ['euclidean', 'cosine']:
+		# 	raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
 
 		if self.separate_rep == True:
 			if self.n_rep  is None or self.n_rep <=0:

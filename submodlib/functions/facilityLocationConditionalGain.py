@@ -69,8 +69,8 @@ class FacilityLocationConditionalGainFunction(SetFunction):
 		if self.num_privates < 0:
 			raise Exception("ERROR: Number of private data points must be >= 0")
 
-		if self.metric not in ['euclidean', 'cosine']:
-			raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
+		# if self.metric not in ['euclidean', 'cosine']:
+		# 	raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
 
 		if (type(self.data_sijs) != type(None)) and (type(self.private_sijs) != type(None)): # User has provided both kernels
 			if type(self.data_sijs) != np.ndarray:

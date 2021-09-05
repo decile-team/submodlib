@@ -44,6 +44,8 @@ float SparseSim::get_val(ll r, ll c) // O(log(num_neigh))
 
 */
 
+//TODO: overload = for deep copy
+
 SparseSim::SparseSim(std::vector<float> const &a_val, std::vector<ll> const &a_count, std::vector<ll> const &a_col) : arr_val(a_val), arr_count(a_count), arr_col(a_col), num_ind(a_count.size()-1), alwaysNonZero(false) // O(num_ind*num_neigh*log(num_neigh)) (One time operation)
 {
 	v_col_ID.resize(num_ind);

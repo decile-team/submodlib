@@ -31,7 +31,7 @@ class ConcaveOverModular : public SetFunction {
 	double marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item);
 	void updateMemoization(std::unordered_set<ll> const &X, ll item);
     std::unordered_set<ll> getEffectiveGroundSet();
-	std::vector<std::pair<ll, double>> maximize(std::string, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose, bool showProgress);
+	//std::vector<std::pair<ll, double>> maximize(std::string, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose, bool showProgress);
     void clearMemoization();
 	void setMemoization(std::unordered_set<ll> const &X);
     // ConcaveOverModular* clone();

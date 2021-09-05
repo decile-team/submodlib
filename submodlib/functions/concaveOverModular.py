@@ -69,8 +69,8 @@ class ConcaveOverModularFunction(SetFunction):
 		if self.num_queries < 0:
 			raise Exception("ERROR: Number of queries must be >= 0")
 
-		if self.metric not in ['euclidean', 'cosine']:
-			raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
+		# if self.metric not in ['euclidean', 'cosine']:
+		# 	raise Exception("ERROR: Unsupported metric. Must be 'euclidean' or 'cosine'")
 
 		if type(self.query_sijs) != type(None): # User has provided query kernel
 			if type(self.query_sijs) != np.ndarray:
