@@ -104,29 +104,29 @@ void ConditionalGain::updateMemoization(std::unordered_set<ll> const &X, ll item
     }
 }
 
-// std::vector<std::pair<ll, double>> ConditionalGain::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false) {
-// 	// std::cout << "ConditionalGain maximize\n";
-// 	if(optimizer == "NaiveGreedy") {
-// 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
-// 	} else if(optimizer == "LazyGreedy") {
-//         return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
-// 	} else if(optimizer == "StochasticGreedy") {
-//         return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
-// 	} else if(optimizer == "LazierThanLazyGreedy") {
-//         return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
-// 	} else {
-// 		std::cerr << "Invalid Optimizer" << std::endl;
-// 	}
-// }
+ std::vector<std::pair<ll, double>> ConditionalGain::maximize(std::string optimizer,ll budget, bool stopIfZeroGain=false, bool stopIfNegativeGain=false, float epsilon = 0.1, bool verbose=false, bool showProgress=true) {
+ 	// std::cout << "ConditionalGain maximize\n";
+ 	if(optimizer == "NaiveGreedy") {
+ 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
+ 	} else if(optimizer == "LazyGreedy") {
+         return LazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose);
+ 	} else if(optimizer == "StochasticGreedy") {
+         return StochasticGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
+ 	} else if(optimizer == "LazierThanLazyGreedy") {
+         return LazierThanLazyGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, epsilon, verbose);
+ 	} else {
+ 		std::cerr << "Invalid Optimizer" << std::endl;
+ 	}
+ }
 
-// std::unordered_set<ll> ConditionalGain::getEffectiveGroundSet() {
-// 	std::unordered_set<ll> effectiveGroundSet;
-// 	effectiveGroundSet.reserve(n);
-// 	for (ll i = 0; i < n; ++i){
-// 		effectiveGroundSet.insert(i); 
-// 	}
-// 	return effectiveGroundSet;
-// }
+ std::unordered_set<ll> ConditionalGain::getEffectiveGroundSet() {
+ 	std::unordered_set<ll> effectiveGroundSet;
+ 	effectiveGroundSet.reserve(n);
+ 	for (ll i = 0; i < n; ++i){
+ 		effectiveGroundSet.insert(i); 
+ 	}
+ 	return effectiveGroundSet;
+ }
 
 void ConditionalGain::clearMemoization()
 {
