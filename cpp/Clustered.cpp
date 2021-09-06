@@ -30,7 +30,7 @@ Clustered::Clustered(ll n_, std::string function_name_, std::vector<std::unorder
         std::vector<std::vector<float>>kernel = clusterKernels[i];
         SetFunction *f_obj;
         if(function_name=="FacilityLocation") {
-            f_obj = new FacilityLocation;
+            f_obj = new FacilityLocation();
             f_obj->cluster_init(cti.size(), kernel, cti, false, 1); 
         } else if(function_name == "DisparitySum") {
             f_obj = new DisparitySum;
@@ -179,7 +179,7 @@ double Clustered::marginalGain(std::unordered_set<ll> const &X, ll item) {
     }
 }
 
-double Clustered::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+double Clustered::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks) {
     // std::cout << "Clustered marginalGainWithMemoization\n";
     ll i = clusterIDs[item];
     if (mode == single) {

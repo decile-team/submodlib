@@ -18,14 +18,17 @@ bool StochasticGreedyOptimizer::equals(double val1, double val2, double eps) {
   }
 }
 
-std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFunction &f_obj, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose, bool showProgress, const std::vector<int>& costs, bool costSensitiveGreedy) {
+std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFunction &f_obj, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose, bool showProgress, const std::vector<float>& costs, bool costSensitiveGreedy) {
 	//TODO: take care of handling equal guys later
 	//TODO: take care of different sizes of each items - becomes a candidate only if best and within budget, cost sensitive selection
-	std::vector<std::pair<ll, double>>greedyVector;
-	greedyVector.reserve(budget);
+	std::vector<std::pair<ll, double>> greedyVector;
 	std::unordered_set<ll> greedySet;
-	greedySet.reserve(budget);
-	ll rem_budget = budget;
+	if(costs.size()==0) {
+		//every element is of same size, budget corresponds to cardinality
+		greedyVector.reserve(budget);
+		greedySet.reserve(budget);
+	}
+	float rem_budget = budget;
 	std::unordered_set<ll> remainingSet = f_obj.getEffectiveGroundSet();
 	ll n = remainingSet.size();
 	ll randomSetSize = ((double)n/budget)* log(1/epsilon);
@@ -54,7 +57,7 @@ std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFuncti
 	int step = 1;
 	int displayNext = step;
 	int percent = 0;
-	int N = rem_budget;
+  float N = rem_budget;
 	int iter = 0;
 	while (rem_budget > 0) {
 		std::unordered_set<ll> randomSet;
@@ -81,7 +84,7 @@ std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFuncti
 		//for (auto it = groundSet.begin(); it != groundSet.end(); ++it) {
 		for (auto i: randomSet) {
 			//ll i = *it;
-			double gain = f_obj.marginalGainWithMemoization(greedySet, i);
+			double gain = f_obj.marginalGainWithMemoization(greedySet, i, false);
 			//std::cout << "Gain of " << i << " is " << gain << "\n";
 			if (gain > best_val) {
 				best_id = i;

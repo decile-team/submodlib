@@ -52,9 +52,9 @@ double ProbabilisticSetCoverMutualInformation::marginalGain(std::unordered_set<l
 }
 
 
-double ProbabilisticSetCoverMutualInformation::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+double ProbabilisticSetCoverMutualInformation::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks) {
 	double gain = 0;
-	if (X.find(item)!=X.end()) {
+	if (enableChecks && X.find(item)!=X.end()) {
 		return 0;
 	}
 	return pscQ->marginalGainWithMemoization(X, item);

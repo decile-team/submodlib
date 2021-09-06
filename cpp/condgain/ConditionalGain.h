@@ -25,7 +25,7 @@ class ConditionalGain : public SetFunction {
     double evaluateWithMemoization(std::unordered_set<ll> const &X);
     double marginalGain(std::unordered_set<ll> const &X, ll item);
     double marginalGainWithMemoization(std::unordered_set<ll> const &X,
-                                       ll item);
+                                       ll item, bool enableChecks=true);
     void updateMemoization(std::unordered_set<ll> const &X, ll item);
     std::unordered_set<ll> getEffectiveGroundSet();
     std::vector<std::pair<ll, double>> maximize(std::string, ll budget,

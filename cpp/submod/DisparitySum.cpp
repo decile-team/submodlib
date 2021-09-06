@@ -169,7 +169,7 @@ double DisparitySum::marginalGain(std::unordered_set<ll> const &X, ll item) {
     return gain;
 }
 
-double DisparitySum::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+double DisparitySum::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks) {
     //identical to marginalGain, but duplicating here to save an extra function call
     std::unordered_set<ll> effectiveX;
     double gain = 0;
@@ -184,11 +184,11 @@ double DisparitySum::marginalGainWithMemoization(std::unordered_set<ll> const &X
         effectiveX = X;
     }
 
-    if (effectiveX.find(item)!=effectiveX.end()) {
+    if (enableChecks && effectiveX.find(item)!=effectiveX.end()) {
         return 0;
     }
 
-    if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+    if (partial && effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
         return 0;
     }
 

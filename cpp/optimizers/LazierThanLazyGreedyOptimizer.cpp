@@ -179,17 +179,20 @@ greedySet) { std::cout << i << " ";
 }*/
 
 std::vector<std::pair<ll, double>> LazierThanLazyGreedyOptimizer::maximize(
-    SetFunction &f_obj, ll budget, bool stopIfZeroGain,
+    SetFunction &f_obj, float budget, bool stopIfZeroGain,
     bool stopIfNegativeGain, float epsilon,
-    bool verbose, bool showProgress, const std::vector<int>& costs, bool costSensitiveGreedy) {
+    bool verbose, bool showProgress, const std::vector<float>& costs, bool costSensitiveGreedy) {
     // TODO: take care of handling equal guys later
     // TODO: take care of different sizes of each items - becomes a candidate
     // only if best and within budget, cost sensitive selection
     std::vector<std::pair<ll, double>> greedyVector;
-    greedyVector.reserve(budget);
     std::unordered_set<ll> greedySet;
-    greedySet.reserve(budget);
-    ll rem_budget = budget;
+    if(costs.size()==0) {
+		//every element is of same size, budget corresponds to cardinality
+        greedyVector.reserve(budget);
+	    greedySet.reserve(budget);
+	}
+    float rem_budget = budget;
     std::unordered_set<ll> remainingSet = f_obj.getEffectiveGroundSet();
     ll n = remainingSet.size();
     ll randomSetSize = ((double)n / budget) * log(1 / epsilon);
@@ -221,7 +224,7 @@ std::vector<std::pair<ll, double>> LazierThanLazyGreedyOptimizer::maximize(
     // for each element in the ground set
     for (auto elem : remainingSet) {
         sortedGains.insert(std::pair<double, ll>(
-            f_obj.marginalGainWithMemoization(greedySet, elem), elem));
+            f_obj.marginalGainWithMemoization(greedySet, elem, false), elem));
     }
 
     if (verbose) {
@@ -232,7 +235,7 @@ std::vector<std::pair<ll, double>> LazierThanLazyGreedyOptimizer::maximize(
     int step = 1;
 	int displayNext = step;
 	int percent = 0;
-    int N = rem_budget;
+    float N = rem_budget;
     int iter = 0;
     while (rem_budget > 0) {
         std::unordered_set<ll> randomSet;
@@ -275,7 +278,7 @@ std::vector<std::pair<ll, double>> LazierThanLazyGreedyOptimizer::maximize(
                 candidate_id = (*it).second;
                 candidate_val = (*it).first;
                 newCandidateBound =
-                    f_obj.marginalGainWithMemoization(greedySet, candidate_id);
+                    f_obj.marginalGainWithMemoization(greedySet, candidate_id, false);
                 if (verbose)
                     std::cout << "Updated gain as per updated greedy set = "
                               << newCandidateBound << "\n";

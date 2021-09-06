@@ -17,23 +17,26 @@ bool NaiveGreedyOptimizer::equals(double val1, double val2, double eps) {
   }
 }
 
-std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f_obj, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbose, bool showProgress, const std::vector<int>& costs, bool costSensitiveGreedy) {
+std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f_obj, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, bool verbose, bool showProgress, const std::vector<float>& costs, bool costSensitiveGreedy) {
 	//TODO: take care of handling equal guys later
 	std::vector<std::pair<ll, double>>greedyVector;
-	greedyVector.reserve(budget);
 	std::unordered_set<ll> greedySet;
-	greedySet.reserve(budget);
-	ll rem_budget = budget;
+	if(costs.size()==0) {
+		//every element is of same size, budget corresponds to cardinality
+        greedyVector.reserve(budget);
+	    greedySet.reserve(budget);
+	}
+	float rem_budget = budget;
 	std::unordered_set<ll> groundSet = f_obj.getEffectiveGroundSet();
 	if (verbose) {
 		std::cout << "Ground set:" << std::endl;
-		for(int i: groundSet) {
+		for(ll i: groundSet) {
 			std::cout << i << " ";
 		}
 		std::cout << "\n";
 		std::cout << "Num elements in groundset = " << groundSet.size() << std::endl;
 		std::cout << "Costs:" << std::endl;
-		for(int i: costs) {
+		for(float i: costs) {
 			std::cout << i << " ";
 		}
 		std::cout << "\n";
@@ -51,7 +54,7 @@ std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f
 	int step = 1;
 	int displayNext = step;
 	int percent = 0;
-	int N = rem_budget;
+	float N = rem_budget;
 	int iter = 0;
 	if(costs.size()==0 && !costSensitiveGreedy) {
 			while (rem_budget > 0) {
@@ -64,7 +67,7 @@ std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f
 						//if this datapoint has already been included in greedySet, skip it
 						continue;
 					}
-					double gain = f_obj.marginalGainWithMemoization(greedySet, i);
+					double gain = f_obj.marginalGainWithMemoization(greedySet, i, false);
 					if(verbose) std::cout << "Gain of " << i << " is " << gain << "\n";
 					if (gain > best_val) {
 						best_id = i;
@@ -105,9 +108,11 @@ std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f
 				}
 		}
 	} else if(costs.size()!= 0 && !costSensitiveGreedy) {
-		while (rem_budget > 0) {
+		bool possible = true;
+		while (possible && rem_budget > 0) {
 				best_id = -1;
 				best_val = -1 * std::numeric_limits<double>::max();
+				bool atLeastOneFound = false;
 				//for (auto it = groundSet.begin(); it != groundSet.end(); ++it) {
 				for (auto i: groundSet) {
 					//ll i = *it;
@@ -119,12 +124,17 @@ std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f
 						//if this datapoint has already been included in greedySet, skip it
 						continue;
 					}
-					double gain = f_obj.marginalGainWithMemoization(greedySet, i);
+					atLeastOneFound = true;
+					double gain = f_obj.marginalGainWithMemoization(greedySet, i, false);
 					if(verbose) std::cout << "Gain of " << i << " is " << gain << "\n";
 					if (gain > best_val) {
 						best_id = i;
 						best_val = gain;
 					}
+				}
+				if(!atLeastOneFound) {
+					possible = false;
+					continue;
 				}
 				if(verbose) {
 					if(best_id == -1) throw "Nobody had greater gain than minus infinity!!";
@@ -160,13 +170,13 @@ std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f
 					}
 				}
 		}
-
-
 	} else if(costs.size()!= 0 && costSensitiveGreedy) {
-		while (rem_budget > 0) {
+		bool possible = true;
+		while (possible && rem_budget > 0) {
 				best_id = -1;
 				best_val = -1 * std::numeric_limits<double>::max();
 				//for (auto it = groundSet.begin(); it != groundSet.end(); ++it) {
+				bool atLeastOneFound = false;
 				for (auto i: groundSet) {
 					//ll i = *it;
 					if (costs[i] > rem_budget) {
@@ -177,12 +187,17 @@ std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f
 						//if this datapoint has already been included in greedySet, skip it
 						continue;
 					}
-					double gainPerCost = (f_obj.marginalGainWithMemoization(greedySet, i))/costs[i];
+					atLeastOneFound = true;
+					double gainPerCost = (f_obj.marginalGainWithMemoization(greedySet, i, false))/costs[i];
 					if(verbose) std::cout << "Gain per cost of " << i << " is " << gainPerCost << "\n";
 					if (gainPerCost > best_val) {
 						best_id = i;
 						best_val = gainPerCost;
 					}
+				}
+				if(!atLeastOneFound) {
+					possible = false;
+					continue;
 				}
 				if(verbose) {
 					if(best_id == -1) throw "Nobody had greater gain per cost than minus infinity!!";
@@ -223,4 +238,3 @@ std::vector<std::pair<ll, double>> NaiveGreedyOptimizer::maximize(SetFunction &f
 	}
 	return greedyVector;
 }
-

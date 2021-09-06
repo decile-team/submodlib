@@ -226,7 +226,7 @@ double GraphCut::marginalGain(std::unordered_set<ll> const &X, ll item) {
 }
 
 
-double GraphCut::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+double GraphCut::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks) {
 	// std::cout << "GraphCut marginalGainWithMemoization\n";
 	std::unordered_set<ll> effectiveX;
 	double gain = 0;
@@ -236,10 +236,10 @@ double GraphCut::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll
 	} else {
 		effectiveX = X;
 	}
-	if (effectiveX.find(item)!=effectiveX.end()) {
+	if (enableChecks && effectiveX.find(item)!=effectiveX.end()) {
 		return 0;
 	}
-	if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+	if (partial && effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
         return 0;
     }
 	if (mode == dense) {

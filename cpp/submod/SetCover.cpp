@@ -68,9 +68,9 @@ double SetCover::marginalGain(std::unordered_set<ll> const &X, ll item) {
 }
 
 
-double SetCover::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+double SetCover::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks) {
 	double gain = 0;
-	if (X.find(item)!=X.end()) {
+	if (enableChecks && X.find(item)!=X.end()) {
 		return 0;
 	}
 	//std::cout << "Concepts covered by " << item << " = {";

@@ -110,9 +110,9 @@ double FeatureBased::marginalGain(std::unordered_set<ll> const &X, ll item) {
 }
 
 
-double FeatureBased::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+double FeatureBased::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks) {
 	double gain = 0;
-	if (X.find(item)!=X.end()) {
+	if (enableChecks && X.find(item)!=X.end()) {
 		return 0;
 	}
 	double temp;

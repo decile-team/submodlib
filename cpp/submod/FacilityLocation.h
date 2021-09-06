@@ -65,7 +65,7 @@ public:
 	double evaluate(std::unordered_set<ll> const &X);
 	double evaluateWithMemoization(std::unordered_set<ll> const &X);
 	double marginalGain(std::unordered_set<ll> const &X, ll item);
-	double marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item);
+	double marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks=true);
 	void updateMemoization(std::unordered_set<ll> const &X, ll item);
 	std::unordered_set<ll> getEffectiveGroundSet();
 	void cluster_init(ll n_, std::vector<std::vector<float>> const &denseKernel_, std::unordered_set<ll> const &ground_, bool partial, float lambda);

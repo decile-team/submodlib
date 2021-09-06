@@ -445,7 +445,7 @@ double FacilityLocation::marginalGain(std::unordered_set<ll> const &X, ll item) 
 }
 
 
-double FacilityLocation::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+double FacilityLocation::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks) {
 	// std::cout << "FacilityLocation marginalGainWithMemoization\n";
 	std::unordered_set<ll> effectiveX;
 	double gain = 0;
@@ -455,7 +455,7 @@ double FacilityLocation::marginalGainWithMemoization(std::unordered_set<ll> cons
 	} else {
 		effectiveX = X;
 	}
-	if (effectiveX.find(item)!=effectiveX.end()) {
+	if (enableChecks && effectiveX.find(item)!=effectiveX.end()) {
 		//item is already present
 		return 0;
 	}

@@ -52,8 +52,8 @@ double GraphCutMutualInformation::marginalGain(std::unordered_set<ll> const &X, 
     return gain;
 }
 
-double GraphCutMutualInformation::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
-    if (X.find(item)!=X.end()) {
+double GraphCutMutualInformation::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks) {
+    if (enableChecks && X.find(item)!=X.end()) {
         return 0;
     }
     double gain = 0;

@@ -73,8 +73,8 @@ double ConditionalGain::marginalGain(std::unordered_set<ll> const &X, ll item) {
 	return fAUPGain;
 }
 
-double ConditionalGain::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
-    if (X.find(item)!=X.end()) {
+double ConditionalGain::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks) {
+    if (enableChecks && X.find(item)!=X.end()) {
         return 0;
     }
     // std::cout << "Calling logDet's marginalGainWithMemoization\n";

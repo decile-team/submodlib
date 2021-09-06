@@ -140,7 +140,7 @@ class SetFunction():
 		if element in X:
 			return 0
 
-		return self.cpp_obj.marginalGainWithMemoization(X, element)
+		return self.cpp_obj.marginalGainWithMemoization(X, element, True)
 
 	def evaluateWithMemoization(self, X):
 		"""Efficiently compute the function evaluation of a set assuming that memoized statistics for it are already computed.

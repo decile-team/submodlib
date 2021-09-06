@@ -155,7 +155,7 @@ double LogDeterminant::marginalGain(std::unordered_set<ll> const &X, ll item) {
 }
 
 double LogDeterminant::marginalGainWithMemoization(
-    std::unordered_set<ll> const &X, ll item) {
+    std::unordered_set<ll> const &X, ll item, bool enableChecks) {
     // std::cout << "LogDet's marginalGainWithMemoization called with X={";
     // for(auto temp: X) {
     //     std::cout << temp << ", ";
@@ -175,10 +175,10 @@ double LogDeterminant::marginalGainWithMemoization(
         effectiveX = X;
     }
 
-    if (effectiveX.find(item) != effectiveX.end()) {
+    if (enableChecks && effectiveX.find(item) != effectiveX.end()) {
         return 0;
     }
-    if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+    if (partial && effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
         return 0;
     }
     ll itemIndex = (partial)?originalToPartialIndexMap[item]:item;

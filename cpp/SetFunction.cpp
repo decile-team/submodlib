@@ -13,10 +13,10 @@
 double SetFunction::evaluate(std::unordered_set<ll> const &X){}
 double SetFunction::evaluateWithMemoization(std::unordered_set<ll> const &X){}
 double SetFunction::marginalGain(std::unordered_set<ll> const &X, ll item){}
-double SetFunction::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item){}
+double SetFunction::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks){}
 void SetFunction::updateMemoization(std::unordered_set<ll> const &X, ll item){}
 std::unordered_set<ll> SetFunction::getEffectiveGroundSet(){}
-std::vector<std::pair<ll, double>> SetFunction::maximize(std::string optimizer, ll budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose, bool showProgress, const std::vector<int>& costs, bool costSensitiveGreedy){
+std::vector<std::pair<ll, double>> SetFunction::maximize(std::string optimizer, float budget, bool stopIfZeroGain, bool stopIfNegativeGain, float epsilon, bool verbose, bool showProgress, const std::vector<float>& costs, bool costSensitiveGreedy){
 	if(optimizer == "NaiveGreedy") {
 		return NaiveGreedyOptimizer().maximize(*this, budget, stopIfZeroGain, stopIfNegativeGain, verbose, showProgress, costs, costSensitiveGreedy);
 	} else if(optimizer == "LazyGreedy") {

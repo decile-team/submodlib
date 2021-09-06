@@ -182,7 +182,7 @@ double DisparityMin::marginalGain(std::unordered_set<ll> const &X, ll item) {
     return min-currentMin;
 }
 
-double DisparityMin::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+double DisparityMin::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks) {
     //identical to marginalGain, but duplicating here to save an extra function call
     std::unordered_set<ll> effectiveX;
 
@@ -196,11 +196,11 @@ double DisparityMin::marginalGainWithMemoization(std::unordered_set<ll> const &X
         effectiveX = X;
     }
 
-    if (effectiveX.find(item)!=effectiveX.end()) {
+    if (enableChecks && effectiveX.find(item)!=effectiveX.end()) {
         return 0;
     }
 
-    if (effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
+    if (partial && effectiveGroundSet.find(item)==effectiveGroundSet.end()) {
         return 0;
     }
 

@@ -21,25 +21,28 @@ bool LazyGreedyOptimizer::equals(double val1, double val2, double eps) {
 //TODO: perf: try emplace_back instead of push_back()
 
 std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
-    SetFunction &f_obj, ll budget, bool stopIfZeroGain,
-    bool stopIfNegativeGain, bool verbose, bool showProgress, const std::vector<int>& costs, bool costSensitiveGreedy) {
+    SetFunction &f_obj, float budget, bool stopIfZeroGain,
+    bool stopIfNegativeGain, bool verbose, bool showProgress, const std::vector<float>& costs, bool costSensitiveGreedy) {
     //TODO: take care of handling equal guys later
     std::vector<std::pair<ll, double>> greedyVector;
-    greedyVector.reserve(budget);
     std::unordered_set<ll> greedySet;
-    greedySet.reserve(budget);
-    ll rem_budget = budget;
+    if(costs.size()==0) {
+		//every element is of same size, budget corresponds to cardinality
+        greedyVector.reserve(budget);
+	    greedySet.reserve(budget);
+	}
+    float rem_budget = budget;
     std::unordered_set<ll> groundSet = f_obj.getEffectiveGroundSet();
     if (verbose) {
         std::cout << "Ground set:" << std::endl;
-        for (int i : groundSet) {
+        for (ll i : groundSet) {
             std::cout << i << " ";
         }
         std::cout << "\n";
         std::cout << "Num elements in groundset = " << groundSet.size()
                   << std::endl;
         std::cout << "Costs:" << std::endl;
-		for(int i: costs) {
+		for(float i: costs) {
 			std::cout << i << " ";
 		}
 		std::cout << "\n";
@@ -68,7 +71,7 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
             // store <elem, marginalGainWithMemoization(greedySet, elem)> in
             // priority-queue (max-heap)
             maxHeap.push(std::pair<double, ll>(
-                (f_obj.marginalGainWithMemoization(greedySet, elem))/costs[elem], elem));
+                (f_obj.marginalGainWithMemoization(greedySet, elem, false))/costs[elem], elem));
         }
     } else {
         // for each element in the ground set
@@ -76,7 +79,7 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
             // store <elem, marginalGainWithMemoization(greedySet, elem)> in
             // priority-queue (max-heap)
             maxHeap.push(std::pair<double, ll>(
-                f_obj.marginalGainWithMemoization(greedySet, elem), elem));
+                f_obj.marginalGainWithMemoization(greedySet, elem, false), elem));
         }
     }
     
@@ -84,7 +87,7 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
     int step = 1;
 	int displayNext = step;
 	int percent = 0;
-    int N = rem_budget;
+    float N = rem_budget;
     int iter = 0;
     if(costs.size()==0 && !costSensitiveGreedy) {
         while (rem_budget > 0) {
@@ -92,7 +95,7 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
             maxHeap.pop();
             if(verbose) std::cout << "currentMax element: " << currentMax.second <<" and its uper bound: " << currentMax.first << "\n";
             double newMaxBound =
-                f_obj.marginalGainWithMemoization(greedySet, currentMax.second);
+                f_obj.marginalGainWithMemoization(greedySet, currentMax.second, false);
             if(verbose) {
                 std::cout << "newMaxBound: " << newMaxBound <<"\n";
                 std::cout << "nextBest element: " << maxHeap.top().second <<"and its bound: " << maxHeap.top().first << "\n";
@@ -138,7 +141,7 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
             }
         }
     } else if(costs.size()!= 0 && !costSensitiveGreedy) {
-        while (rem_budget > 0) {
+        while (rem_budget > 0 && maxHeap.size()>0) {
             std::pair<double, ll> currentMax = maxHeap.top();
             maxHeap.pop();
             if(verbose) std::cout << "currentMax element: " << currentMax.second <<" and its uper bound: " << currentMax.first << "\n";
@@ -148,7 +151,7 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
                 continue;
             }
             double newMaxBound =
-                f_obj.marginalGainWithMemoization(greedySet, currentMax.second);
+                f_obj.marginalGainWithMemoization(greedySet, currentMax.second, false);
             if(verbose) {
                 std::cout << "newMaxBound: " << newMaxBound <<"\n";
                 std::cout << "nextBest element: " << maxHeap.top().second <<"and its bound: " << maxHeap.top().first << "\n";
@@ -194,7 +197,7 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
             }
         }
     } else if(costs.size()!= 0 && costSensitiveGreedy) {
-        while (rem_budget > 0) {
+        while (rem_budget > 0 && maxHeap.size()>0) {
             std::pair<double, ll> currentMax = maxHeap.top();
             maxHeap.pop();
             if(verbose) std::cout << "currentMax element: " << currentMax.second <<" and its uper bound: " << currentMax.first << "\n";
@@ -204,7 +207,7 @@ std::vector<std::pair<ll, double>> LazyGreedyOptimizer::maximize(
                 continue;
             }
             double newMaxBound =
-                (f_obj.marginalGainWithMemoization(greedySet, currentMax.second))/costs[currentMax.second];
+                (f_obj.marginalGainWithMemoization(greedySet, currentMax.second, false))/costs[currentMax.second];
             if(verbose) {
                 std::cout << "newMaxBound: " << newMaxBound <<"\n";
                 std::cout << "nextBest element: " << maxHeap.top().second <<"and its bound: " << maxHeap.top().first << "\n";

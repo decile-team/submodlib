@@ -62,9 +62,9 @@ double ProbabilisticSetCover::marginalGain(std::unordered_set<ll> const &X, ll i
 }
 
 
-double ProbabilisticSetCover::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item) {
+double ProbabilisticSetCover::marginalGainWithMemoization(std::unordered_set<ll> const &X, ll item, bool enableChecks) {
 	double gain = 0;
-	if (X.find(item)!=X.end()) {
+	if (enableChecks && X.find(item)!=X.end()) {
 		return 0;
 	}
 	for(int i=0; i<numConcepts; i++) {
