@@ -39,6 +39,7 @@ class LogDeterminantMutualInformation : public SetFunction {
     //                                             float epsilon, bool verbose, bool showProgress);
     void clearMemoization();
     void setMemoization(std::unordered_set<ll> const &X);
+    virtual ~logDeterminantMutualInformation();
     // LogDeterminantMutualInformation* clone();
 };
 #endif

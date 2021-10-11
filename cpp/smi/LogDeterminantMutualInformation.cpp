@@ -49,6 +49,12 @@ LogDeterminantMutualInformation::LogDeterminantMutualInformation(ll n_, int numQ
     // std::cout << "Instantiated mutualInfo\n";
 }
 
+LogDeterminantMutualInformation::~LogDeterminantMutualInformation() {
+
+    delete mutualInfo;
+    delete logDet;
+}
+
 // LogDeterminantMutualInformation* LogDeterminantMutualInformation::clone() {
 //     return NULL;
 // }
