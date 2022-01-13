@@ -64,8 +64,19 @@ from submodlib import FacilityLocationFunction
 objFL = FacilityLocationFunction(n=43, data=groundData, mode="dense", metric="euclidean")
 greedyList = objFL.maximize(budget=10,optimizer='NaiveGreedy')
 ```
-
+    
 For a more detailed discussion on all possible usage patterns, please see [Different Options of Usage](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Different_Options_for_Usage.ipynb)
+
+
+# Google Colab Notebooks Demonstrating the power of *SubModLib* and sample usage
+    
+* [Modelling capabilities of regular submodular functions](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Modelling_Capabilities_of_Regular_Submod_Functions.ipynb)
+* [Modelling capabilities of submodular mutual information (SMI) functions](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Modelling_Capabilities_of_SMI_Functions.ipynb)
+* [Modelling capabilities of conditional gain (CG) functions](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Modelling_Capabilities_of_CG_Functions.ipynb)
+* [Modelling capabilities of conditional mutual information (CMI) functions](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Modelling_Capabilities_of_CMI_Functions.ipynb)
+* [This notebook](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Quantitative_Analysis_and_Effect_of_Parameters.ipynb) contains a quantitative analysis of performance of different functions and role of the parameterization in aspects like query-coverage, query-relevance, privacy-irrelevance and diversity for different SMI, CG and CMI functions as observed on synthetically generated dataset. 
+* [This notebook](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Quantitative_Analysis_on_ImageNette.ipynb) contains similar analysis on ImageNette dataset.
+* For a more detailed discussion on all possible usage patterns, please see [Different Options of Usage](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Different_Options_for_Usage.ipynb)
 
 
 # Functions
