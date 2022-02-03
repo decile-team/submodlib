@@ -3,4 +3,4 @@ sphinxcontrib-bibtex
 pybind11>=2.6.0
 numpy==1.20.1
 scipy
-sklearn
+scikit-learn
