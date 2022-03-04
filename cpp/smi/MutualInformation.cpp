@@ -22,6 +22,11 @@ MutualInformation::MutualInformation(SetFunction& f_, std::unordered_set<ll> que
     fAUQ->setMemoization(querySet);
 }
 
+MutualInformation::~MutualInformation() {
+
+    delete fAUQ;
+}
+
 // MutualInformation* MutualInformation::clone() {
 //     return NULL;
 // }
