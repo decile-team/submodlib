@@ -9,6 +9,8 @@
 
 *SubModLib* is an easy-to-use, efficient and scalable Python library for submodular optimization with a C++ optimization engine. *Submodlib* finds its application in summarization, data subset selection, hyper parameter tuning, efficient training etc. Through a rich API, it offers a great deal of flexibility in the way it can be used.
 
+Please check out our latest arxiv preprint: https://arxiv.org/abs/2202.10680
+
 # Salient Features
 
 * **Rich suite of functions** for a wide variety of subset selection tasks:
@@ -159,7 +161,7 @@ The above code was timed using Python's timeit module averaged across three exec
 
 # Contributors
 
-* Vishal Kaushal
+* Vishal Kaushal, Ganesh Ramakrishnan and Rishabh Iyer. Currently maintained by CARAML Lab
 
 # Contact
 
@@ -167,4 +169,4 @@ Should you face any issues or have any feedback or suggestions, please feel free
 
 # Acknowledgements 
 
-This work is supported by the Ekal Fellowship (www.ekal.org).
+This work is supported by the Ekal Fellowship (www.ekal.org). This work is also supported by the National Science Foundation(NSF) under Grant Number 2106937, a startup grant from UT Dallas, as well as Google and Adobe awards.
