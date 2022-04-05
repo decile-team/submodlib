@@ -36,7 +36,7 @@ Please check out our latest arxiv preprint: https://arxiv.org/abs/2202.10680
 * [Modelling capabilities of conditional gain (CG) functions](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Modelling_Capabilities_of_CG_Functions.ipynb)
 * [Modelling capabilities of conditional mutual information (CMI) functions](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Modelling_Capabilities_of_CMI_Functions.ipynb)
 * [This notebook](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Quantitative_Analysis_and_Effect_of_Parameters.ipynb) contains a quantitative analysis of performance of different functions and role of the parameterization in aspects like query-coverage, query-relevance, privacy-irrelevance and diversity for different SMI, CG and CMI functions as observed on synthetically generated dataset. 
-* [This notebook](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Quantitative_Analysis_on_ImageNette.ipynb) contains similar analysis on ImageNette dataset.
+* [This notebook](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Quantitative_Analysis_on_ImageNette.ipynb) contains similar analysis on ImageNet dataset.
 * For a more detailed discussion on all possible usage patterns, please see [Different Options of Usage](https://colab.research.google.com/github/vishkaush/submodlib/blob/master/tutorials/Different_Options_for_Usage.ipynb)
 
 # Setup
