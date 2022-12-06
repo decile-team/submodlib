@@ -1,6 +1,6 @@
 #this file is needed for doc building by readthedocs.org
 sphinxcontrib-bibtex
 pybind11>=2.6.0
-numpy==1.21.0
+numpy==1.22.0
 scipy
 scikit-learn
