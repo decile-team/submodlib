@@ -1,8 +1,7 @@
 # setCover.py
 # Author: Vishal Kaushal <vishal.kaushal@gmail.com>
 from .setFunction import SetFunction
-#from submodlib_cpp import SetCover
-from submodlib_pytorch import SetCover
+from submodlib_cpp import SetCover
 
 class SetCoverFunction(SetFunction):
 	"""Implementation of the Set-Cover (SC) submodular function.
@@ -43,9 +42,8 @@ class SetCoverFunction(SetFunction):
 		self.cover_set = cover_set
 		self.num_concepts = num_concepts
 		self.concept_weights = concept_weights
-		#self.cpp_obj = None
-		self.obj = None
-
+		self.cpp_obj = None
+		
 		if self.n <= 0:
 			raise Exception("ERROR: Number of elements in ground set must be positive")
 
@@ -58,9 +56,7 @@ class SetCoverFunction(SetFunction):
 		else:
 			self.concept_weights = [1] * self.num_concepts
 
-		#self.cpp_obj = SetCover(self.n, self.cover_set, self.num_concepts, self.concept_weights)
-		self.obj = SetCover(self.n, self.cover_set, self.num_concepts, self.concept_weights)
-
+		self.cpp_obj = SetCover(self.n, self.cover_set, self.num_concepts, self.concept_weights)
 		self.effective_ground = set(range(n))
 
 	
