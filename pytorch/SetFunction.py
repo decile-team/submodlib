@@ -4,7 +4,11 @@ import torch
 import torch.nn as nn
 import numpy as np
 import random
-# import optimizer python files
+from optimizer.LazierThanLazyGreedyOptimizer import LazierThanLazyGreedyOptimizer
+from optimizer.LazyGreedyOptimizer import LazyGreedyOptimizer
+from optimizer.NaiveGreedyOptimizer import NaiveGreedyOptimizer
+from optimizer.StochasticGreedyOptimizer import StochasticGreedyOptimizer
+
 
 class SetFunction(nn.Module):
     def __init__(self):
