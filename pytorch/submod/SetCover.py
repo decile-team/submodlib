@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import random
-from SetFunction import SetFunction
+from ..SetFunction import SetFunction
 class SetCover(SetFunction):
     def __init__(self, n, cover_set, num_concepts, concept_weights = None):
         super(SetFunction, self).__init__()
