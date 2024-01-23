@@ -27,7 +27,7 @@ class SetCoverFunction(SetFunction):
 			self.concept_weights = [1] * self.num_concepts
 		print("starting setCover.py self.cpp_obj = SetCover line 40 (at 60)")
 		device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-		if device == "cuda":
+		if  "cuda" in device :
 			self.pytorch_obj = SetCover(self.n, self.cover_set, self.num_concepts, self.concept_weights)
 		else:
 			self.cpp_obj = SetCover(self.n, self.cover_set, self.num_concepts, self.concept_weights)
