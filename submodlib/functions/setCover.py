@@ -2,8 +2,9 @@
 # Author: Vishal Kaushal <vishal.kaushal@gmail.com>
 from .setFunction import SetFunction
 from submodlib_cpp import SetCover
-from submodlib_pytorch import SetCover
+# from submodlib.pytorch import SetCover
 import torch
+from pytorch.submod import SetCover
 
 class SetCoverFunction(SetFunction):
 	

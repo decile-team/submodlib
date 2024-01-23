@@ -11,7 +11,7 @@ class StochasticGreedyOptimizer:
     def equals(val1: float, val2: float, eps: float) -> bool:
         return abs(val1 - val2) < eps
 
-    def maximize(self, f_obj: SetFunction, budget: float, stop_if_zero_gain: bool,
+    def maximize(self, f_obj, budget: float, stop_if_zero_gain: bool,
                  stop_if_negative_gain: bool, epsilon: float = 1, verbose: bool = True,
                  show_progress: bool = False, costs: List[float] = None, cost_sensitive_greedy: bool = False) -> List[Tuple[int, float]]:
         # TODO: Implement handling of equal guys and different sizes of each item later

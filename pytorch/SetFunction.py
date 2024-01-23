@@ -4,10 +4,10 @@ import torch
 import torch.nn as nn
 import numpy as np
 import random
-from optimizer.LazierThanLazyGreedyOptimizer import LazierThanLazyGreedyOptimizer
-from optimizer.LazyGreedyOptimizer import LazyGreedyOptimizer
-from optimizer.NaiveGreedyOptimizer import NaiveGreedyOptimizer
-from optimizer.StochasticGreedyOptimizer import StochasticGreedyOptimizer
+from pytorch.optimizer.LazierThanLazyGreedyOptimizer import LazierThanLazyGreedyOptimizer
+from pytorch.optimizer.LazyGreedyOptimizer import LazyGreedyOptimizer
+from pytorch.optimizer.NaiveGreedyOptimizer import NaiveGreedyOptimizer
+from pytorch.optimizer.StochasticGreedyOptimizer import StochasticGreedyOptimizer
 
 
 class SetFunction(nn.Module):
