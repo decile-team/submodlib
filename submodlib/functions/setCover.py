@@ -1,10 +1,11 @@
 # setCover.py
 # Author: Vishal Kaushal <vishal.kaushal@gmail.com>
 from .setFunction import SetFunction
-from submodlib_cpp import SetCover
-# from submodlib.pytorch import SetCover
 import torch
-from pytorch.submod import SetCover
+if torch.cuda.is_available() :
+	from pytorch.submod import SetCover
+else:
+	from submodlib_cpp import SetCover
 
 class SetCoverFunction(SetFunction):
 	
@@ -27,9 +28,9 @@ class SetCoverFunction(SetFunction):
 		else:
 			self.concept_weights = [1] * self.num_concepts
 		print("starting setCover.py self.cpp_obj = SetCover line 40 (at 60)")
-		device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-		if  "cuda" in device :
-			self.pytorch_obj = SetCover(self.n, self.cover_set, self.num_concepts, self.concept_weights)
+		
+		if torch.cuda.is_available() :
+			self.cpp_obj = SetCover(self.n, self.cover_set, self.num_concepts, self.concept_weights)
 		else:
 			self.cpp_obj = SetCover(self.n, self.cover_set, self.num_concepts, self.concept_weights)
 		self.effective_ground = set(range(n))
