@@ -1,6 +1,6 @@
 from typing import List, Set
 
-class GraphCutpy(SetFunction):
+class GraphCut(SetFunction):
     def __init__(self, n, mode, lambdaVal, separate_rep=None, n_rep=None, mgsijs=None, ggsijs=None, data=None, data_rep=None, metric="cosine", num_neighbors=None, 
                  master_ground_kernel: List[List[float]] = None,
                  ground_ground_kernel: List[List[float]] = None, arr_val: List[float] = None,
