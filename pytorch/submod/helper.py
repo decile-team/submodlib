@@ -1,0 +1,186 @@
+import torch
+import torch.nn.functional as F
+from sklearn.cluster import Birch
+from sklearn.metrics.pairwise import euclidean_distances, cosine_similarity, pairwise_distances
+from sklearn.neighbors import NearestNeighbors
+from scipy import sparse
+import pickle
+import time
+import os
+
+def cos_sim_square(A):
+    similarity = torch.matmul(A, A.t())
+
+    square_mag = torch.diag(similarity)
+
+    inv_square_mag = 1 / square_mag
+    inv_square_mag[torch.isinf(inv_square_mag)] = 0
+
+    inv_mag = torch.sqrt(inv_square_mag)
+
+    cosine = similarity * inv_mag
+    cosine = cosine.t() * inv_mag
+    return cosine
+
+def cos_sim_rectangle(A, B):
+    num = torch.matmul(A, B.t())
+    p1 = torch.sqrt(torch.sum(A**2, dim=1)).unsqueeze(1)
+    p2 = torch.sqrt(torch.sum(B**2, dim=1)).unsqueeze(0)
+    return num / (p1 * p2)
+
+def create_sparse_kernel(X, metric, num_neigh, n_jobs=1, method="sklearn"):
+    if num_neigh > X.shape[0]:
+        raise Exception("ERROR: num of neighbors can't be more than the number of datapoints")
+    dense = None
+    dense = create_kernel_dense_sklearn(X, metric)
+    dense_ = None
+    if num_neigh == -1:
+        num_neigh = X.shape[0]  # default is the total number of datapoints
+
+    # Assuming X is a PyTorch tensor
+    X_np = X.numpy()
+
+    # Use PyTorch functions for the nearest neighbors search
+    if metric == 'euclidean':
+      distances = torch.cdist(X, X, p=2)  # Euclidean distance
+    elif metric == 'cosine':
+      distances = 1 - torch.nn.functional.cosine_similarity(X, X, dim=1)  # Cosine similarity as distance
+
+    # Exclude the distance to oneself (diagonal elements)
+    distances.fill_diagonal_(float('inf'))
+
+    # Find the indices of the k-nearest neighbors using torch.topk
+    _, ind = torch.topk(distances, k=num_neigh, largest=False)
+
+    # ind_l = [(index[0], x.item()) for index, x in torch.ndenumerate(ind)]
+        # Convert indices to row and col lists
+    row = []
+    col = []
+    for i, indices_row in enumerate(ind):
+        for j in indices_row:
+            row.append(i)
+            col.append(j.item())
+
+    mat = torch.zeros_like(distances)
+    mat[row, col] = 1
+    dense_ = dense * mat  # Only retain similarity of nearest neighbors
+    sparse_coo = torch.sparse_coo_tensor(torch.tensor([row, col]), mat[row, col], dense.size())
+    # Convert the COO tensor to CSR format
+    sparse_csr = sparse_coo.coalesce()
+    return sparse_csr
+    # pass
+
+
+def create_kernel_dense(X, metric, method="sklearn"):
+    dense = None
+    if method == "sklearn":
+        dense = create_kernel_dense_sklearn(X, metric)
+    else:
+        raise Exception("For creating dense kernel, only 'sklearn' method is supported")
+    return dense
+
+def create_kernel_dense_sklearn(X, metric, X_rep=None):
+    dense = None
+    D = None
+
+    if metric == "euclidean":
+        if X_rep is None:
+            D = torch.cdist(X, X, p=2)
+        else:
+            D = torch.cdist(X_rep, X, p=2)
+        gamma = 1 / X.shape[1]
+        dense = torch.exp(-D * gamma)  # Obtaining Similarity from distance
+
+    elif metric == "cosine":
+        if X_rep is None:
+            dense = torch.nn.functional.cosine_similarity(X, X, dim=1)
+        else:
+            dense = torch.nn.functional.cosine_similarity(X_rep, X, dim=1)
+
+    elif metric == "dot":
+        if X_rep is None:
+            dense = torch.matmul(X, X.t())
+        else:
+            dense = torch.matmul(X_rep, X.t())
+
+    else:
+        raise Exception("ERROR: unsupported metric for this method of kernel creation")
+
+    if X_rep is not None:
+        assert dense.shape == (X_rep.shape[0], X.shape[0])
+    else:
+        assert dense.shape == (X.shape[0], X.shape[0])
+
+    return dense
+    pass
+
+
+def create_cluster_kernels(X, metric, cluster_lab=None, num_cluster=None, onlyClusters=False):
+    lab = []
+    if cluster_lab is None:
+        obj = Birch(n_clusters=num_cluster)
+        obj.fit(X)
+        lab = obj.predict(X).tolist()
+        if num_cluster is None:
+            num_cluster = len(obj.subcluster_labels_)
+    else:
+        if num_cluster is None:
+            raise Exception("ERROR: num_cluster needs to be specified if cluster_lab is provided")
+        lab = cluster_lab
+    
+    l_cluster = [set() for _ in range(num_cluster)]
+    l_ind = [0] * X.shape[0]
+    l_count = [0] * num_cluster
+    
+    for i, el in enumerate(lab):
+        l_cluster[el].add(i)
+        l_ind[i] = l_count[el]
+        l_count[el] = l_count[el] + 1
+
+    if onlyClusters:
+        return l_cluster, None, None
+        
+    l_kernel = []
+    for el in l_cluster: 
+        k = len(el)
+        l_kernel.append(torch.zeros((k, k)))  # placeholder matrices of suitable size
+    
+    M = None
+    if metric == "euclidean":
+        D = torch.cdist(X, X)
+        gamma = 1 / X.shape[1]
+        M = torch.exp(-D * gamma)  # similarity from distance
+    elif metric == "cosine":
+        M = F.cosine_similarity(X, X, dim=1)
+        M = M.unsqueeze(0)  # converting to 2D for compatibility
+    else:
+        raise Exception("ERROR: unsupported metric")
+    
+    # Create kernel for each cluster using the bigger kernel
+    for i in range(X.shape[0]):
+        for j in range(X.shape[0]):
+            if lab[i] == lab[j]:
+                c_ID = lab[i]
+                ii = l_ind[i]
+                jj = l_ind[j]
+                l_kernel[c_ID][ii, jj] = M[i, j]
+            
+    return l_cluster, l_kernel, l_ind
+
+def create_kernel(X, metric, mode="dense", num_neigh=-1, n_jobs=1, X_rep=None, method="sklearn"):
+
+    if X_rep is not None:
+        assert X_rep.shape[1] == X.shape[1]
+
+    if mode == "dense":
+        dense = None
+        dense = globals()['create_kernel_dense_'+method](X, metric, X_rep)
+        return torch.tensor(dense)
+
+    elif mode == "sparse":
+        if X_rep is not None:
+            raise Exception("Sparse mode is not supported for separate X_rep")
+        return create_sparse_kernel(X, metric, num_neigh, n_jobs, method)
+
+    else:
+        raise Exception("ERROR: unsupported mode")
