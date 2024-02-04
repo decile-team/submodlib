@@ -7,6 +7,14 @@ from scipy import sparse
 import pickle
 import time
 import os
+import numpy as np
+from typing import List, Dict, Union
+from math import sqrt
+
+# Define type aliases for clarity
+Vector = List[float]
+Matrix = List[Vector]
+Set = List[int]  # Considering integer elements for simplicity
 
 def cos_sim_square(A):
     similarity = torch.matmul(A, A.t())
@@ -184,3 +192,75 @@ def create_kernel(X, metric, mode="dense", num_neigh=-1, n_jobs=1, X_rep=None, m
 
     else:
         raise Exception("ERROR: unsupported mode")
+
+
+
+# Euclidean similarity function
+def euclidean_similarity(a: Vector, b: Vector) -> float:
+    return np.linalg.norm(np.array(a) - np.array(b))
+
+# Cosine similarity function
+def cosine_similarity(a: Vector, b: Vector) -> float:
+    dot_product = np.dot(a, b)
+    norm_a = np.linalg.norm(a)
+    norm_b = np.linalg.norm(b)
+    return dot_product / (norm_a * norm_b) if norm_a * norm_b > 0 else 0
+
+# Dot product function
+def dot_prod(a: Vector, b: Vector) -> float:
+    return np.dot(a, b)
+
+# Create kernel function for non-square kernel
+def create_kernel_NS(X_ground: Matrix, X_master: Matrix, metric: str = "euclidean") -> Matrix:
+    n_ground = len(X_ground)
+    n_master = len(X_master)
+    k_dense = [[0] * n_ground for _ in range(n_master)]
+
+    for r in range(n_master):
+        for c in range(n_ground):
+            if metric == "euclidean":
+                k_dense[r][c] = euclidean_similarity(X_master[r], X_ground[c])
+            elif metric == "cosine":
+                k_dense[r][c] = cosine_similarity(X_master[r], X_ground[c])
+            elif metric == "dot":
+                k_dense[r][c] = dot_prod(X_master[r], X_ground[c])
+            else:
+                raise ValueError("Unsupported metric for kernel computation in Python")
+    return k_dense
+
+# Create square kernel function
+def create_square_kernel_dense(X_ground: Matrix, metric: str = "euclidean") -> Matrix:
+    n_ground = len(X_ground)
+    k_dense = [[0] * n_ground for _ in range(n_ground)]
+
+    if metric == "euclidean":
+        for r in range(n_ground):
+            k_dense[r][r] = 1.0
+            for c in range(r + 1, n_ground):
+                sim = euclidean_similarity(X_ground[r], X_ground[c])
+                k_dense[r][c] = sim
+                k_dense[c][r] = sim
+    elif metric == "cosine":
+        for r in range(n_ground):
+            a_norm = sqrt(dot_prod(X_ground[r], X_ground[r]))
+            k_dense[r][r] = 1.0
+            for c in range(r + 1, n_ground):
+                sim = dot_prod(X_ground[r], X_ground[c])
+                b_norm = sqrt(dot_prod(X_ground[c], X_ground[c]))
+                sim = sim / (a_norm * b_norm) if a_norm * b_norm > 0 else 0
+                k_dense[r][c] = sim
+                k_dense[c][r] = sim
+    elif metric == "dot":
+        for r in range(n_ground):
+            for c in range(r, n_ground):
+                sim = dot_prod(X_ground[r], X_ground[c])
+                k_dense[r][c] = sim
+                k_dense[c][r] = sim
+    else:
+        raise ValueError("Unsupported metric for kernel computation in Python")
+    return k_dense
+
+# Set intersection function
+def set_intersection(a: Set, b: Set) -> Set:
+    return list(set(a) & set(b))  # Converting set intersection to list for better compatibility
+
