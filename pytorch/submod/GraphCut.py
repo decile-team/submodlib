@@ -1,7 +1,13 @@
 from typing import List, Set
+import random
+from helper import *
 
-class GraphCut(SetFunction):
-    def __init__(self, n, mode, lambdaVal, separate_rep=None, n_rep=None, mgsijs=None, ggsijs=None, data=None, data_rep=None, metric="cosine", num_neighbors=None, 
+class GraphCutpy(SetFunction):
+    # def __init__(self, n: int, mode: str, metric: str, master_ground_kernel: List[List[float]] = None,
+    #              ground_ground_kernel: List[List[float]] = None, arr_val: List[float] = None,
+    #              arr_count: List[int] = None, arr_col: List[int] = None, partial: bool = False,
+    #              ground: Set[int] = None, lambdaVal: float = 0.0):
+    def __init__(self, n, mode, lambdaVal, separate_rep=None, n_rep=None, mgsijs=None, ggsijs=None, data=None, data_rep=None, metric="cosine", num_neighbors=None,
                  master_ground_kernel: List[List[float]] = None,
                  ground_ground_kernel: List[List[float]] = None, arr_val: List[float] = None,
                  arr_count: List[int] = None, arr_col: List[int] = None, partial: bool = False,
@@ -27,7 +33,6 @@ class GraphCut(SetFunction):
         self.cluster_map=None
         self.ggsijs = None
         self.mgsijs = None
-        # self.cpp_ground_sub = {-1} #Provide a dummy set for pybind11 binding to be successful
         self.content = None
         self.effective_ground = None
 
@@ -38,14 +43,14 @@ class GraphCut(SetFunction):
           raise Exception("ERROR: Incorrect mode. Must be one of 'dense' or 'sparse'")
         if self.separate_rep == True:
           if self.n_rep is None or self.n_rep <=0:
-            raise Exception("ERROR: separate represented intended but number of elements in represented not specified or not positive")	
+            raise Exception("ERROR: separate represented intended but number of elements in represented not specified or not positive")
           if self.mode != "dense":
             raise Exception("Only dense mode supported if separate_rep = True")
           if (type(self.mgsijs) != type(None)) and (type(self.mgsijs) != np.ndarray):
             raise Exception("mgsijs provided, but is not dense")
           if (type(self.ggsijs) != type(None)) and (type(self.ggsijs) != np.ndarray):
             raise Exception("ggsijs provided, but is not dense")
-          
+
         if mode == "dense":
             self.master_ground_kernel = master_ground_kernel
             self.ground_ground_kernel = ground_ground_kernel
@@ -66,14 +71,16 @@ class GraphCut(SetFunction):
             if partial:
                 self.original_to_partial_index_map = {elem: ind for ind, elem in enumerate(self.effective_ground_set)}
 
-            self.total_similarity_with_subset = [0] * self.num_effective_ground_set
-            self.total_similarity_with_master = [0] * self.num_effective_ground_set
+            self.total_similarity_with_subset = [random.random() for _ in range(self.num_effective_ground_set)]
+            self.total_similarity_with_master = [random.random() for _ in range(self.num_effective_ground_set)]
+            self.master_ground_kernel = [[random.random() for _ in range(self.num_effective_ground_set)] for _ in range(self.num_effective_ground_set)]
+            self.ground_ground_kernel = [[random.random() for _ in range(self.num_effective_ground_set)] for _ in range(self.num_effective_ground_set)]
             for elem in self.effective_ground_set:
                 index = self.original_to_partial_index_map[elem] if partial else elem
-                self.total_similarity_with_subset[index] = 0
-                self.total_similarity_with_master[index] = 0
-                # for j in self.master_set:
-                #     self.total_similarity_with_master[index] += self.master_ground_kernel[j][elem]
+                self.total_similarity_with_subset[index] = 1
+                self.total_similarity_with_master[index] = 1
+                for j in self.master_set:
+                    self.total_similarity_with_master[index] += self.master_ground_kernel[j][elem]
 
             if self.separate_rep == True:
               if type(self.mgsijs) == type(None):
@@ -82,7 +89,9 @@ class GraphCut(SetFunction):
                   raise Exception("Data missing to compute mgsijs")
                 if np.shape(self.data)[0]!=self.n or np.shape(self.data_rep)[0]!=self.n_rep:
                   raise Exception("ERROR: Inconsistentcy between n, n_rep and no of examples in the given ground data matrix and represented data matrix")
-                self.mgsijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_rep.tolist(), self.metric))
+
+                #create_kernel_NS is there .................... find it and define it not found in helper.py but used as here
+                # self.mgsijs = np.array(subcp.create_kernel_NS(self.data.tolist(),self.data_rep.tolist(), self.metric))
               else:
                 #provided mgsijs - verify it's dimensionality
                 if np.shape(self.mgsijs)[1]!=self.n or np.shape(self.mgsijs)[0]!=self.n_rep:
@@ -94,8 +103,7 @@ class GraphCut(SetFunction):
                 if self.num_neighbors is not None:
                   raise Exception("num_neighbors wrongly provided for dense mode")
                 self.num_neighbors = np.shape(self.data)[0] #Using all data as num_neighbors in case of dense mode
-                self.content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neighbors))
-                print(self.content)
+                self.content = np.array(create_kernel(X = torch.tensor(self.data), metric = self.metric, num_neigh = self.num_neighbors).to_dense())
                 val = self.cpp_content[0]
                 row = list(self.cpp_content[1].astype(int))
                 col = list(self.cpp_content[2].astype(int))
@@ -114,7 +122,7 @@ class GraphCut(SetFunction):
                 if self.num_neighbors is not None:
                   raise Exception("num_neighbors wrongly provided for dense mode")
                 self.num_neighbors = np.shape(self.data)[0] #Using all data as num_neighbors in case of dense mode
-                self.content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neighbors))
+                self.content = np.array(create_kernel(X = torch.tensor(self.data), metric = self.metric, num_neigh = self.num_neighbors).to_dense())
                 val = self.content[0]
                 row = list(self.content[1].astype(int))
                 col = list(self.content[2].astype(int))
@@ -143,7 +151,7 @@ class GraphCut(SetFunction):
               #no kernel is provided make ggsij sparse kernel
               if type(data) == type(None):
                 raise Exception("Data missing to compute ggsijs")
-              self.content = np.array(subcp.create_kernel(self.data.tolist(), self.metric, self.num_neighbors))
+              self.content = np.array(create_kernel(X = torch.tensor(self.data), metric = self.metric, num_neigh = self.num_neighbors).to_dense())
               val = self.content[0]
               row = list(self.content[1].astype(int))
               col = list(self.content[2].astype(int))
@@ -168,26 +176,24 @@ class GraphCut(SetFunction):
 
         if self.mode=="dense" and self.separate_rep == False :
             self.ggsijs = self.ggsijs.tolist() #break numpy ndarray to native list of list datastructure
-            
+
             if type(self.ggsijs[0])==int or type(self.ggsijs[0])==float: #Its critical that we pass a list of list to pybind11
                                             #This condition ensures the same in case of a 1D numpy array (for 1x1 sim matrix)
               l=[]
               l.append(self.ggsijs)
               self.ggsijs=l
 
-            # self.cpp_obj = GraphCut(self.n, self.cpp_ggsijs, False, self.cpp_ground_sub, self.lambdaVal)
-          
         elif self.mode=="dense" and self.separate_rep == True :
             self.ggsijs = self.ggsijs.tolist() #break numpy ndarray to native list of list datastructure
-            
+
             if type(self.ggsijs[0])==int or type(self.ggsijs[0])==float: #Its critical that we pass a list of list to pybind11
                                             #This condition ensures the same in case of a 1D numpy array (for 1x1 sim matrix)
               l=[]
               l.append(self.ggsijs)
               self.ggsijs=l
-            
+
             self.mgsijs = self.mgsijs.tolist() #break numpy ndarray to native list of list datastructure
-            
+
             if type(self.mgsijs[0])==int or type(self.mgsijs[0])==float: #Its critical that we pass a list of list to pybind11
                                             #This condition ensures the same in case of a 1D numpy array (for 1x1 sim matrix)
               l=[]
@@ -198,17 +204,18 @@ class GraphCut(SetFunction):
 
         elif self.mode == "sparse":
             self.ggsijs = {}
-            self.ggsijs['arr_val'] = self.ggsijs.data.tolist() #contains non-zero values in matrix (row major traversal)
-            self.ggsijs['arr_count'] = self.ggsijs.indptr.tolist() #cumulitive count of non-zero elements upto but not including current row
-            self.ggsijs['arr_col'] = self.ggsijs.indices.tolist() #contains col index corrosponding to non-zero values in arr_val
-            # self.cpp_obj = GraphCutpy(self.n, self.cpp_ggsijs['arr_val'], self.cpp_ggsijs['arr_count'], self.cpp_ggsijs['arr_col'], lambdaVal)
+            # self.ggsijs['arr_val'] = self.ggsijs.data.tolist() #contains non-zero values in matrix (row major traversal)
+            # self.ggsijs['arr_count'] = self.ggsijs.indptr.tolist() #cumulitive count of non-zero elements upto but not including current row
+            # self.ggsijs['arr_col'] = self.ggsijs.indices.tolist() #contains col index corrosponding to non-zero values in arr_val
+            # # self.cpp_obj = GraphCutpy(self.n, self.cpp_ggsijs['arr_val'], self.cpp_ggsijs['arr_count'], self.cpp_ggsijs['arr_col'], lambdaVal)
         else:
             raise Exception("Invalid")
 
         self.effective_ground = self.get_effective_ground_set()
-        print("it is done")
 
-      # mode == "sparse":
+        # if mode == "dense":
+
+        # elif mode == "sparse":
         #     if not arr_val or not arr_count or not arr_col:
         #         raise ValueError("Error: Empty/Corrupt sparse similarity kernel")
 
@@ -291,30 +298,58 @@ class GraphCut(SetFunction):
             for elem in effective_x:
                 gain -= 2 * self.lambda_ * self.sparse_kernel.get_val(item, elem)
             gain -= self.lambda_ * self.sparse_kernel.get_val(item, item)
-
         return gain
 
-    def marginal_gain_with_memoization(self, X: Set[int], item: int, enable_checks: bool = True) -> float:
-        effective_x = X.intersection(self.effective_ground_set) if self.partial else X
+    # def marginal_gain_with_memoization(self, X: Set[int], item: int, enable_checks: bool = True) -> float:
+    #     effective_x = X.intersection(self.effective_ground_set) if self.partial else X
 
-        if enable_checks and item in effective_x:
+    #     if enable_checks and item in effective_x:
+    #         return 0
+
+    #     if self.partial and item not in self.effective_ground_set:
+    #         return 0
+
+    #     gain = 0
+
+    #     if self.mode == "dense":
+    #         index = self.original_to_partial_index_map[item] if self.partial else item
+    #         gain = self.total_similarity_with_master[index] - 2 * self.lambda_ * self.total_similarity_with_subset[index]
+    #         gain = self.total_similarity_with_master[index] - 2 * self.lambda_ * self.total_similarity_with_subset[index] - self.lambda_ * self.ground_ground_kernel[item][item]
+
+    #     elif self.mode == "sparse":
+    #         index = self.original_to_partial_index_map[item] if self.partial else item
+    #         gain = self.total_similarity_with_master[index] - 2 * self.lambda_ * self.total_similarity_with_subset[index] - self.lambda_ * self.sparse_kernel.get_val(item, item)
+
+    #     return gain
+
+
+    def marginal_gain_with_memoization(self, X: Set[int], item: int, enable_checks: bool) -> float:
+        effective_X = set()
+        gain = 0
+        if self.partial:
+            effective_X = X.intersection(self.effective_ground_set)
+        else:
+            effective_X = X
+
+        if enable_checks and item in effective_X:
             return 0
 
         if self.partial and item not in self.effective_ground_set:
             return 0
 
-        gain = 0
-
-        if self.mode == "dense":
-            index = self.original_to_partial_index_map[item] if self.partial else item
-            gain = self.total_similarity_with_master[index] - 2 * self.lambda_ * self.total_similarity_with_subset[index]
-            # gain = self.total_similarity_with_master[index] - 2 * self.lambda_ * self.total_similarity_with_subset[index] - self.lambda_ * self.ground_ground_kernel[item][item]
-
-        elif self.mode == "sparse":
-            index = self.original_to_partial_index_map[item] if self.partial else item
-            gain = self.total_similarity_with_master[index] - 2 * self.lambda_ * self.total_similarity_with_subset[index] - self.lambda_ * self.sparse_kernel.get_val(item, item)
-
+        if self.mode == 'dense':
+            gain = self.total_similarity_with_master[self.original_to_partial_index_map[item] if self.partial else item] \
+                  - 2 * self.lambda_ * self.total_similarity_with_subset[self.original_to_partial_index_map[item] if self.partial else item] \
+                  - self.lambda_ * self.ground_ground_kernel[item][item]
+        elif self.mode == 'sparse':
+            gain = self.total_similarity_with_master[self.original_to_partial_index_map[item] if self.partial else item] \
+                  - 2 * self.lambda_ * self.total_similarity_with_subset[self.original_to_partial_index_map[item] if self.partial else item] \
+                  - self.lambda_ * self.sparse_kernel.get_val(item, item)
+        else:
+            raise ValueError("Error: Only dense and sparse mode supported")
+        # print("gain value",gain)
         return gain
+
 
     def update_memoization(self, X: Set[int], item: int):
         effective_x = X.intersection(self.effective_ground_set) if self.partial else X
