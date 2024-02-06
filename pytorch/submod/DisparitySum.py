@@ -1,6 +1,7 @@
 from helper import *
 import numpy as np
 import scipy
+from ..SetFunction import SetFunction
 
 class DisparitySumFunction(SetFunction):
 
