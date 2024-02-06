@@ -1,6 +1,7 @@
 from typing import List, Set
 import random
 from helper import *
+from ..SetFunction import SetFunction
 
 class GraphCutFunction(SetFunction):
     def __init__(self, n, mode, lambdaVal, separate_rep=None, n_rep=None, mgsijs=None, ggsijs=None, data=None, data_rep=None, metric="cosine", num_neighbors=None,
