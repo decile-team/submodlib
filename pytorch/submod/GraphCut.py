@@ -2,11 +2,7 @@ from typing import List, Set
 import random
 from helper import *
 
-class GraphCutpy(SetFunction):
-    # def __init__(self, n: int, mode: str, metric: str, master_ground_kernel: List[List[float]] = None,
-    #              ground_ground_kernel: List[List[float]] = None, arr_val: List[float] = None,
-    #              arr_count: List[int] = None, arr_col: List[int] = None, partial: bool = False,
-    #              ground: Set[int] = None, lambdaVal: float = 0.0):
+class GraphCutFunction(SetFunction):
     def __init__(self, n, mode, lambdaVal, separate_rep=None, n_rep=None, mgsijs=None, ggsijs=None, data=None, data_rep=None, metric="cosine", num_neighbors=None,
                  master_ground_kernel: List[List[float]] = None,
                  ground_ground_kernel: List[List[float]] = None, arr_val: List[float] = None,
