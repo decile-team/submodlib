@@ -3,7 +3,8 @@ import torch.nn as nn
 import numpy as np
 import random
 from ..SetFunction import SetFunction
-class SetCover(SetFunction):
+
+class SetCoverFunction(SetFunction):
     def __init__(self, n, cover_set, num_concepts, concept_weights = None):
         super(SetFunction, self).__init__()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
