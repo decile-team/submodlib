@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 from helper import *
+from ..SetFunction import SetFunction
 
 class DisparityMinFunction(SetFunction):
 
