@@ -2,6 +2,8 @@ import numpy as np
 import scipy
 from scipy import sparse
 from helper import *
+from ..SetFunction import SetFunction
+
 class FacilityLocationFunction(SetFunction):
     def __init__(self, n, mode, separate_rep=None, n_rep=None, sijs=None, data=None, data_rep=None, num_clusters=None, cluster_labels=None, metric="cosine", num_neighbors=None,
                  dense_kernel = None, data_master = None, create_dense_cpp_kernel_in_python = True, partial = False, seperate_master = False):
