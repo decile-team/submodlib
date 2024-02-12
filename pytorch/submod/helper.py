@@ -87,29 +87,81 @@ def create_kernel_dense(X, metric, method="sklearn"):
         raise Exception("For creating dense kernel, only 'sklearn' method is supported")
     return dense
 
-def create_kernel_dense_sklearn(X, metric, X_rep=None):
+def create_kernel_dense_sklearn(X, metric, X_rep=None, batch=0):
     dense = None
     D = None
-
+    batch_size = batch
     if metric == "euclidean":
         if X_rep is None:
-            D = torch.cdist(X, X, p=2)
+            # print(X.shape)
+            # Process data in batches for torch.cdist
+            for i in range(0, len(X), batch_size):
+                X_batch = X[i:i+batch_size].to(device="cuda")
+                # print(X_batch.shape)
+                D_batch = torch.cdist(X_batch, X, p=2).to(device="cuda")
+                gamma = 1 / X.shape[1]
+                dense_batch = torch.exp(-D_batch * gamma).to(device="cuda")
+                # Accumulate results from batches
+                if dense is None:
+                    dense = dense_batch
+                else:
+                    dense = torch.cat([dense, dense_batch])
         else:
-            D = torch.cdist(X_rep, X, p=2)
-        gamma = 1 / X.shape[1]
-        dense = torch.exp(-D * gamma)  # Obtaining Similarity from distance
+            # Process data in batches for torch.cdist
+            for i in range(0, len(X_rep), batch_size):
+                X_rep_batch = X_rep[i:i+batch_size].to(device="cuda")
+                D_batch = torch.cdist(X_rep_batch, X).to(device="cuda")
+                gamma = 1 / X.shape[1]
+                dense_batch = torch.exp(-D_batch * gamma).to(device="cuda")
+                # Accumulate results from batches
+                if dense is None:
+                    dense = dense_batch
+                else:
+                    dense = torch.cat([dense, dense_batch])
 
     elif metric == "cosine":
         if X_rep is None:
-            dense = torch.nn.functional.cosine_similarity(X, X, dim=1)
+            # Process data in batches for torch.nn.functional.cosine_similarity
+            for i in range(0, len(X), batch_size):
+                X_batch = X[i:i+batch_size].to(device="cuda")
+                dense_batch = torch.nn.functional.cosine_similarity(X_batch.unsqueeze(1), X.unsqueeze(0), dim=2)
+                # Accumulate results from batches
+                if dense is None:
+                    dense = dense_batch
+                else:
+                    dense = torch.cat([dense, dense_batch])
         else:
-            dense = torch.nn.functional.cosine_similarity(X_rep, X, dim=1)
+            # Process data in batches for torch.nn.functional.cosine_similarity
+            for i in range(0, len(X_rep), batch_size):
+                X_rep_batch = X_rep[i:i+batch_size].to(device="cuda")
+                dense_batch = torch.nn.functional.cosine_similarity(X_rep_batch, X, dim=1)
+                # Accumulate results from batches
+                if dense is None:
+                    dense = dense_batch
+                else:
+                    dense = torch.cat([dense, dense_batch])
 
     elif metric == "dot":
         if X_rep is None:
-            dense = torch.matmul(X, X.t())
+            # Process data in batches for torch.matmul
+            for i in range(0, len(X), batch_size):
+                X_batch = X[i:i+batch_size].to(device="cuda")
+                dense_batch = torch.matmul(X_batch, X.t())
+                # Accumulate results from batches
+                if dense is None:
+                    dense = dense_batch
+                else:
+                    dense = torch.cat([dense, dense_batch])
         else:
-            dense = torch.matmul(X_rep, X.t())
+            # Process data in batches for torch.matmul
+            for i in range(0, len(X_rep), batch_size):
+                X_rep_batch = X_rep[i:i+batch_size].to(device="cuda")
+                dense_batch = torch.matmul(X_rep_batch, X.t())
+                # Accumulate results from batches
+                if dense is None:
+                    dense = dense_batch
+                else:
+                    dense = torch.cat([dense, dense_batch])
 
     else:
         raise Exception("ERROR: unsupported metric for this method of kernel creation")
@@ -119,9 +171,8 @@ def create_kernel_dense_sklearn(X, metric, X_rep=None):
     else:
         assert dense.shape == (X.shape[0], X.shape[0])
 
+    torch.cuda.empty_cache()
     return dense
-    pass
-
 
 def create_cluster_kernels(X, metric, cluster_lab=None, num_cluster=None, onlyClusters=False):
     lab = []
