@@ -10,6 +10,12 @@ from submodlib_cpp import FacilityLocation2
 from submodlib.helper import create_kernel, create_cluster_kernels
 #from memory_profiler import profile
 
+if torch.cuda.is_available() :
+	from pytorch.submod import FacilityLocation
+else:
+	from submodlib_cpp import FacilityLocation
+
+
 class FacilityLocationFunction(SetFunction):
 	"""Implementation of the Facility Location submodular function (FL).
 
@@ -224,11 +230,20 @@ class FacilityLocationFunction(SetFunction):
 					l.append(self.cpp_sijs)
 					self.cpp_sijs=l
 
-				self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs, False, self.cpp_ground_sub, self.separate_rep)
+				if torch.cuda.is_available() :
+					self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs, False, self.cpp_ground_sub, self.separate_rep)
+				else:
+					self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs, False, self.cpp_ground_sub, self.separate_rep)
+		
+				
 			# elif pybind_mode == "memoryview":
 			# 	self.cpp_obj = FacilityLocation(self.n, memoryview(self.sijs), False, self.cpp_ground_sub, self.separate_rep)
 			elif pybind_mode == "numpyarray":
-				self.cpp_obj = FacilityLocation(self.n, self.sijs, False, self.cpp_ground_sub, self.separate_rep)
+				if torch.cuda.is_available() :
+					self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs, False, self.cpp_ground_sub, self.separate_rep)
+				else:
+					self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs, False, self.cpp_ground_sub, self.separate_rep)
+
 			elif pybind_mode == "array32":
 				# print("Kernel's type = ", self.sijs.dtype)
 				self.sijs.astype('float32', copy=False)
@@ -250,16 +265,26 @@ class FacilityLocationFunction(SetFunction):
 		
 		elif self.mode=="dense" and create_dense_cpp_kernel_in_python == False:
 			if self.separate_rep == True:
-				self.cpp_obj = FacilityLocation(self.n, self.data.tolist(), self.data_rep.tolist(), True, self.metric)
+				if torch.cuda.is_available() :
+					self.cpp_obj = FacilityLocation(self.n, self.data.tolist(), self.data_rep.tolist(), True, self.metric)
+				else:
+					self.cpp_obj = FacilityLocation(self.n, self.data.tolist(), self.data_rep.tolist(), True, self.metric)
 			else:
-				self.cpp_obj = FacilityLocation(self.n, self.data.tolist(), [[0.]], False, self.metric)
+				if torch.cuda.is_available() :
+					self.cpp_obj = FacilityLocation(self.n, self.data.tolist(), [[0.]], False, self.metric)
+				else:
+					self.cpp_obj = FacilityLocation(self.n, self.data.tolist(), [[0.]], False, self.metric)
+				
 		
 		elif self.mode=="sparse": #break scipy sparse matrix to native component lists (for csr implementation)
 			self.cpp_sijs = {}
 			self.cpp_sijs['arr_val'] = self.sijs.data.tolist() #contains non-zero values in matrix (row major traversal)
 			self.cpp_sijs['arr_count'] = self.sijs.indptr.tolist() #cumulitive count of non-zero elements upto but not including current row
 			self.cpp_sijs['arr_col'] = self.sijs.indices.tolist() #contains col index corrosponding to non-zero values in arr_val
-			self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs['arr_val'], self.cpp_sijs['arr_count'], self.cpp_sijs['arr_col'])
+			if torch.cuda.is_available() :
+					self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs['arr_val'], self.cpp_sijs['arr_count'], self.cpp_sijs['arr_col'])
+			else:
+					self.cpp_obj = FacilityLocation(self.n, self.cpp_sijs['arr_val'], self.cpp_sijs['arr_count'], self.cpp_sijs['arr_col'])
 		
 		elif self.mode=="clustered":
 			l_temp = []
@@ -273,7 +298,10 @@ class FacilityLocationFunction(SetFunction):
 				l_temp.append(temp)
 			self.cluster_sijs = l_temp
 
-			self.cpp_obj = FacilityLocation(self.n, self.clusters, self.cluster_sijs, self.cluster_map)
+			if torch.cuda.is_available() :
+					self.cpp_obj = FacilityLocation(self.n, self.clusters, self.cluster_sijs, self.cluster_map)
+			else:
+					self.cpp_obj = FacilityLocation(self.n, self.clusters, self.cluster_sijs, self.cluster_map)
 
 		#self.cpp_ground_sub=self.cpp_obj.getEffectiveGroundSet()
 		#self.ground_sub=self.cpp_ground_sub
