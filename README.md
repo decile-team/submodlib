@@ -159,6 +159,21 @@ The above code was timed using Python's timeit module averaged across three exec
 | 9000	| 8.010674|
 | 10000	| 9.417298|
 
+# Citing
+
+If your research makes use of SUBMODLIB, please consider citing:
+
+**SUBMODLIB** ([_Submodlib: A Submodular Optimization Library_ (Kaushal et al., 2022)](https://arxiv.org/abs/2202.10680))
+```
+@article{kaushal2022submodlib,
+  title={Submodlib: A submodular optimization library},
+  author={Kaushal, Vishal and Ramakrishnan, Ganesh and Iyer, Rishabh},
+  journal={arXiv preprint arXiv:2202.10680},
+  year={2022}
+}
+
+```
+
 # Contributors
 
 * Vishal Kaushal, Ganesh Ramakrishnan and Rishabh Iyer. Currently maintained by CARAML Lab
