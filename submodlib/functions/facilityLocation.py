@@ -8,6 +8,7 @@ import submodlib_cpp as subcp
 from submodlib_cpp import FacilityLocation
 from submodlib_cpp import FacilityLocation2 
 from submodlib.helper import create_kernel, create_cluster_kernels
+import torch
 #from memory_profiler import profile
 
 if torch.cuda.is_available() :
