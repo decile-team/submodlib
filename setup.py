@@ -70,7 +70,7 @@ ext_modules = [
 setup(
     name='submodlib',
     #packages=find_packages(include=['submodlib']),
-    packages=['submodlib', 'submodlib/functions'],
+    packages=['submodlib', 'submodlib/functions','pytorch'],
     #packages=find_packages('submodlib'),
     #package_dir={'':'submodlib'},
     #version='0.0.2',
