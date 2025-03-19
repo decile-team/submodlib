@@ -1,8 +1,8 @@
 [build-system]
 requires = [
-    "setuptools>=42",
+    "setuptools>=61.0",
     "wheel",
-    "pybind11>=2.6.0",
+    "pybind11>=2.12.0",
 ]
 
 build-backend = "setuptools.build_meta"
@@ -34,3 +34,37 @@ markers = [
     "pybind_test: for testing different pybind alternatives",
     "single: mark any specific tests using this marker"
 ]
+
+[project]
+name = "submodlib-py"
+version = "0.0.1"
+authors = [
+  {name="Vishal Kaushal", email="vkaushal@cse.iitb.ac.in" },
+  { name="Krishnateja Killamsetty", email="krishnateja.k@ibm.com" },
+  { name="Suraj Kothawade", email="skothawade@google.com" },
+  { name = "Ganesh Ramakrishnan", email = "ganesh@cse.iitb.ac.in" },
+  { name = "Rishabh Iyer", email = "rishabh.iyer@utdallas.edu"},
+]
+description = "SubModLib is an easy-to-use, efficient and scalable Python library for submodular optimization with a C++ optimization engine. Submodlib finds its application in summarization, data subset selection, hyper parameter tuning, efficient training etc. Through a rich API, it offers a great deal of flexibility in the way it can be used."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+]
+license = {file = "LICENSE"}
+dependencies = [
+    "numpy>=1.26.4",
+    "scipy",
+    "scikit-learn",
+    "matplotlib",
+    "tqdm",
+    "pandas",
+    "joblib",
+]
+
+[project.urls]
+Homepage = "https://github.com/decile-team/submodlib"
+Issues = "https://github.com/decile-team/submodlib/issues"
+
