@@ -36,7 +36,7 @@ markers = [
 ]
 
 [project]
-name = "submodlib-py"
+name = "submodlib"
 version = "0.0.1"
 authors = [
   {name="Vishal Kaushal", email="vkaushal@cse.iitb.ac.in" },
@@ -55,7 +55,8 @@ classifiers = [
 ]
 license = {file = "LICENSE"}
 dependencies = [
-    "numpy>=1.26.4",
+    "numpy>=1.24.4",
+    "numba>= 0.43.0",
     "scipy",
     "scikit-learn",
     "matplotlib",
