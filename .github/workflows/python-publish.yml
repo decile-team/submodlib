@@ -17,6 +17,7 @@ jobs:
           - ubuntu-latest
           - macos-13
           - macos-14
+          - macos-latest
           # - windows-latest # Add back if needed
 
     steps:
