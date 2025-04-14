@@ -1,0 +1,113 @@
+# .github/workflows/publish-to-pypi.yml
+
+name: Build and Publish Python Wheels to PyPI
+
+on:
+  push:
+    tags:
+      - "v*" # Trigger workflow on push events to tags starting with 'v'
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Run builds for different OSes in parallel
+      matrix:
+        os:
+          - ubuntu-latest # Linux x86_64 (uses manylinux)
+          - windows-latest # Windows x86_64
+          - macos-13 # macOS x86_64 (Intel) - macos-13 is an Intel runner
+          - macos-14 # macOS arm64 - macos-14 is an ARM runner (Apple Silicon)
+          # Note: macos-latest currently points to macos-14 (ARM)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch all history and tags for setuptools-scm versioning
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          # Use a recent Python version available on all runners for running cibuildwheel
+          python-version: '3.11'
+
+      - name: Install cibuildwheel
+        run: python -m pip install --upgrade pip cibuildwheel
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          # --- cibuildwheel configuration via environment variables ---
+          # (Alternative: Configure in pyproject.toml [tool.cibuildwheel] section)
+
+          # Example: Specify Python versions to build for (adjust as needed)
+          # CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
+
+          # Example: Skip builds you don't need (e.g., PyPy, 32-bit Linux)
+          CIBW_SKIP: "pp* *_i686" # Skip PyPy and 32-bit Linux builds
+
+          # Example: Use a specific manylinux image for broader Linux compatibility
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+
+          # Example: macOS architecture settings (adjust based on runner)
+          # On macos-13 (Intel runner), builds x86_64 by default ('auto').
+          # On macos-14 (ARM runner), builds arm64 by default ('auto').
+          # To build universal2 (x86_64 + arm64) on macos-14:
+          # CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
+          # Using 'auto' here builds native arch for the runner (x86_64 on macos-13, arm64 on macos-14)
+          CIBW_ARCHS_MACOS: "auto"
+
+          # Example: Add build-time dependencies (if any) required by your C++ code
+          # CIBW_BUILD_FRONTEND: "build" # Use python -m build frontend
+          # CIBW_BEFORE_BUILD_LINUX: "yum install -y [your-linux-dependency]"
+          # CIBW_BEFORE_BUILD_MACOS: "brew install [your-mac-dependency]"
+          # CIBW_BEFORE_BUILD_WINDOWS: "choco install [your-windows-dependency]"
+
+          # Example: Add test dependencies and command to run after building each wheel
+          # CIBW_TEST_REQUIRES: "pytest numpy"
+          # CIBW_TEST_COMMAND: "pytest {project}/tests" # {project} is replaced by the path to the built package
+
+      - name: Upload wheels artifact (optional, for debugging)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
+
+  # --- Publishing Job ---
+  # This job runs only after all build_wheels jobs complete successfully.
+  # It uses trusted publishing, so it needs the environment and permissions.
+  publish_wheels:
+    name: Publish wheels to PyPI
+    needs: build_wheels # Run after all builds are finished
+    runs-on: ubuntu-latest # Use a single OS for the publishing step
+
+    environment:
+      name: pypi
+      url: https://pypi.org/project/submodlib-py # Link shown in GitHub Deployments tab
+
+    permissions:
+      id-token: write # Required for PyPI trusted publishing (OIDC)
+
+    steps:
+      # No checkout needed if only publishing pre-built wheels
+
+      - name: Download all wheels artifacts
+        uses: actions/download-artifact@v4
+        with:
+          # Downloads artifacts from all matrix jobs into respective directories
+          # e.g., ./wheels-ubuntu-latest/*.whl, ./wheels-windows-latest/*.whl
+          pattern: wheels-* # Download all artifacts matching 'wheels-*'
+          path: dist # Put all downloaded wheels into the 'dist' directory
+          merge-multiple: true # Merge artifacts from different jobs into the same directory
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # No 'with:' block needed here if using Trusted Publishing
+        # PyPA action automatically finds wheels/sdist in the default './dist/' directory
+        # If you kept the output dir as './wheelhouse' in the download step, you would use:
+        # with:
+        #   packages-dir: ./wheelhouse/
+
