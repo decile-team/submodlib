@@ -31,7 +31,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           # Use a recent Python version available on all runners for running cibuildwheel
-          python-version: '3.11'
+          python-version: ["3.9", "3.10", "3.11"]
 
       - name: Install cibuildwheel
         run: python -m pip install --upgrade pip cibuildwheel
