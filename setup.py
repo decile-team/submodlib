@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages, Distribution
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 
+from setuptools_scm import get_version
+__version__ = get_version()
+
 # Read the long description from the README file.
 with open("README.md", "r") as fh:
     long_description = fh.read()
-
-# Get the version from your version file.
-exec(open('submodlib/version.py').read())
 
 # Custom distribution to indicate the presence of binary extensions.
 class BinaryDistribution(Distribution):
@@ -63,7 +63,6 @@ ext_modules = [
 ]
 
 setup(
-    version=__version__,
     description='submodlib is an efficient and scalable library for submodular optimization which finds its application in summarization, data subset selection, hyper parameter tuning etc.',
     long_description=long_description,
     long_description_content_type="text/markdown",
