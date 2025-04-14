@@ -36,7 +36,7 @@ markers = [
 ]
 
 [project]
-name = "submodlib"
+name = "submodlib-py"
 version = "0.0.1"
 authors = [
   {name="Vishal Kaushal", email="vkaushal@cse.iitb.ac.in" },
