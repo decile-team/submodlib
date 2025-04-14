@@ -16,7 +16,6 @@ jobs:
       matrix:
         os:
           - ubuntu-latest # Linux x86_64 (uses manylinux)
-          - windows-latest # Windows x86_64
           - macos-13 # macOS x86_64 (Intel) - macos-13 is an Intel runner
           - macos-14 # macOS arm64 - macos-14 is an ARM runner (Apple Silicon)
           # Note: macos-latest currently points to macos-14 (ARM)
