@@ -242,7 +242,7 @@ std::vector<std::pair<ll, double>> LazierThanLazyGreedyOptimizer::maximize(
     int iter = 0;
     while (rem_budget > 0) {
         std::unordered_set<ll> randomSet;
-        while (randomSet.size() < randomSetSize) {
+        while (randomSet.size() < std::min(randomSetSize, static_cast<ll>(remainingSet.size()))) {
             ll elem =
                 rand() %
                 n;  // TODO:serious issue, works only till RAND_MAX
