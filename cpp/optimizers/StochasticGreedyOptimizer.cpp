@@ -64,7 +64,7 @@ std::vector<std::pair<ll, double>> StochasticGreedyOptimizer::maximize(SetFuncti
 	int iter = 0;
 	while (rem_budget > 0) {
 		std::unordered_set<ll> randomSet;
-		while(randomSet.size() < randomSetSize) {
+		while(randomSet.size() < std::min(randomSetSize, static_cast<ll>(remainingSet.size()))) {
 		    ll elem = rand() % n; //TODO:serious issue, works only till RAND_MAX
 				//std::cout << "Trying random element " << elem << "\n";
         if((remainingSet.find(elem) != remainingSet.end()) && (randomSet.find(elem) == randomSet.end())){
