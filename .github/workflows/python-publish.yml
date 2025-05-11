@@ -39,7 +39,7 @@ jobs:
         env:
           # --- CORRECT way to specify target Python versions ---
           # Uncomment and adjust this list as needed
-          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*" # Build wheels FOR CPython 3.8, 3.9, 3.10, 3.11, 3.12
+          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*" # Build wheels FOR CPython 3.8, 3.9, 3.10, 3.11, 3.12, 3.13
 
           # --- Other cibuildwheel configurations ---
           CIBW_SKIP: "pp* *_i686"
