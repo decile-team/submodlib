@@ -2,7 +2,7 @@
 set -e -x
 
 # List of Python versions to build for.
-PYTHON_VERSIONS=("cp38-cp38" "cp39-cp39" "cp310-cp310" "cp311-cp311" "cp312-cp312")
+PYTHON_VERSIONS=("cp38-cp38" "cp39-cp39" "cp310-cp310" "cp311-cp311" "cp312-cp312" "cp313-cp313")
 
 # Install build tools (if needed inside the container)
 yum install -y gcc gcc-c++ make
